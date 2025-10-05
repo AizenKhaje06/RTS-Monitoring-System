@@ -351,10 +351,10 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
                 >
                   <BarChart data={provinces} layout="horizontal" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid stroke="#444" strokeDasharray="3 3" />
-                    <XAxis type="number" unit="%" stroke="#888" />
+                    <XAxis type="number" unit="%" stroke="#888" domain={[0, 'dataMax']} />
                     <YAxis dataKey="province" type="category" width={80} stroke="#888" tickLine={true} axisLine={true} />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="returnProbability" fill="rgba(239, 68, 68, 0.9)" barSize={20} />
+                    <Bar dataKey="returnProbability" fill="rgba(255, 99, 71, 1)" barSize={20} />
                   </BarChart>
                 </ChartContainer>
               </CardContent>
