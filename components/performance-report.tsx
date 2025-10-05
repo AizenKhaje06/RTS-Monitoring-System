@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { TrendingUp, Package, CheckCircle, XCircle, DollarSign, AlertCircle, TrendingDown } from "lucide-react"
+import { TrendingUp, Package, CheckCircle, XCircle, DollarSign, AlertCircle, TrendingDown, MapPin, PackageX } from "lucide-react"
 import type { ProcessedData, FilterState } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,44 +14,83 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
   const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
   const [filter, setFilter] = useState<FilterState>({ type: "all", value: "" })
 
-  const filteredData = useMemo(() => {
-    if (!data) return null
+  const { filteredData, topProvinces, topShippers, topRTSDestinations, topRegionsSuccessDelivery, topRegionsHighRTS } = useMemo(() => {
+    if (!data) return { filteredData: null, topProvinces: [], topShippers: [], topRTSDestinations: [], topRegionsSuccessDelivery: [], topRegionsHighRTS: [] }
 
     const sourceData = currentRegion === "all" ? data.all : data[currentRegion]
 
     if (filter.type === "all") {
       const filtered = sourceData.data
 
-      // Recalculate stats for filtered data
-      const stats: { [status: string]: { count: number } } = {}
+      // Calculate provinces
+      const provinces: { [key: string]: number } = {}
+      const shippers: { [key: string]: number } = {}
       filtered.forEach((parcel) => {
-        if (!stats[parcel.normalizedStatus]) {
-          stats[parcel.normalizedStatus] = { count: 0 }
-        }
-        stats[parcel.normalizedStatus].count++
+        provinces[parcel.province] = (provinces[parcel.province] || 0) + 1
+        shippers[parcel.shipper] = (shippers[parcel.shipper] || 0) + 1
       })
 
-      // Calculate financial metrics
-      const totalCOD = filtered.reduce((sum, parcel) => sum + (parcel.codAmount || 0), 0)
-      const totalShippingCost = filtered.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
       const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
-      const rtsParcels = filtered.filter((p) => rtsStatuses.includes(p.normalizedStatus))
-      const rtsShippingCost = rtsParcels.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
-      const rtsFeeLost = rtsParcels.reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
-      const grossProfit = totalCOD - totalShippingCost
-      const netProfit = grossProfit - rtsShippingCost - rtsFeeLost
+      const rtsDestinations: { [key: string]: number } = {}
+      filtered
+        .filter((p) => rtsStatuses.includes(p.normalizedStatus))
+        .forEach((parcel) => {
+          rtsDestinations[parcel.province] = (rtsDestinations[parcel.province] || 0) + 1
+        })
+
+      const topProvinces = Object.entries(provinces)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 10)
+
+      const topShippers = Object.entries(shippers)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 10)
+
+      const topRTSDestinations = Object.entries(rtsDestinations)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 10)
+
+      // Calculate regional totals
+      const luzonTotal = filtered.filter((p) => p.island === "Luzon").length
+      const visayasTotal = filtered.filter((p) => p.island === "Visayas").length
+      const mindanaoTotal = filtered.filter((p) => p.island === "Mindanao").length
+
+      // Calculate regional success delivery and RTS rates
+      const regions = ["Luzon", "Visayas", "Mindanao"]
+      const regionStats: { [key: string]: { total: number, delivered: number, rts: number } } = {}
+
+      regions.forEach(region => {
+        const regionParcels = filtered.filter(p => p.island === region)
+        const delivered = regionParcels.filter(p => p.normalizedStatus === "DELIVERED").length
+        const rts = regionParcels.filter(p => rtsStatuses.includes(p.normalizedStatus)).length
+        regionStats[region] = { total: regionParcels.length, delivered, rts }
+      })
+
+      const topRegionsSuccessDelivery = Object.entries(regionStats)
+        .map(([region, stats]) => ({
+          region,
+          rate: stats.total > 0 ? (stats.delivered / stats.total) * 100 : 0,
+          count: stats.delivered
+        }))
+        .sort((a, b) => b.rate - a.rate)
+        .slice(0, 5)
+
+      const topRegionsHighRTS = Object.entries(regionStats)
+        .map(([region, stats]) => ({
+          region,
+          rate: stats.total > 0 ? (stats.rts / stats.total) * 100 : 0,
+          count: stats.rts
+        }))
+        .sort((a, b) => b.rate - a.rate)
+        .slice(0, 5)
 
       return {
-        data: filtered,
-        stats,
-        total: filtered.length,
-        totalCOD,
-        totalShippingCost,
-        rtsShippingCost,
-        grossProfit,
-        netProfit,
-        rtsParcelsCount: rtsParcels.length,
-        rtsFeeLost,
+        filteredData: { luzonTotal, visayasTotal, mindanaoTotal, total: filtered.length },
+        topProvinces,
+        topShippers,
+        topRTSDestinations,
+        topRegionsSuccessDelivery,
+        topRegionsHighRTS,
       }
     }
 
@@ -106,36 +145,75 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       return true
     })
 
-    // Recalculate stats for filtered data
-    const stats: { [status: string]: { count: number } } = {}
+    // Calculate provinces
+    const provinces: { [key: string]: number } = {}
+    const shippers: { [key: string]: number } = {}
     filtered.forEach((parcel) => {
-      if (!stats[parcel.normalizedStatus]) {
-        stats[parcel.normalizedStatus] = { count: 0 }
-      }
-      stats[parcel.normalizedStatus].count++
+      provinces[parcel.province] = (provinces[parcel.province] || 0) + 1
+      shippers[parcel.shipper] = (shippers[parcel.shipper] || 0) + 1
     })
 
-    // Calculate financial metrics
-    const totalCOD = filtered.reduce((sum, parcel) => sum + (parcel.codAmount || 0), 0)
-    const totalShippingCost = filtered.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
     const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
-    const rtsParcels = filtered.filter((p) => rtsStatuses.includes(p.normalizedStatus))
-    const rtsShippingCost = rtsParcels.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
-    const rtsFeeLost = rtsParcels.reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
-    const grossProfit = totalCOD - totalShippingCost
-    const netProfit = grossProfit - rtsShippingCost - rtsFeeLost
+    const rtsDestinations: { [key: string]: number } = {}
+    filtered
+      .filter((p) => rtsStatuses.includes(p.normalizedStatus))
+      .forEach((parcel) => {
+        rtsDestinations[parcel.province] = (rtsDestinations[parcel.province] || 0) + 1
+      })
+
+    const topProvinces = Object.entries(provinces)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+
+    const topShippers = Object.entries(shippers)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+
+    const topRTSDestinations = Object.entries(rtsDestinations)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+
+    // Calculate regional totals
+    const luzonTotal = filtered.filter((p) => p.island === "Luzon").length
+    const visayasTotal = filtered.filter((p) => p.island === "Visayas").length
+    const mindanaoTotal = filtered.filter((p) => p.island === "Mindanao").length
+
+    // Calculate regional success delivery and RTS rates
+    const regions = ["Luzon", "Visayas", "Mindanao"]
+    const regionStats: { [key: string]: { total: number, delivered: number, rts: number } } = {}
+
+    regions.forEach(region => {
+      const regionParcels = filtered.filter(p => p.island === region)
+      const delivered = regionParcels.filter(p => p.normalizedStatus === "DELIVERED").length
+      const rts = regionParcels.filter(p => rtsStatuses.includes(p.normalizedStatus)).length
+      regionStats[region] = { total: regionParcels.length, delivered, rts }
+    })
+
+    const topRegionsSuccessDelivery = Object.entries(regionStats)
+      .map(([region, stats]) => ({
+        region,
+        rate: stats.total > 0 ? (stats.delivered / stats.total) * 100 : 0,
+        count: stats.delivered
+      }))
+      .sort((a, b) => b.rate - a.rate)
+      .slice(0, 5)
+
+    const topRegionsHighRTS = Object.entries(regionStats)
+      .map(([region, stats]) => ({
+        region,
+        rate: stats.total > 0 ? (stats.rts / stats.total) * 100 : 0,
+        count: stats.rts
+      }))
+      .sort((a, b) => b.rate - a.rate)
+      .slice(0, 5)
 
     return {
-      data: filtered,
-      stats,
-      total: filtered.length,
-      totalCOD,
-      totalShippingCost,
-      rtsShippingCost,
-      grossProfit,
-      netProfit,
-      rtsParcelsCount: rtsParcels.length,
-      rtsFeeLost,
+      filteredData: { luzonTotal, visayasTotal, mindanaoTotal, total: filtered.length },
+      topProvinces,
+      topShippers,
+      topRTSDestinations,
+      topRegionsSuccessDelivery,
+      topRegionsHighRTS,
     }
   }, [data, currentRegion, filter])
 
@@ -151,18 +229,23 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     )
   }
 
-  const deliveryRate = filteredData
-    ? (((filteredData.stats.DELIVERED?.count || 0) / filteredData.total) * 100).toFixed(2)
-    : "0.00"
-  const rtsRate = filteredData
-    ? (
-        (((filteredData.stats.CANCELLED?.count || 0) +
-          (filteredData.stats.PROBLEMATIC?.count || 0) +
-          (filteredData.stats.RETURNED?.count || 0)) /
-          filteredData.total) *
-        100
-      ).toFixed(2)
-    : "0.00"
+  // Calculate delivery and RTS rates from the data
+  const deliveryRate = useMemo(() => {
+    if (!data) return "0.00"
+    const sourceData = currentRegion === "all" ? data.all : data[currentRegion]
+    const delivered = sourceData.data.filter(p => p.normalizedStatus === "DELIVERED").length
+    const total = sourceData.data.length
+    return total > 0 ? ((delivered / total) * 100).toFixed(2) : "0.00"
+  }, [data, currentRegion])
+
+  const rtsRate = useMemo(() => {
+    if (!data) return "0.00"
+    const sourceData = currentRegion === "all" ? data.all : data[currentRegion]
+    const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
+    const rts = sourceData.data.filter(p => rtsStatuses.includes(p.normalizedStatus)).length
+    const total = sourceData.data.length
+    return total > 0 ? ((rts / total) * 100).toFixed(2) : "0.00"
+  }, [data, currentRegion])
 
   return (
     <div className="p-8 space-y-6">
@@ -275,123 +358,126 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="glass rounded-xl p-6 border border-border/50">
-          <div className="flex items-center justify-between mb-4">
-            <DollarSign className="w-8 h-8 text-green-500" />
+          <div className="flex items-center gap-3 mb-4">
+            <MapPin className="w-6 h-6 text-primary" />
+            <h2 className="text-xl font-bold text-foreground">Luzon</h2>
           </div>
-          <p className="text-sm text-muted-foreground mb-1">Total Parcels</p>
-          <p className="text-3xl font-bold text-foreground">{filteredData?.total.toLocaleString() || 0}</p>
+          <p className="text-3xl font-bold text-foreground mb-2">{filteredData?.luzonTotal.toLocaleString() || 0}</p>
+          <p className="text-sm text-muted-foreground">Total Parcels</p>
         </div>
 
         <div className="glass rounded-xl p-6 border border-border/50">
-          <div className="flex items-center justify-between mb-4">
-            <DollarSign className="w-8 h-8 text-blue-500" />
+          <div className="flex items-center gap-3 mb-4">
+            <MapPin className="w-6 h-6 text-primary" />
+            <h2 className="text-xl font-bold text-foreground">Visayas</h2>
           </div>
-          <p className="text-sm text-muted-foreground mb-1">Total COD Amount</p>
-          <p className="text-3xl font-bold text-foreground">
-            ₱
-            {filteredData?.totalCOD.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }) || "0.00"}
-          </p>
+          <p className="text-3xl font-bold text-foreground mb-2">{filteredData?.visayasTotal.toLocaleString() || 0}</p>
+          <p className="text-sm text-muted-foreground">Total Parcels</p>
         </div>
 
         <div className="glass rounded-xl p-6 border border-border/50">
-          <div className="flex items-center justify-between mb-4">
-            <DollarSign className="w-8 h-8 text-primary" />
+          <div className="flex items-center gap-3 mb-4">
+            <MapPin className="w-6 h-6 text-primary" />
+            <h2 className="text-xl font-bold text-foreground">Mindanao</h2>
           </div>
-          <p className="text-sm text-muted-foreground mb-1">Total Operational Cost</p>
-          <p className="text-3xl font-bold text-foreground">
-            ₱
-            {filteredData?.totalShippingCost.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }) || "0.00"}
-          </p>
-        </div>
-
-        <div className="glass rounded-xl p-6 border border-border/50">
-          <div className="flex items-center justify-between mb-4">
-            <DollarSign className="w-8 h-8 text-orange-500" />
-          </div>
-          <p className="text-sm text-muted-foreground mb-1">RTS Cost Impact</p>
-          <p className="text-3xl font-bold text-foreground">
-            -₱
-            {filteredData?.rtsShippingCost.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }) || "0.00"}
-          </p>
+          <p className="text-3xl font-bold text-foreground mb-2">{filteredData?.mindanaoTotal.toLocaleString() || 0}</p>
+          <p className="text-sm text-muted-foreground">Total Parcels</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="glass rounded-xl p-6 border border-border/50">
+          <h2 className="text-xl font-bold text-foreground mb-4">Top 10 Provinces</h2>
+          <div className="space-y-3">
+            {topProvinces.map(([province, count], index) => (
+              <div key={province} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-primary w-6">#{index + 1}</span>
+                  <span className="text-sm font-medium text-foreground">{province}</span>
+                </div>
+                <span className="text-sm font-bold text-foreground">{count.toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="glass rounded-xl p-6 border border-border/50">
+          <h2 className="text-xl font-bold text-foreground mb-4">Top 10 Shippers</h2>
+          <div className="space-y-3">
+            {topShippers.map(([shipper, count], index) => (
+              <div key={shipper} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-primary w-6">#{index + 1}</span>
+                  <span className="text-sm font-medium text-foreground">{shipper}</span>
+                </div>
+                <span className="text-sm font-bold text-foreground">{count.toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="glass rounded-xl p-6 border border-green-500/50">
           <div className="flex items-center gap-3 mb-4">
             <TrendingUp className="w-6 h-6 text-green-500" />
-            <h2 className="text-xl font-bold text-foreground">Gross Profit</h2>
+            <h2 className="text-xl font-bold text-foreground">Top Regions - Success Delivery</h2>
           </div>
-          <p className="text-4xl font-bold text-green-500 mb-2">
-            ₱
-            {filteredData?.grossProfit.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }) || "0.00"}
-          </p>
-          <p className="text-sm text-muted-foreground">Total COD - Shipping Costs</p>
+          <div className="space-y-3">
+            {topRegionsSuccessDelivery.map((item, index) => (
+              <div key={item.region} className="flex items-center justify-between p-3 rounded-lg bg-green-500/10">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-green-500 w-6">#{index + 1}</span>
+                  <span className="text-sm font-medium text-foreground">{item.region}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-sm font-bold text-green-500">{item.rate.toFixed(2)}%</span>
+                  <p className="text-xs text-muted-foreground">{item.count.toLocaleString()} delivered</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="glass rounded-xl p-6 border border-blue-500/50">
+        <div className="glass rounded-xl p-6 border border-red-500/50">
           <div className="flex items-center gap-3 mb-4">
-            <TrendingDown className="w-6 h-6 text-blue-500" />
-            <h2 className="text-xl font-bold text-foreground">Net Profit</h2>
+            <AlertCircle className="w-6 h-6 text-red-500" />
+            <h2 className="text-xl font-bold text-foreground">Top Regions - High RTS Rate</h2>
           </div>
-          <p className="text-4xl font-bold text-blue-500 mb-2">
-            ₱
-            {filteredData?.netProfit.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }) || "0.00"}
-          </p>
-          <p className="text-sm text-muted-foreground">Gross Profit - RTS Impact</p>
+          <div className="space-y-3">
+            {topRegionsHighRTS.map((item, index) => (
+              <div key={item.region} className="flex items-center justify-between p-3 rounded-lg bg-red-500/10">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-red-500 w-6">#{index + 1}</span>
+                  <span className="text-sm font-medium text-foreground">{item.region}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-sm font-bold text-red-500">{item.rate.toFixed(2)}%</span>
+                  <p className="text-xs text-muted-foreground">{item.count.toLocaleString()} RTS</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       <div className="glass rounded-xl p-6 border border-red-500/50">
-        <div className="flex items-center gap-3 mb-6">
-          <AlertCircle className="w-6 h-6 text-red-500" />
-          <h2 className="text-xl font-bold text-foreground">RTS Financial Impact</h2>
+        <div className="flex items-center gap-3 mb-4">
+          <PackageX className="w-6 h-6 text-red-500" />
+          <h2 className="text-xl font-bold text-foreground">Top 10 RTS Destinations</h2>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-4 rounded-lg bg-red-500/10">
-            <p className="text-sm text-muted-foreground mb-1">RTS Parcels</p>
-            <p className="text-2xl font-bold text-foreground">{filteredData?.rtsParcelsCount.toLocaleString() || 0}</p>
-          </div>
-
-          <div className="p-4 rounded-lg bg-red-500/10">
-            <p className="text-sm text-muted-foreground mb-1">RTS Shipping Cost Lost</p>
-            <p className="text-2xl font-bold text-red-500">
-              ₱
-              {filteredData?.rtsShippingCost.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }) || "0.00"}
-            </p>
-          </div>
-
-          <div className="p-4 rounded-lg bg-red-500/10">
-            <p className="text-sm text-muted-foreground mb-1">RTS Fee Impact</p>
-            <p className="text-2xl font-bold text-red-500">
-              ₱
-              {filteredData?.rtsFeeLost.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }) || "0.00"}
-            </p>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {topRTSDestinations.map(([destination, count], index) => (
+            <div key={destination} className="flex items-center justify-between p-3 rounded-lg bg-red-500/10">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-bold text-red-500 w-6">#{index + 1}</span>
+                <span className="text-sm font-medium text-foreground">{destination}</span>
+              </div>
+              <span className="text-sm font-bold text-red-500">{count.toLocaleString()}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
