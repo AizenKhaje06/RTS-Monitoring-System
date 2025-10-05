@@ -1,8 +1,10 @@
+
+
 "use client"
 
 import { useMemo, useState } from "react"
 import { PieChart, MapPin, PackageX, TrendingUp, Users, Map, BarChart3 } from "lucide-react"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList } from "recharts"
 import type { ProcessedData, FilterState } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -354,7 +356,9 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
                       <XAxis type="number" unit="%" stroke="#888" domain={[0, 'dataMax']} />
                       <YAxis dataKey="province" type="category" width={80} stroke="#888" tickLine={true} axisLine={true} />
                       <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar dataKey="returnProbability" fill="rgba(255, 99, 71, 1)" barSize={20} maxBarSize={30} minPointSize={5} stroke="#000" strokeWidth={1} />
+                      <Bar dataKey="returnProbability" fill="rgba(255, 99, 71, 1)" barSize={20} maxBarSize={30} minPointSize={5} stroke="#000" strokeWidth={1}>
+                        <LabelList dataKey="returnProbability" position="insideRight" formatter={(label: any) => typeof label === 'number' ? `${label.toFixed(1)}%` : ''} fill="#fff" />
+                      </Bar>
                     </BarChart>
                 </ChartContainer>
               </CardContent>
