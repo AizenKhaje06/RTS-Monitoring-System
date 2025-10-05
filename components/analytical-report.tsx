@@ -354,7 +354,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
                     <XAxis type="number" unit="%" stroke="#888" domain={[0, 'dataMax']} />
                     <YAxis dataKey="province" type="category" width={80} stroke="#888" tickLine={true} axisLine={true} />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="returnProbability" fill="rgba(255, 99, 71, 1)" barSize={20} />
+                    <Bar dataKey="returnProbability" fill="rgba(255, 99, 71, 1)" barSize={20} maxBarSize={30} minPointSize={5} />
                   </BarChart>
                 </ChartContainer>
               </CardContent>
