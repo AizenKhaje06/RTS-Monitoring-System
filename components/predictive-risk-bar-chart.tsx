@@ -17,13 +17,24 @@ export function PredictiveRiskBarChart({ data, threshold = 70, title = "Region P
         width={700}
         height={350}
         data={data}
-        layout="horizontal"
         margin={{ top: 20, right: 40, left: 20, bottom: 20 }}
         barCategoryGap="30%"
         barGap={0}
       >
         <CartesianGrid stroke="#555" strokeDasharray="3 3" vertical={false} />
         <XAxis
+          dataKey="province"
+          type="category"
+          stroke="#cccccc"
+          tick={{ fill: "#ffffff", fontSize: 14 }}
+          tickLine={false}
+          axisLine={false}
+          interval={0}
+          angle={-45}
+          textAnchor="end"
+          height={80}
+        />
+        <YAxis
           type="number"
           unit="%"
           stroke="#cccccc"
@@ -31,15 +42,6 @@ export function PredictiveRiskBarChart({ data, threshold = 70, title = "Region P
           tick={{ fill: "#ffffff", fontSize: 14 }}
           tickLine={false}
           axisLine={true}
-        />
-        <YAxis
-          dataKey="province"
-          type="category"
-          width={150}
-          stroke="#cccccc"
-          tick={{ fill: "#ffffff", fontSize: 14 }}
-          tickLine={false}
-          axisLine={false}
         />
         <Tooltip />
         {/* Background track bar */}
@@ -61,14 +63,14 @@ export function PredictiveRiskBarChart({ data, threshold = 70, title = "Region P
         >
           <LabelList
             dataKey="returnProbability"
-            position="insideLeft"
+            position="top"
             formatter={(label: any) => (typeof label === "number" ? `${label.toFixed(1)}%` : "")}
             fill="#ffffff"
             offset={10}
           />
         </Bar>
         {/* Threshold line */}
-        <ReferenceLine x={threshold} stroke="#ffffff" strokeWidth={2} />
+        <ReferenceLine y={threshold} stroke="#ffffff" strokeWidth={2} />
       </BarChart>
     </div>
   )

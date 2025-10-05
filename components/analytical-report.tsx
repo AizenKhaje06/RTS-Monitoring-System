@@ -333,7 +333,11 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
 
       {/* Predictive Risk Dashboard - Return probability bar chart per region */}
       {/* Added new PredictiveRiskBarChart component */}
-      <PredictiveRiskBarChart data={riskByRegion[currentRegion as keyof typeof riskByRegion] || []} />
+      <PredictiveRiskBarChart data={
+        currentRegion === "all"
+          ? Object.values(riskByRegion).flat()
+          : riskByRegion[currentRegion as keyof typeof riskByRegion] || []
+      } />
 
       {/* Customer Intelligence Matrix - RFM segmentation chart */}
       <div className="glass rounded-xl p-6 border border-border/50">
