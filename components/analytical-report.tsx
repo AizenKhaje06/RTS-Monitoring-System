@@ -7,6 +7,8 @@ import type { ProcessedData, FilterState } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { philippineRegions } from "@/lib/philippine-regions"
 
 interface AnalyticalReportProps {
   data: ProcessedData | null
@@ -16,9 +18,10 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
   const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
   const [filter, setFilter] = useState<FilterState>({ type: "all", value: "" })
 
-  const { predictiveRiskData, rfmSegmentationData, geospatialData, abcAnalysisData } = useMemo(() => {
+  const { predictiveRiskData, riskByRegion, rfmSegmentationData, geospatialData, abcAnalysisData } = useMemo(() => {
     if (!data) return {
       predictiveRiskData: null,
+      riskByRegion: {},
       rfmSegmentationData: null,
       geospatialData: null,
       abcAnalysisData: null
@@ -100,6 +103,28 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
       }))
     }))
 
+    // Group by region
+    const riskByRegion: { [region: string]: { province: string, returnProbability: number }[] } = {}
+    predictiveRiskData?.forEach(provinceData => {
+      let region = 'unknown'
+      for (const [island, islandData] of Object.entries(philippineRegions)) {
+        for (const [reg, provinces] of Object.entries(islandData.provinces)) {
+          if (provinces.includes(provinceData.province)) {
+            region = reg
+            break
+          }
+        }
+        if (region !== 'unknown') break
+      }
+      if (!riskByRegion[region]) riskByRegion[region] = []
+      const totalReturns = provinceData.shippers.reduce((sum, shipper) => sum + shipper.returnProbability, 0)
+      const avgReturnProbability = provinceData.shippers.length > 0 ? totalReturns / provinceData.shippers.length : 0
+      riskByRegion[region].push({
+        province: provinceData.province,
+        returnProbability: avgReturnProbability * 100
+      })
+    })
+
     // Customer Intelligence Matrix - RFM segmentation
     const customerRFM: { [key: string]: { recency: number, frequency: number, monetary: number } } = {}
     filtered.forEach((parcel) => {
@@ -173,6 +198,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
 
     return {
       predictiveRiskData,
+      riskByRegion,
       rfmSegmentationData,
       geospatialData,
       abcAnalysisData
@@ -302,38 +328,39 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
         </div>
       </div>
 
-      {/* Predictive Risk Dashboard - Return probability bar chart */}
+      {/* Predictive Risk Dashboard - Return probability bar chart per region */}
       <div className="glass rounded-xl p-6 border border-border/50">
         <div className="flex items-center gap-3 mb-6">
           <TrendingUp className="w-6 h-6 text-orange-500" />
           <h2 className="text-xl font-bold text-foreground">Predictive Risk Dashboard</h2>
         </div>
-        <p className="text-muted-foreground mb-4">Return probability by province</p>
-        <ChartContainer
-          id="predictive-risk-bar-chart"
-          config={{
-            returnProbability: { label: "Return Probability", color: "rgba(239, 68, 68, 1)" },
-          }}
-          className="min-w-full h-64"
-        >
-          <BarChart
-            data={predictiveRiskData?.map(province => {
-              const totalReturns = province.shippers.reduce((sum, shipper) => sum + shipper.returnProbability, 0)
-              const avgReturnProbability = province.shippers.length > 0 ? totalReturns / province.shippers.length : 0
-              return {
-                province: province.province,
-                returnProbability: avgReturnProbability * 100,
-              }
-            })}
-            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="province" />
-            <YAxis unit="%" />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="returnProbability" fill="rgba(239, 68, 68, 0.8)" />
-          </BarChart>
-        </ChartContainer>
+        <p className="text-muted-foreground mb-4">Return probability by province per region</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {Object.entries(riskByRegion).map(([region, provinces]) => (
+            <Card key={region} className="glass rounded-xl border border-border/50">
+              <CardHeader>
+                <CardTitle className="text-lg font-bold text-foreground">{region.toUpperCase()}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  id={`predictive-risk-${region}`}
+                  config={{
+                    returnProbability: { label: "Return Probability", color: "rgba(239, 68, 68, 1)" },
+                  }}
+                  className="h-64"
+                >
+                  <BarChart data={provinces} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="province" />
+                    <YAxis unit="%" />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="returnProbability" fill="rgba(239, 68, 68, 0.8)" />
+                  </BarChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
 
       {/* Customer Intelligence Matrix - RFM segmentation chart */}
