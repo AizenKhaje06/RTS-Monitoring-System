@@ -351,15 +351,64 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
                   }}
                   className="h-48"
                 >
-                    <BarChart data={provinces} layout="horizontal" margin={{ top: 5, right: 30, left: 20, bottom: 5 }} barCategoryGap="20%">
-                      <CartesianGrid stroke="#444" strokeDasharray="3 3" />
-                      <XAxis type="number" unit="%" stroke="#888" domain={[0, 100]} />
-                      <YAxis dataKey="province" type="category" width={80} stroke="#888" tickLine={true} axisLine={true} />
+                    <BarChart
+                      data={provinces}
+                      layout="horizontal"
+                      margin={{ top: 20, right: 40, left: 20, bottom: 20 }}
+                      barCategoryGap="30%"
+                      barGap={0}
+                      className="bg-black rounded-lg p-4"
+                    >
+                      <CartesianGrid stroke="#444" strokeDasharray="3 3" vertical={false} />
+                      <XAxis
+                        type="number"
+                        unit="%"
+                        stroke="#888"
+                        domain={[0, 100]}
+                        tick={{ fill: "#ccc", fontSize: 12 }}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        dataKey="province"
+                        type="category"
+                        width={120}
+                        stroke="#888"
+                        tick={{ fill: "#ccc", fontSize: 12 }}
+                        tickLine={false}
+                        axisLine={false}
+                      />
                       <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar dataKey="threshold" fill="#d3d3d3" barSize={20} maxBarSize={30} minPointSize={5} />
-                      <Bar dataKey="returnProbability" fill="#2ca02c" barSize={20} maxBarSize={30} minPointSize={5} stroke="#000" strokeWidth={1}>
-                        <LabelList dataKey="returnProbability" position="insideRight" formatter={(label: any) => typeof label === 'number' ? `${label.toFixed(1)}%` : ''} fill="#fff" />
+                      {/* Background track bar */}
+                      <Bar
+                        dataKey={() => 100}
+                        fill="#444"
+                        barSize={20}
+                        maxBarSize={30}
+                        minPointSize={5}
+                        radius={[10, 10, 10, 10]}
+                        isAnimationActive={false}
+                      />
+                      {/* Actual value bar */}
+                      <Bar
+                        dataKey="returnProbability"
+                        fill="#2ca02c"
+                        barSize={20}
+                        maxBarSize={30}
+                        minPointSize={5}
+                        radius={[10, 10, 10, 10]}
+                        stroke="#000"
+                        strokeWidth={1}
+                      >
+                        <LabelList
+                          dataKey="returnProbability"
+                          position="insideLeft"
+                          formatter={(label: any) => (typeof label === "number" ? `${label.toFixed(1)}%` : "")}
+                          fill="#fff"
+                          offset={10}
+                        />
                       </Bar>
+                      {/* Threshold line */}
                       <ReferenceLine x={70} stroke="black" strokeWidth={2} />
                     </BarChart>
                 </ChartContainer>
