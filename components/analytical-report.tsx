@@ -347,14 +347,14 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
                   config={{
                     returnProbability: { label: "Return Probability", color: "rgba(239, 68, 68, 1)" },
                   }}
-                  className="h-64"
+                  className="h-48"
                 >
                   <BarChart data={provinces} layout="horizontal" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis type="number" unit="%" />
                     <YAxis dataKey="province" type="category" width={80} />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="returnProbability" fill="rgba(239, 68, 68, 0.8)" />
+                    <Bar dataKey="returnProbability" fill="rgba(239, 68, 68, 0.8)" barSize={20} />
                   </BarChart>
                 </ChartContainer>
               </CardContent>
