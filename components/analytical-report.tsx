@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { PieChart, MapPin, PackageX } from "lucide-react"
+import { PieChart, MapPin, PackageX, TrendingUp, Users, Map, BarChart3 } from "lucide-react"
 import type { ProcessedData, FilterState } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,56 +14,16 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
   const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
   const [filter, setFilter] = useState<FilterState>({ type: "all", value: "" })
 
-  const { filteredData, topProvinces, topShippers, topRTSDestinations } = useMemo(() => {
-    if (!data) return { filteredData: null, topProvinces: [], topShippers: [], topRTSDestinations: [] }
-
-    const sourceData = currentRegion === "all" ? data.all : data[currentRegion]
-
-    if (filter.type === "all") {
-      const filtered = sourceData.data
-
-      // Calculate provinces
-      const provinces: { [key: string]: number } = {}
-      const shippers: { [key: string]: number } = {}
-      filtered.forEach((parcel) => {
-        provinces[parcel.province] = (provinces[parcel.province] || 0) + 1
-        shippers[parcel.shipper] = (shippers[parcel.shipper] || 0) + 1
-      })
-
-      const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
-      const rtsDestinations: { [key: string]: number } = {}
-      filtered
-        .filter((p) => rtsStatuses.includes(p.normalizedStatus))
-        .forEach((parcel) => {
-          rtsDestinations[parcel.province] = (rtsDestinations[parcel.province] || 0) + 1
-        })
-
-      const topProvinces = Object.entries(provinces)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 10)
-
-      const topShippers = Object.entries(shippers)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 10)
-
-      const topRTSDestinations = Object.entries(rtsDestinations)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 10)
-
-      // Calculate regional totals
-      const luzonTotal = filtered.filter((p) => p.island === "Luzon").length
-      const visayasTotal = filtered.filter((p) => p.island === "Visayas").length
-      const mindanaoTotal = filtered.filter((p) => p.island === "Mindanao").length
-
-      return {
-        filteredData: { luzonTotal, visayasTotal, mindanaoTotal, total: filtered.length },
-        topProvinces,
-        topShippers,
-        topRTSDestinations,
-      }
+  const { predictiveRiskData, rfmSegmentationData, geospatialData, abcAnalysisData } = useMemo(() => {
+    if (!data) return {
+      predictiveRiskData: null,
+      rfmSegmentationData: null,
+      geospatialData: null,
+      abcAnalysisData: null
     }
 
-    const filtered = sourceData.data.filter((parcel) => {
+    const sourceData = currentRegion === "all" ? data.all : data[currentRegion]
+    const filtered = filter.type === "all" ? sourceData.data : sourceData.data.filter((parcel) => {
       if (filter.type === "province") {
         return parcel.province.toLowerCase().includes(filter.value.toLowerCase())
       }
@@ -114,44 +74,106 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
       return true
     })
 
-    // Calculate provinces
-    const provinces: { [key: string]: number } = {}
-    const shippers: { [key: string]: number } = {}
+    // Predictive Risk Dashboard - Return probability heatmap
+    const returnProbabilities: { [key: string]: { [key: string]: number } } = {}
+    const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
+
     filtered.forEach((parcel) => {
-      provinces[parcel.province] = (provinces[parcel.province] || 0) + 1
-      shippers[parcel.shipper] = (shippers[parcel.shipper] || 0) + 1
+      const province = parcel.province
+      const shipper = parcel.shipper
+      if (!returnProbabilities[province]) returnProbabilities[province] = {}
+      if (!returnProbabilities[province][shipper]) returnProbabilities[province][shipper] = 0
+
+      if (rtsStatuses.includes(parcel.normalizedStatus)) {
+        returnProbabilities[province][shipper] += 1
+      }
     })
 
-    const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
-    const rtsDestinations: { [key: string]: number } = {}
-    filtered
-      .filter((p) => rtsStatuses.includes(p.normalizedStatus))
-      .forEach((parcel) => {
-        rtsDestinations[parcel.province] = (rtsDestinations[parcel.province] || 0) + 1
-      })
+    // Calculate return probabilities
+    const predictiveRiskData = Object.entries(returnProbabilities).map(([province, shippers]) => ({
+      province,
+      shippers: Object.entries(shippers).map(([shipper, returns]) => ({
+        shipper,
+        returnProbability: returns / filtered.filter(p => p.province === province && p.shipper === shipper).length
+      }))
+    }))
 
-    const topProvinces = Object.entries(provinces)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 10)
+    // Customer Intelligence Matrix - RFM segmentation
+    const customerRFM: { [key: string]: { recency: number, frequency: number, monetary: number } } = {}
+    filtered.forEach((parcel) => {
+      const customer = parcel.shipper
+      if (!customerRFM[customer]) {
+        customerRFM[customer] = { recency: 0, frequency: 0, monetary: 0 }
+      }
+      customerRFM[customer].frequency += 1
+      // Assuming monetary value is based on some metric, using frequency as proxy for now
+      customerRFM[customer].monetary += 1
+    })
 
-    const topShippers = Object.entries(shippers)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 10)
+    const rfmSegmentationData = Object.entries(customerRFM).map(([customer, rfm]) => ({
+      customer,
+      ...rfm,
+      segment: rfm.frequency > 10 ? 'High Value' : rfm.frequency > 5 ? 'Medium Value' : 'Low Value'
+    }))
 
-    const topRTSDestinations = Object.entries(rtsDestinations)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 10)
+    // Geospatial Optimization Map - Delivery efficiency layers
+    const provinceEfficiency: { [key: string]: { total: number, successful: number, avgTime: number } } = {}
+    filtered.forEach((parcel) => {
+      const province = parcel.province
+      if (!provinceEfficiency[province]) {
+        provinceEfficiency[province] = { total: 0, successful: 0, avgTime: 0 }
+      }
+      provinceEfficiency[province].total += 1
+      if (!rtsStatuses.includes(parcel.normalizedStatus)) {
+        provinceEfficiency[province].successful += 1
+      }
+    })
 
-    // Calculate regional totals
-    const luzonTotal = filtered.filter((p) => p.island === "Luzon").length
-    const visayasTotal = filtered.filter((p) => p.island === "Visayas").length
-    const mindanaoTotal = filtered.filter((p) => p.island === "Mindanao").length
+    const geospatialData = Object.entries(provinceEfficiency).map(([province, data]) => ({
+      province,
+      efficiency: data.successful / data.total,
+      totalDeliveries: data.total,
+      coordinates: { lat: 0, lng: 0 } // Placeholder coordinates
+    }))
+
+    // Portfolio Performance Grid - ABC analysis
+    const shipperPerformance: { [key: string]: { revenue: number, volume: number } } = {}
+    filtered.forEach((parcel) => {
+      const shipper = parcel.shipper
+      if (!shipperPerformance[shipper]) {
+        shipperPerformance[shipper] = { revenue: 0, volume: 0 }
+      }
+      shipperPerformance[shipper].volume += 1
+      shipperPerformance[shipper].revenue += 1 // Using volume as revenue proxy
+    })
+
+    const sortedShippers = Object.entries(shipperPerformance)
+      .sort(([, a], [, b]) => b.revenue - a.revenue)
+
+    const totalRevenue = sortedShippers.reduce((sum, [, data]) => sum + data.revenue, 0)
+    let cumulativeRevenue = 0
+
+    const abcAnalysisData = sortedShippers.map(([shipper, data], index) => {
+      cumulativeRevenue += data.revenue
+      const percentage = (cumulativeRevenue / totalRevenue) * 100
+      let category = 'C'
+      if (percentage <= 80) category = 'A'
+      else if (percentage <= 95) category = 'B'
+
+      return {
+        shipper,
+        revenue: data.revenue,
+        volume: data.volume,
+        category,
+        cumulativePercentage: percentage
+      }
+    })
 
     return {
-      filteredData: { luzonTotal, visayasTotal, mindanaoTotal, total: filtered.length },
-      topProvinces,
-      topShippers,
-      topRTSDestinations,
+      predictiveRiskData,
+      rfmSegmentationData,
+      geospatialData,
+      abcAnalysisData
     }
   }, [data, currentRegion, filter])
 
@@ -278,80 +300,133 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="glass rounded-xl p-6 border border-border/50">
-          <div className="flex items-center gap-3 mb-4">
-            <MapPin className="w-6 h-6 text-primary" />
-            <h2 className="text-xl font-bold text-foreground">Luzon</h2>
-          </div>
-          <p className="text-3xl font-bold text-foreground mb-2">{filteredData?.luzonTotal.toLocaleString() || 0}</p>
-          <p className="text-sm text-muted-foreground">Total Parcels</p>
+      {/* Predictive Risk Dashboard - Return probability heatmap */}
+      <div className="glass rounded-xl p-6 border border-border/50">
+        <div className="flex items-center gap-3 mb-6">
+          <TrendingUp className="w-6 h-6 text-orange-500" />
+          <h2 className="text-xl font-bold text-foreground">Predictive Risk Dashboard</h2>
         </div>
-
-        <div className="glass rounded-xl p-6 border border-border/50">
-          <div className="flex items-center gap-3 mb-4">
-            <MapPin className="w-6 h-6 text-primary" />
-            <h2 className="text-xl font-bold text-foreground">Visayas</h2>
-          </div>
-          <p className="text-3xl font-bold text-foreground mb-2">{filteredData?.visayasTotal.toLocaleString() || 0}</p>
-          <p className="text-sm text-muted-foreground">Total Parcels</p>
-        </div>
-
-        <div className="glass rounded-xl p-6 border border-border/50">
-          <div className="flex items-center gap-3 mb-4">
-            <MapPin className="w-6 h-6 text-primary" />
-            <h2 className="text-xl font-bold text-foreground">Mindanao</h2>
-          </div>
-          <p className="text-3xl font-bold text-foreground mb-2">{filteredData?.mindanaoTotal.toLocaleString() || 0}</p>
-          <p className="text-sm text-muted-foreground">Total Parcels</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="glass rounded-xl p-6 border border-border/50">
-          <h2 className="text-xl font-bold text-foreground mb-4">Top 10 Provinces</h2>
-          <div className="space-y-3">
-            {topProvinces.map(([province, count], index) => (
-              <div key={province} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-primary w-6">#{index + 1}</span>
-                  <span className="text-sm font-medium text-foreground">{province}</span>
+        <p className="text-muted-foreground mb-4">Return probability heatmap by province and shipper</p>
+        <div className="overflow-x-auto">
+          <div className="min-w-full">
+            <div className="grid grid-cols-12 gap-1 mb-2">
+              <div className="col-span-3"></div>
+              {predictiveRiskData?.slice(0, 8).map((province) => (
+                <div key={province.province} className="text-xs font-medium text-center text-foreground truncate">
+                  {province.province}
                 </div>
-                <span className="text-sm font-bold text-foreground">{count.toLocaleString()}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="glass rounded-xl p-6 border border-border/50">
-          <h2 className="text-xl font-bold text-foreground mb-4">Top 10 Shippers</h2>
-          <div className="space-y-3">
-            {topShippers.map(([shipper, count], index) => (
-              <div key={shipper} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-primary w-6">#{index + 1}</span>
-                  <span className="text-sm font-medium text-foreground">{shipper}</span>
-                </div>
-                <span className="text-sm font-bold text-foreground">{count.toLocaleString()}</span>
+              ))}
+            </div>
+            {predictiveRiskData?.slice(0, 8).map((province) => (
+              <div key={province.province} className="grid grid-cols-12 gap-1 mb-1">
+                <div className="col-span-3 text-xs font-medium text-foreground truncate">{province.province}</div>
+                {province.shippers.slice(0, 8).map((shipper, index) => (
+                  <div
+                    key={shipper.shipper}
+                    className="aspect-square rounded-sm flex items-center justify-center text-xs font-bold"
+                    style={{
+                      backgroundColor: `rgba(239, 68, 68, ${Math.min(shipper.returnProbability * 2, 1)})`,
+                      color: shipper.returnProbability > 0.5 ? 'white' : 'black'
+                    }}
+                  >
+                    {(shipper.returnProbability * 100).toFixed(0)}%
+                  </div>
+                ))}
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="glass rounded-xl p-6 border border-red-500/50">
-        <div className="flex items-center gap-3 mb-4">
-          <PackageX className="w-6 h-6 text-red-500" />
-          <h2 className="text-xl font-bold text-foreground">Top 10 RTS Destinations</h2>
+      {/* Customer Intelligence Matrix - RFM segmentation chart */}
+      <div className="glass rounded-xl p-6 border border-border/50">
+        <div className="flex items-center gap-3 mb-6">
+          <Users className="w-6 h-6 text-blue-500" />
+          <h2 className="text-xl font-bold text-foreground">Customer Intelligence Matrix</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {topRTSDestinations.map(([destination, count], index) => (
-            <div key={destination} className="flex items-center justify-between p-3 rounded-lg bg-red-500/10">
+        <p className="text-muted-foreground mb-4">RFM segmentation analysis</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {rfmSegmentationData?.slice(0, 9).map((customer) => (
+            <div key={customer.customer} className="p-4 rounded-lg bg-secondary/30">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-foreground truncate">{customer.customer}</span>
+                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                  customer.segment === 'High Value' ? 'bg-green-500/20 text-green-700' :
+                  customer.segment === 'Medium Value' ? 'bg-yellow-500/20 text-yellow-700' :
+                  'bg-red-500/20 text-red-700'
+                }`}>
+                  {customer.segment}
+                </span>
+              </div>
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span>Frequency:</span>
+                  <span className="font-bold">{customer.frequency}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Monetary:</span>
+                  <span className="font-bold">{customer.monetary}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Geospatial Optimization Map - Delivery efficiency layers */}
+      <div className="glass rounded-xl p-6 border border-border/50">
+        <div className="flex items-center gap-3 mb-6">
+          <Map className="w-6 h-6 text-green-500" />
+          <h2 className="text-xl font-bold text-foreground">Geospatial Optimization Map</h2>
+        </div>
+        <p className="text-muted-foreground mb-4">Delivery efficiency by province</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {geospatialData?.slice(0, 12).map((province) => (
+            <div key={province.province} className="p-4 rounded-lg bg-secondary/30">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-foreground">{province.province}</span>
+                <span className="text-sm font-bold text-green-600">
+                  {(province.efficiency * 100).toFixed(1)}%
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                <div
+                  className="bg-green-500 h-2 rounded-full"
+                  style={{ width: `${province.efficiency * 100}%` }}
+                ></div>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {province.totalDeliveries} total deliveries
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Portfolio Performance Grid - ABC analysis visualization */}
+      <div className="glass rounded-xl p-6 border border-border/50">
+        <div className="flex items-center gap-3 mb-6">
+          <BarChart3 className="w-6 h-6 text-purple-500" />
+          <h2 className="text-xl font-bold text-foreground">Portfolio Performance Grid</h2>
+        </div>
+        <p className="text-muted-foreground mb-4">ABC analysis of shipper performance</p>
+        <div className="space-y-3">
+          {abcAnalysisData?.slice(0, 10).map((shipper, index) => (
+            <div key={shipper.shipper} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
               <div className="flex items-center gap-3">
-                <span className="text-sm font-bold text-red-500 w-6">#{index + 1}</span>
-                <span className="text-sm font-medium text-foreground">{destination}</span>
+                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                  shipper.category === 'A' ? 'bg-green-500/20 text-green-700' :
+                  shipper.category === 'B' ? 'bg-yellow-500/20 text-yellow-700' :
+                  'bg-red-500/20 text-red-700'
+                }`}>
+                  {shipper.category}
+                </span>
+                <span className="text-sm font-medium text-foreground">{shipper.shipper}</span>
               </div>
-              <span className="text-sm font-bold text-red-500">{count.toLocaleString()}</span>
+              <div className="text-right">
+                <div className="text-sm font-bold text-foreground">{shipper.revenue}</div>
+                <div className="text-xs text-muted-foreground">{shipper.cumulativePercentage.toFixed(1)}% cumulative</div>
+              </div>
             </div>
           ))}
         </div>
