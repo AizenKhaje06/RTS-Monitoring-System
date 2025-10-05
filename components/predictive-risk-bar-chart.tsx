@@ -9,10 +9,10 @@ interface PredictiveRiskBarChartProps {
   title?: string
 }
 
-export function PredictiveRiskBarChart({ data, threshold = 70, title = "Competency Rating Of Employees - Horizontal Bar Chart" }: PredictiveRiskBarChartProps) {
+export function PredictiveRiskBarChart({ data, threshold = 70, title = "Region Province With high RTS" }: PredictiveRiskBarChartProps) {
   return (
-    <div style={{ backgroundColor: "#f0f0f0", borderRadius: 8, padding: 20, maxWidth: 700, margin: "auto" }}>
-      <h3 style={{ textAlign: "center", marginBottom: 20, fontWeight: "bold", fontSize: 18 }}>{title}</h3>
+    <div style={{ backgroundColor: "#1a1a1a", borderRadius: 8, padding: 20, maxWidth: 700, margin: "auto" }}>
+      <h3 style={{ textAlign: "center", marginBottom: 20, fontWeight: "bold", fontSize: 18, color: "#ffffff" }}>{title}</h3>
       <BarChart
         width={700}
         height={350}
@@ -22,13 +22,13 @@ export function PredictiveRiskBarChart({ data, threshold = 70, title = "Competen
         barCategoryGap="30%"
         barGap={0}
       >
-        <CartesianGrid stroke="#ccc" strokeDasharray="3 3" vertical={false} />
+        <CartesianGrid stroke="#555" strokeDasharray="3 3" vertical={false} />
         <XAxis
           type="number"
           unit="%"
-          stroke="#888"
+          stroke="#cccccc"
           domain={[0, 100]}
-          tick={{ fill: "#333", fontSize: 14 }}
+          tick={{ fill: "#ffffff", fontSize: 14 }}
           tickLine={false}
           axisLine={true}
         />
@@ -36,8 +36,8 @@ export function PredictiveRiskBarChart({ data, threshold = 70, title = "Competen
           dataKey="province"
           type="category"
           width={150}
-          stroke="#888"
-          tick={{ fill: "#333", fontSize: 14 }}
+          stroke="#cccccc"
+          tick={{ fill: "#ffffff", fontSize: 14 }}
           tickLine={false}
           axisLine={false}
         />
@@ -45,7 +45,7 @@ export function PredictiveRiskBarChart({ data, threshold = 70, title = "Competen
         {/* Background track bar */}
         <Bar
           dataKey={() => 100}
-          fill="#d3d3d3"
+          fill="#333333"
           barSize={30}
           radius={[10, 10, 10, 10]}
           isAnimationActive={false}
@@ -53,22 +53,22 @@ export function PredictiveRiskBarChart({ data, threshold = 70, title = "Competen
         {/* Actual value bar */}
         <Bar
           dataKey="returnProbability"
-          fill="#2ca02c"
+          fill="#000000"
           barSize={30}
           radius={[10, 10, 10, 10]}
-          stroke="#000"
+          stroke="#ffffff"
           strokeWidth={1}
         >
           <LabelList
             dataKey="returnProbability"
             position="insideLeft"
             formatter={(label: any) => (typeof label === "number" ? `${label.toFixed(1)}%` : "")}
-            fill="#fff"
+            fill="#ffffff"
             offset={10}
           />
         </Bar>
         {/* Threshold line */}
-        <ReferenceLine x={threshold} stroke="black" strokeWidth={2} />
+        <ReferenceLine x={threshold} stroke="#ffffff" strokeWidth={2} />
       </BarChart>
     </div>
   )
