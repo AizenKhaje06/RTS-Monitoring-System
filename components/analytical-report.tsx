@@ -2,9 +2,11 @@
 
 import { useMemo, useState } from "react"
 import { PieChart, MapPin, PackageX, TrendingUp, Users, Map, BarChart3 } from "lucide-react"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts"
 import type { ProcessedData, FilterState } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 
 interface AnalyticalReportProps {
   data: ProcessedData | null
@@ -300,42 +302,38 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
         </div>
       </div>
 
-      {/* Predictive Risk Dashboard - Return probability heatmap */}
+      {/* Predictive Risk Dashboard - Return probability bar chart */}
       <div className="glass rounded-xl p-6 border border-border/50">
         <div className="flex items-center gap-3 mb-6">
           <TrendingUp className="w-6 h-6 text-orange-500" />
           <h2 className="text-xl font-bold text-foreground">Predictive Risk Dashboard</h2>
         </div>
-        <p className="text-muted-foreground mb-4">Return probability heatmap by province and shipper</p>
-        <div className="overflow-x-auto">
-          <div className="min-w-full">
-            <div className="grid grid-cols-12 gap-1 mb-2">
-              <div className="col-span-3"></div>
-              {predictiveRiskData?.slice(0, 8).map((province) => (
-                <div key={province.province} className="text-xs font-medium text-center text-foreground truncate">
-                  {province.province}
-                </div>
-              ))}
-            </div>
-            {predictiveRiskData?.slice(0, 8).map((province) => (
-              <div key={province.province} className="grid grid-cols-12 gap-1 mb-1">
-                <div className="col-span-3 text-xs font-medium text-foreground truncate">{province.province}</div>
-                {province.shippers.slice(0, 8).map((shipper, index) => (
-                  <div
-                    key={shipper.shipper}
-                    className="aspect-square rounded-sm flex items-center justify-center text-xs font-bold"
-                    style={{
-                      backgroundColor: `rgba(239, 68, 68, ${Math.min(shipper.returnProbability * 2, 1)})`,
-                      color: shipper.returnProbability > 0.5 ? 'white' : 'black'
-                    }}
-                  >
-                    {(shipper.returnProbability * 100).toFixed(0)}%
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
+        <p className="text-muted-foreground mb-4">Return probability by province</p>
+        <ChartContainer
+          id="predictive-risk-bar-chart"
+          config={{
+            returnProbability: { label: "Return Probability", color: "rgba(239, 68, 68, 1)" },
+          }}
+          className="min-w-full h-64"
+        >
+          <BarChart
+            data={predictiveRiskData?.map(province => {
+              const totalReturns = province.shippers.reduce((sum, shipper) => sum + shipper.returnProbability, 0)
+              const avgReturnProbability = province.shippers.length > 0 ? totalReturns / province.shippers.length : 0
+              return {
+                province: province.province,
+                returnProbability: avgReturnProbability * 100,
+              }
+            })}
+            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="province" />
+            <YAxis unit="%" />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar dataKey="returnProbability" fill="rgba(239, 68, 68, 0.8)" />
+          </BarChart>
+        </ChartContainer>
       </div>
 
       {/* Customer Intelligence Matrix - RFM segmentation chart */}
