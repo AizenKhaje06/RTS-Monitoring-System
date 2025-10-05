@@ -349,10 +349,10 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
                   }}
                   className="h-64"
                 >
-                  <BarChart data={provinces} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                  <BarChart data={provinces} layout="horizontal" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="province" />
-                    <YAxis unit="%" />
+                    <XAxis type="number" unit="%" />
+                    <YAxis dataKey="province" type="category" width={80} />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Bar dataKey="returnProbability" fill="rgba(239, 68, 68, 0.8)" />
                   </BarChart>
