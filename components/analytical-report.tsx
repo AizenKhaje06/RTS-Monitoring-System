@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { philippineRegions } from "@/lib/philippine-regions"
+import { PredictiveRiskBarChart } from "@/components/predictive-risk-bar-chart"
 
 interface AnalyticalReportProps {
   data: ProcessedData | null
@@ -331,92 +332,8 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
       </div>
 
       {/* Predictive Risk Dashboard - Return probability bar chart per region */}
-      <div className="glass rounded-xl p-6 border border-border/50">
-        <div className="flex items-center gap-3 mb-6">
-          <TrendingUp className="w-6 h-6 text-orange-500" />
-          <h2 className="text-xl font-bold text-foreground">Predictive Risk Dashboard</h2>
-        </div>
-        <p className="text-muted-foreground mb-4">Return probability by province per region</p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {Object.entries(riskByRegion).map(([region, provinces]) => (
-            <Card key={region} className="glass rounded-xl border border-border/50">
-              <CardHeader>
-                <CardTitle className="text-lg font-bold text-foreground">{region.toUpperCase()}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  id={`predictive-risk-${region}`}
-                  config={{
-                    returnProbability: { label: "Return Probability", color: "rgba(239, 68, 68, 1)" },
-                  }}
-                  className="h-48"
-                >
-                    <BarChart
-                      data={provinces}
-                      layout="horizontal"
-                      margin={{ top: 20, right: 40, left: 20, bottom: 20 }}
-                      barCategoryGap="30%"
-                      barGap={0}
-                      className="bg-black rounded-lg p-4"
-                    >
-                      <CartesianGrid stroke="#444" strokeDasharray="3 3" vertical={false} />
-                      <XAxis
-                        type="number"
-                        unit="%"
-                        stroke="#888"
-                        domain={[0, 100]}
-                        tick={{ fill: "#ccc", fontSize: 12 }}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <YAxis
-                        dataKey="province"
-                        type="category"
-                        width={120}
-                        stroke="#888"
-                        tick={{ fill: "#ccc", fontSize: 12 }}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      {/* Background track bar */}
-                      <Bar
-                        dataKey={() => 100}
-                        fill="#444"
-                        barSize={20}
-                        maxBarSize={30}
-                        minPointSize={5}
-                        radius={[10, 10, 10, 10]}
-                        isAnimationActive={false}
-                      />
-                      {/* Actual value bar */}
-                      <Bar
-                        dataKey="returnProbability"
-                        fill="#2ca02c"
-                        barSize={20}
-                        maxBarSize={30}
-                        minPointSize={5}
-                        radius={[10, 10, 10, 10]}
-                        stroke="#000"
-                        strokeWidth={1}
-                      >
-                        <LabelList
-                          dataKey="returnProbability"
-                          position="insideLeft"
-                          formatter={(label: any) => (typeof label === "number" ? `${label.toFixed(1)}%` : "")}
-                          fill="#fff"
-                          offset={10}
-                        />
-                      </Bar>
-                      {/* Threshold line */}
-                      <ReferenceLine x={70} stroke="black" strokeWidth={2} />
-                    </BarChart>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+      {/* Added new PredictiveRiskBarChart component */}
+      <PredictiveRiskBarChart data={riskByRegion[currentRegion as keyof typeof riskByRegion] || []} />
 
       {/* Customer Intelligence Matrix - RFM segmentation chart */}
       <div className="glass rounded-xl p-6 border border-border/50">
