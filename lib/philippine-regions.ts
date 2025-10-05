@@ -254,11 +254,21 @@ export interface RegionInfo {
 export function determineRegion(consigneeRegion: string): RegionInfo {
   const regionText = (consigneeRegion || "").toUpperCase().trim()
 
+  // Normalize regionText by removing common suffixes and extra spaces
+  const normalizedRegionText = regionText
+    .replace(/ CITY$/, "")
+    .replace(/ PROVINCE$/, "")
+    .replace(/ METRO MANILA$/, "")
+    .replace(/ METRO /, " ")
+    .replace(/\./g, "")
+    .trim()
+
+
   // Check for specific region matches first
   for (const [island, islandData] of Object.entries(philippineRegions)) {
     for (const [region, provinces] of Object.entries(islandData.provinces)) {
       for (const province of provinces) {
-        if (regionText.includes(province.toUpperCase())) {
+        if (normalizedRegionText.includes(province.toUpperCase())) {
           return {
             island: island as Island,
             region: region,
@@ -270,11 +280,11 @@ export function determineRegion(consigneeRegion: string): RegionInfo {
   }
 
   // Fallback to simple text matching
-  if (regionText.includes("LUZON") || regionText.includes("NCR") || regionText.includes("CAR")) {
+  if (normalizedRegionText.includes("LUZON") || normalizedRegionText.includes("NCR") || normalizedRegionText.includes("CAR")) {
     return { island: "luzon", region: "Unknown", province: "Unknown" }
-  } else if (regionText.includes("VISAYAS")) {
+  } else if (normalizedRegionText.includes("VISAYAS")) {
     return { island: "visayas", region: "Unknown", province: "Unknown" }
-  } else if (regionText.includes("MINDANAO")) {
+  } else if (normalizedRegionText.includes("MINDANAO")) {
     return { island: "mindanao", region: "Unknown", province: "Unknown" }
   }
 
