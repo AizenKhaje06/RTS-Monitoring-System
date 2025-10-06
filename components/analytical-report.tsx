@@ -334,8 +334,8 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
       </div>
 
       {/* Map Visualization - Profitability Overview */}
-      <div className="glass rounded-xl p-6 border border-border/50 mb-6">
-        <h2 className="text-xl font-bold text-foreground mb-4">Profitability Overview</h2>
+      <div className="glass rounded-2xl p-8 border border-border/60 mb-8 shadow-lg shadow-orange-600/20 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <h2 className="text-2xl font-extrabold text-orange-400 mb-6 tracking-wide">Profitability Overview</h2>
         <MapVisualization
           data={
             Object.entries(riskByRegion).flatMap(([region, provinces]) =>
@@ -347,8 +347,8 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
       </div>
 
       {/* Treemap Visualization - Products */}
-      <div className="glass rounded-xl p-6 border border-border/50 mb-6">
-        <h2 className="text-xl font-bold text-foreground mb-4">Products</h2>
+      <div className="glass rounded-2xl p-8 border border-border/60 mb-8 shadow-lg shadow-orange-600/20 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <h2 className="text-2xl font-extrabold text-orange-400 mb-6 tracking-wide">Products</h2>
         <TreemapVisualization
           data={
             abcAnalysisData?.map(shipper => ({
@@ -357,8 +357,8 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
             })) || []
           }
           colorRange={["#f9f0c1", "#d94e1f"]}
-          width={600}
-          height={400}
+          width={700}
+          height={450}
         />
       </div>
 
