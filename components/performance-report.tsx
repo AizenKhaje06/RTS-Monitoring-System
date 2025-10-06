@@ -415,7 +415,13 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       </div>
 
       {/* Core Visualizations */}
-      {/* Removed Status Distribution, RTS by Shop, and RTS by Region charts as requested */}
+      {/* Core Visualizations */}
+      {/* Status Distribution */}
+      {/* Removed Status Distribution chart */}
+      {/* RTS by Shop */}
+      {/* Removed RTS by Shop chart */}
+      {/* RTS by Region */}
+      {/* Removed RTS by Region chart */}
 
       {/* Additional Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
