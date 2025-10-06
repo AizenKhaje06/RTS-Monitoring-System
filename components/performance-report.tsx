@@ -415,57 +415,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       </div>
 
       {/* Core Visualizations */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Status Distribution */}
-        <div className="glass rounded-xl p-6 border border-border/50">
-          <h3 className="text-xl font-bold text-foreground mb-4">Status Distribution</h3>
-          <ChartContainer
-            config={{
-              delivered: { label: "Delivered", color: "#22c55e" },
-              rts: { label: "RTS", color: "#ef4444" },
-              other: { label: "Other", color: "#6b7280" },
-            }}
-            className="h-64"
-          >
-            <PieChart>
-              <Pie data={statusDistributionData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value">
-                {statusDistributionData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-      <ChartTooltip content={<ChartTooltipContent />} />
-    </PieChart>
-  </ChartContainer>
-        </div>
-
-        {/* RTS by Shop */}
-        <div className="glass rounded-xl p-6 border border-border/50">
-          <h3 className="text-xl font-bold text-foreground mb-4">RTS by Shop (Top 10)</h3>
-          <ChartContainer config={{ rtsRate: { label: "RTS Rate (%)", color: "#ef4444" } }} className="h-64">
-            <BarChart data={rtsByShopData} layout="horizontal">
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" />
-              <YAxis dataKey="shop" type="category" width={100} />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="rtsRate" fill="#ef4444" />
-            </BarChart>
-          </ChartContainer>
-        </div>
-
-        {/* RTS by Region */}
-        <div className="glass rounded-xl p-6 border border-border/50">
-          <h3 className="text-xl font-bold text-foreground mb-4">RTS by Region (Top 10)</h3>
-          <ChartContainer config={{ rtsRate: { label: "RTS Rate (%)", color: "#f97316" } }} className="h-64">
-            <BarChart data={rtsByRegionData} layout="horizontal">
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" />
-              <YAxis dataKey="region" type="category" width={100} />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="rtsRate" fill="#f97316" />
-            </BarChart>
-          </ChartContainer>
-        </div>
-      </div>
+      {/* Removed Status Distribution, RTS by Shop, and RTS by Region charts as requested */}
 
       {/* Additional Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
