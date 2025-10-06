@@ -16,9 +16,96 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
 
   const filteredData = useMemo(() => {
     if (!data) return null
+
     const sourceData = currentRegion === "all" ? data.all : data[currentRegion]
-    return sourceData
-  }, [data, currentRegion])
+
+    if (filter.type === "all") {
+      return sourceData
+    }
+
+    let filtered = sourceData.data
+
+    if (filter.type === "province" && filter.value) {
+      filtered = filtered.filter((parcel) =>
+        parcel.province.toLowerCase().includes(filter.value.toLowerCase())
+      )
+    }
+
+    if (filter.type === "month" && filter.value) {
+      filtered = filtered.filter((parcel) => {
+        if (!parcel.date) return false
+        const parcelDate = new Date(parcel.date)
+        const parcelMonth = String(parcelDate.getMonth() + 1).padStart(2, "0")
+        return parcelMonth === filter.value
+      })
+    }
+
+    if (filter.type === "year" && filter.value) {
+      filtered = filtered.filter((parcel) => {
+        if (!parcel.date) return false
+        const parcelDate = new Date(parcel.date)
+        return String(parcelDate.getFullYear()) === filter.value
+      })
+    }
+
+    // Recalculate stats for filtered data
+    const stats: { [status: string]: { count: number } } = {}
+    filtered.forEach((parcel) => {
+      if (!stats[parcel.normalizedStatus]) {
+        stats[parcel.normalizedStatus] = { count: 0 }
+      }
+      stats[parcel.normalizedStatus].count++
+    })
+
+    return {
+      ...sourceData,
+      data: filtered,
+      stats,
+      total: filtered.length,
+    }
+  }, [data, currentRegion, filter])
+
+  // Calculate metrics from filtered data
+  const metrics = useMemo(() => {
+    if (!filteredData) return null
+
+    const parcelData = filteredData.data
+
+    // Financial metrics
+    const totalCOD = parcelData.reduce((sum, parcel) => sum + (parcel.codAmount || 0), 0)
+    const totalShippingCost = parcelData.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
+    const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
+    const rtsParcels = parcelData.filter((p) => rtsStatuses.includes(p.normalizedStatus))
+    const rtsShippingCost = rtsParcels.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
+    const rtsFeeLost = rtsParcels.reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
+    const totalCostOfFailure = rtsShippingCost + rtsFeeLost
+
+    // Address complexity score (simplified calculation)
+    const avgAddressComplexity = parcelData.length > 0
+      ? parcelData.reduce((sum, parcel) => {
+          // Simple complexity based on address length and special characters
+          const complexity = (parcel.consigneeRegion?.length || 0) +
+                           (parcel.province?.length || 0) +
+                           (parcel.consigneeRegion?.match(/[^a-zA-Z0-9\s]/g)?.length || 0) * 2
+          return sum + complexity
+        }, 0) / parcelData.length
+      : 0
+
+    return {
+      totalParcels: parcelData.length,
+      totalCOD,
+      totalShippingCost,
+      rtsParcelsCount: rtsParcels.length,
+      rtsShippingCost,
+      rtsFeeLost,
+      totalCostOfFailure,
+      avgAddressComplexity: Math.round(avgAddressComplexity * 10) / 10,
+      deliveryRate: parcelData.length > 0
+        ? ((parcelData.filter(p => p.normalizedStatus === "DELIVERED").length / parcelData.length) * 100)
+        : 0,
+      rtsRate: parcelData.length > 0 ? (rtsParcels.length / parcelData.length) * 100 : 0
+    }
+  }, [filteredData])
 
   if (!data) {
     return (
@@ -277,7 +364,12 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
               <h3 className="text-lg font-bold text-foreground">Total Cost of Failure KPI</h3>
             </div>
             <div className="text-center py-8">
-              <p className="text-4xl font-bold text-red-500 mb-2">₱--</p>
+              <p className="text-4xl font-bold text-red-500 mb-2">
+                ₱{metrics?.totalCostOfFailure.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                }) || "0.00"}
+              </p>
               <p className="text-sm text-muted-foreground">Total operational losses</p>
             </div>
             <p className="text-xs text-muted-foreground mt-2">Combined cost of RTS and failed deliveries</p>
@@ -289,7 +381,12 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
               <h3 className="text-lg font-bold text-foreground">Uncollected COD Amount KPI</h3>
             </div>
             <div className="text-center py-8">
-              <p className="text-4xl font-bold text-orange-500 mb-2">₱--</p>
+              <p className="text-4xl font-bold text-orange-500 mb-2">
+                ₱{metrics?.totalCOD.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                }) || "0.00"}
+              </p>
               <p className="text-sm text-muted-foreground">Outstanding COD value</p>
             </div>
             <p className="text-xs text-muted-foreground mt-2">Value of undelivered cash-on-delivery parcels</p>
