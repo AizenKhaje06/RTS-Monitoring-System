@@ -1,77 +1,54 @@
 "use client"
 
 import React from "react"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList, ReferenceLine, Tooltip } from "recharts"
 
 interface PredictiveRiskBarChartProps {
   data: { province: string; returnProbability: number }[]
-  threshold?: number
   title?: string
 }
 
-export function PredictiveRiskBarChart({ data, threshold = 70, title = "Region Province With high RTS" }: PredictiveRiskBarChartProps) {
+const getColorForValue = (value: number) => {
+  // Map returnProbability (0-100) to a color gradient from dark gray to bright red
+  const red = Math.min(255, Math.floor((value / 100) * 255))
+  const green = 0
+  const blue = 0
+  return `rgb(${red},${green},${blue})`
+}
+
+export function PredictiveRiskBarChart({ data, title = "Region Province With high RTS" }: PredictiveRiskBarChartProps) {
   return (
-    <div style={{ backgroundColor: "#1a1a1a", borderRadius: 8, padding: 20, maxWidth: 700, margin: "auto" }}>
-      <h3 style={{ textAlign: "center", marginBottom: 20, fontWeight: "bold", fontSize: 18, color: "#ffffff" }}>{title}</h3>
-      <BarChart
-        width={700}
-        height={350}
-        data={data}
-        margin={{ top: 20, right: 40, left: 20, bottom: 20 }}
-        barCategoryGap="30%"
-        barGap={0}
+    <div style={{ backgroundColor: "#1a1a1a", borderRadius: 8, padding: 20, maxWidth: 700, margin: "auto", color: "#fff" }}>
+      <h3 style={{ textAlign: "center", marginBottom: 20, fontWeight: "bold", fontSize: 18 }}>{title}</h3>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))",
+          gap: 10,
+          justifyItems: "center",
+        }}
       >
-        <CartesianGrid stroke="#555" strokeDasharray="3 3" vertical={false} />
-        <XAxis
-          dataKey="province"
-          type="category"
-          stroke="#cccccc"
-          tick={{ fill: "#ffffff", fontSize: 14 }}
-          tickLine={false}
-          axisLine={false}
-          interval={0}
-          angle={-45}
-          textAnchor="end"
-          height={80}
-        />
-        <YAxis
-          type="number"
-          unit="%"
-          stroke="#cccccc"
-          domain={[0, 100]}
-          tick={{ fill: "#ffffff", fontSize: 14 }}
-          tickLine={false}
-          axisLine={true}
-        />
-        <Tooltip />
-        {/* Background track bar */}
-        <Bar
-          dataKey={() => 100}
-          fill="#333333"
-          barSize={30}
-          radius={[10, 10, 10, 10]}
-          isAnimationActive={false}
-        />
-        {/* Actual value bar */}
-        <Bar
-          dataKey="returnProbability"
-          fill="#000000"
-          barSize={30}
-          radius={[10, 10, 10, 10]}
-          stroke="#ffffff"
-          strokeWidth={1}
-        >
-          <LabelList
-            dataKey="returnProbability"
-            position="top"
-            formatter={(label: any) => (typeof label === "number" ? `${label.toFixed(1)}%` : "")}
-            fill="#ffffff"
-            offset={10}
-          />
-        </Bar>
-        {/* Threshold line */}
-        <ReferenceLine y={threshold} stroke="#ffffff" strokeWidth={2} />
-      </BarChart>
+        {data.map(({ province, returnProbability }) => (
+          <div
+            key={province}
+            title={`${province}: ${returnProbability.toFixed(1)}%`}
+            style={{
+              width: 80,
+              height: 80,
+              backgroundColor: getColorForValue(returnProbability),
+              borderRadius: 8,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              boxShadow: "0 0 8px rgba(255, 0, 0, 0.7)",
+              cursor: "default",
+            }}
+          >
+            <span style={{ fontWeight: "bold", fontSize: 14, color: "#fff", textAlign: "center" }}>{province}</span>
+            <span style={{ fontSize: 12, color: "#fff", marginTop: 4 }}>{returnProbability.toFixed(1)}%</span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

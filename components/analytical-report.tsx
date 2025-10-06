@@ -12,6 +12,8 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { philippineRegions } from "@/lib/philippine-regions"
 import { PredictiveRiskBarChart } from "@/components/predictive-risk-bar-chart"
+import { MapVisualization } from "./map-visualization"
+import { TreemapVisualization } from "./treemap-visualization"
 
 interface AnalyticalReportProps {
   data: ProcessedData | null
@@ -331,13 +333,34 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
         </div>
       </div>
 
-      {/* Predictive Risk Dashboard - Return probability bar chart per region */}
-      {/* Added new PredictiveRiskBarChart component */}
-      <PredictiveRiskBarChart data={
-        currentRegion === "all"
-          ? Object.values(riskByRegion).flat()
-          : riskByRegion[currentRegion as keyof typeof riskByRegion] || []
-      } />
+      {/* Map Visualization - Profitability Overview */}
+      <div className="glass rounded-xl p-6 border border-border/50 mb-6">
+        <h2 className="text-xl font-bold text-foreground mb-4">Profitability Overview</h2>
+        <MapVisualization
+          data={
+            Object.entries(riskByRegion).flatMap(([region, provinces]) =>
+              provinces.map(p => ({ region, value: p.returnProbability }))
+            )
+          }
+          colorRange={["#f9f0c1", "#d94e1f"]}
+        />
+      </div>
+
+      {/* Treemap Visualization - Products */}
+      <div className="glass rounded-xl p-6 border border-border/50 mb-6">
+        <h2 className="text-xl font-bold text-foreground mb-4">Products</h2>
+        <TreemapVisualization
+          data={
+            abcAnalysisData?.map(shipper => ({
+              name: shipper.shipper,
+              value: shipper.revenue
+            })) || []
+          }
+          colorRange={["#f9f0c1", "#d94e1f"]}
+          width={600}
+          height={400}
+        />
+      </div>
 
       {/* Customer Intelligence Matrix - RFM segmentation chart */}
       <div className="glass rounded-xl p-6 border border-border/50">
