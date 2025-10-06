@@ -80,7 +80,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     }
 
     if (selectedConsigneeRegion) {
-      filteredData = filteredData.filter((parcel) => parcel.consigneeRegion === selectedConsigneeRegion)
+      filteredData = filteredData.filter((parcel) => parcel.region === selectedConsigneeRegion)
     }
 
     // Calculate metrics
@@ -152,12 +152,12 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     // RTS by Region data
     const regionData: { [key: string]: { total: number; rts: number } } = {}
     filteredData.forEach((parcel) => {
-      if (!regionData[parcel.consigneeRegion]) {
-        regionData[parcel.consigneeRegion] = { total: 0, rts: 0 }
+      if (!regionData[parcel.region]) {
+        regionData[parcel.region] = { total: 0, rts: 0 }
       }
-      regionData[parcel.consigneeRegion].total++
+      regionData[parcel.region].total++
       if (rtsStatuses.includes(parcel.normalizedStatus)) {
-        regionData[parcel.consigneeRegion].rts++
+        regionData[parcel.region].rts++
       }
     })
 
@@ -189,7 +189,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     // Top Regions
     const regionCounts: { [key: string]: number } = {}
     filteredData.forEach((parcel) => {
-      regionCounts[parcel.consigneeRegion] = (regionCounts[parcel.consigneeRegion] || 0) + 1
+      regionCounts[parcel.region] = (regionCounts[parcel.region] || 0) + 1
     })
     const topRegions = Object.entries(regionCounts)
       .sort(([, a], [, b]) => b - a)
@@ -204,12 +204,12 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     // Region Success Rates
     const regionSuccessData: { [key: string]: { total: number; delivered: number } } = {}
     filteredData.forEach((parcel) => {
-      if (!regionSuccessData[parcel.consigneeRegion]) {
-        regionSuccessData[parcel.consigneeRegion] = { total: 0, delivered: 0 }
+      if (!regionSuccessData[parcel.region]) {
+        regionSuccessData[parcel.region] = { total: 0, delivered: 0 }
       }
-      regionSuccessData[parcel.consigneeRegion].total++
+      regionSuccessData[parcel.region].total++
       if (parcel.normalizedStatus === "DELIVERED") {
-        regionSuccessData[parcel.consigneeRegion].delivered++
+        regionSuccessData[parcel.region].delivered++
       }
     })
 
@@ -225,12 +225,12 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     // Region RTS Rates
     const regionRTSData: { [key: string]: { total: number; rts: number } } = {}
     filteredData.forEach((parcel) => {
-      if (!regionRTSData[parcel.consigneeRegion]) {
-        regionRTSData[parcel.consigneeRegion] = { total: 0, rts: 0 }
+      if (!regionRTSData[parcel.region]) {
+        regionRTSData[parcel.region] = { total: 0, rts: 0 }
       }
-      regionRTSData[parcel.consigneeRegion].total++
+      regionRTSData[parcel.region].total++
       if (rtsStatuses.includes(parcel.normalizedStatus)) {
-        regionRTSData[parcel.consigneeRegion].rts++
+        regionRTSData[parcel.region].rts++
       }
     })
 
@@ -275,7 +275,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
   const uniqueConsigneeRegions = useMemo(() => {
     if (!data) return []
     const sourceData = currentRegion === "all" ? data.all : data[currentRegion]
-    const regions = new Set(sourceData.data.map((p) => p.consigneeRegion).filter(Boolean))
+    const regions = new Set(sourceData.data.map((p) => p.region).filter(Boolean))
     return Array.from(regions).sort()
   }, [data, currentRegion])
 
