@@ -165,7 +165,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
           <select
             value={filter.type}
             onChange={(e) => {
-              setFilter({ type: e.target.value as any, value: "" })
+              setFilter({ type: e.target.value as "all" | "province" | "month" | "year", value: "" })
             }}
             className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
           >

@@ -70,7 +70,7 @@ export function FinancialReport({ data }: FinancialReportProps) {
           } else {
             parcelMonth = d.getMonth() + 1
           }
-        } catch (e) {
+        } catch {
           const parts = parcel.date.toString().split(" ")[0].split("-")
           parcelMonth = Number.parseInt(parts[1], 10)
         }
@@ -92,7 +92,7 @@ export function FinancialReport({ data }: FinancialReportProps) {
           } else {
             parcelYear = d.getFullYear()
           }
-        } catch (e) {
+        } catch {
           const parts = parcel.date.toString().split(" ")[0].split("-")
           parcelYear = Number.parseInt(parts[0], 10)
         }
@@ -187,7 +187,7 @@ export function FinancialReport({ data }: FinancialReportProps) {
           <select
             value={filter.type}
             onChange={(e) => {
-              setFilter({ type: e.target.value as any, value: "" })
+              setFilter({ type: e.target.value as "all" | "province" | "month" | "year", value: "" })
             }}
             className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
           >

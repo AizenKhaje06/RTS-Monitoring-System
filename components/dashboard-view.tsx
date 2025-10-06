@@ -59,7 +59,7 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
           } else {
             parcelMonth = d.getMonth() + 1
           }
-        } catch (e) {
+        } catch {
           const parts = parcel.date.toString().split(" ")[0].split("-")
           parcelMonth = Number.parseInt(parts[1], 10)
         }
@@ -81,7 +81,7 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
           } else {
             parcelYear = d.getFullYear()
           }
-        } catch (e) {
+        } catch {
           const parts = parcel.date.toString().split(" ")[0].split("-")
           parcelYear = Number.parseInt(parts[0], 10)
         }
@@ -91,12 +91,12 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
     })
 
     // Recalculate stats for filtered data
-    const stats: any = {}
-    const provinces: any = {}
-    const regions: any = {}
+    const stats: Record<string, { count: number; locations: Record<string, number> }> = {}
+    const provinces: Record<string, number> = {}
+    const regions: Record<string, number> = {}
     let total = 0
-    const winningShippers: any = {}
-    const rtsShippers: any = {}
+    const winningShippers: Record<string, number> = {}
+    const rtsShippers: Record<string, number> = {}
 
     STATUSES.forEach((status) => {
       stats[status] = { count: 0, locations: {} }
@@ -243,7 +243,7 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
           <select
             value={filterType}
             onChange={(e) => {
-              setFilterType(e.target.value as any)
+              setFilterType(e.target.value as "all" | "province" | "month" | "year")
               setFilterValue("")
             }}
             className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"

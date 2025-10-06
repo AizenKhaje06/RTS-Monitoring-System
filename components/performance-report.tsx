@@ -21,6 +21,7 @@ import {
   Cell,
   BarChart,
   Bar,
+  ResponsiveContainer,
 } from "recharts"
 
 interface PerformanceReportProps {
@@ -397,9 +398,9 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
           <Button
             size="sm"
             onClick={() => {
-              setDateRange({ start: "", end: "" })
-              setSelectedShipper("")
-              setSelectedConsigneeRegion("")
+              setDateRange({ start: "", end: "" });
+              setSelectedShipper("");
+              setSelectedConsigneeRegion("");
             }}
             variant="outline"
             className="h-9"
@@ -469,9 +470,9 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <ChartTooltip content={<ChartTooltipContent />} />
-            </Pie>
-          </ChartContainer>
+      <ChartTooltip content={<ChartTooltipContent />} />
+    </PieChart>
+  </ChartContainer>
         </div>
 
         {/* RTS by Shop */}

@@ -22,9 +22,18 @@ export function TreemapVisualization({
 
   // Function to interpolate color based on value
   const interpolateColor = (value: number) => {
+    if (maxValue === minValue) {
+      return colorRange[0]
+    }
     const ratio = (value - minValue) / (maxValue - minValue)
-    const startColor = [255, 237, 160] // #ffeda0
-    const endColor = [240, 59, 32] // #f03b20
+    const startColor = colorRange[0]
+      .substring(1)
+      .match(/.{2}/g)
+      ?.map((c) => parseInt(c, 16)) || [255, 237, 160]
+    const endColor = colorRange[1]
+      .substring(1)
+      .match(/.{2}/g)
+      ?.map((c) => parseInt(c, 16)) || [240, 59, 32]
     const r = Math.round(startColor[0] + ratio * (endColor[0] - startColor[0]))
     const g = Math.round(startColor[1] + ratio * (endColor[1] - startColor[1]))
     const b = Math.round(startColor[2] + ratio * (endColor[2] - startColor[2]))

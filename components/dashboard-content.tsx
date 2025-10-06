@@ -8,11 +8,10 @@ import { Button } from "@/components/ui/button"
 
 interface DashboardContentProps {
   data: ProcessedData | null
-  onDataChange: (data: ProcessedData) => void
   onUploadClick: () => void
 }
 
-export function DashboardContent({ data, onDataChange, onUploadClick }: DashboardContentProps) {
+export function DashboardContent({ data, onUploadClick }: DashboardContentProps) {
   const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
   const [filter, setFilter] = useState<FilterState>({ type: "all", value: "" })
 
