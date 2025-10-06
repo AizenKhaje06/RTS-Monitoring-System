@@ -213,12 +213,17 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       }
     })
 
+    // Calculate success rate as delivered / total parcels in the region
     const regionSuccessRates = Object.entries(regionSuccessData)
-      .map(([region, counts]) => ({
-        region,
-        successRate: counts.total > 0 ? Number(((counts.delivered / counts.total) * 100).toFixed(2)) : 0,
-        deliveredCount: counts.delivered,
-      }))
+      .map(([region, counts]) => {
+        const successRate = counts.total > 0 ? (counts.delivered / counts.total) * 100 : 0
+        return {
+          region,
+          successRate: Number(successRate.toFixed(2)),
+          deliveredCount: counts.delivered,
+          totalCount: counts.total,
+        }
+      })
       .sort((a, b) => b.successRate - a.successRate)
       .slice(0, 10)
 
@@ -234,12 +239,17 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       }
     })
 
+    // Calculate RTS rate as RTS parcels / total parcels in the region
     const regionRTSRates = Object.entries(regionRTSData)
-      .map(([region, counts]) => ({
-        region,
-        rtsRate: counts.total > 0 ? Number(((counts.rts / counts.total) * 100).toFixed(2)) : 0,
-        rtsCount: counts.rts,
-      }))
+      .map(([region, counts]) => {
+        const rtsRate = counts.total > 0 ? (counts.rts / counts.total) * 100 : 0
+        return {
+          region,
+          rtsRate: Number(rtsRate.toFixed(2)),
+          rtsCount: counts.rts,
+          totalCount: counts.total,
+        }
+      })
       .sort((a, b) => b.rtsRate - a.rtsRate)
       .slice(0, 10)
 
