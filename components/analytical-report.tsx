@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { PieChart, MapPin, PackageX } from "lucide-react"
+import { PieChart, MapPin, PackageX, TrendingUp, BarChart3, DollarSign, Clock, AlertTriangle } from "lucide-react"
 import type { ProcessedData, FilterState } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,146 +14,11 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
   const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
   const [filter, setFilter] = useState<FilterState>({ type: "all", value: "" })
 
-  const { filteredData, topProvinces, topShippers, topRTSDestinations } = useMemo(() => {
-    if (!data) return { filteredData: null, topProvinces: [], topShippers: [], topRTSDestinations: [] }
-
+  const filteredData = useMemo(() => {
+    if (!data) return null
     const sourceData = currentRegion === "all" ? data.all : data[currentRegion]
-
-    if (filter.type === "all") {
-      const filtered = sourceData.data
-
-      // Calculate provinces
-      const provinces: { [key: string]: number } = {}
-      const shippers: { [key: string]: number } = {}
-      filtered.forEach((parcel) => {
-        provinces[parcel.province] = (provinces[parcel.province] || 0) + 1
-        shippers[parcel.shipper] = (shippers[parcel.shipper] || 0) + 1
-      })
-
-      const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
-      const rtsDestinations: { [key: string]: number } = {}
-      filtered
-        .filter((p) => rtsStatuses.includes(p.normalizedStatus))
-        .forEach((parcel) => {
-          rtsDestinations[parcel.province] = (rtsDestinations[parcel.province] || 0) + 1
-        })
-
-      const topProvinces = Object.entries(provinces)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 10)
-
-      const topShippers = Object.entries(shippers)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 10)
-
-      const topRTSDestinations = Object.entries(rtsDestinations)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 10)
-
-      // Calculate regional totals
-      const luzonTotal = filtered.filter((p) => p.island === "Luzon").length
-      const visayasTotal = filtered.filter((p) => p.island === "Visayas").length
-      const mindanaoTotal = filtered.filter((p) => p.island === "Mindanao").length
-
-      return {
-        filteredData: { luzonTotal, visayasTotal, mindanaoTotal, total: filtered.length },
-        topProvinces,
-        topShippers,
-        topRTSDestinations,
-      }
-    }
-
-    const filtered = sourceData.data.filter((parcel) => {
-      if (filter.type === "province") {
-        return parcel.province.toLowerCase().includes(filter.value.toLowerCase())
-      }
-      if (filter.type === "month") {
-        if (!parcel.date) return false
-        let parcelMonth: number
-        try {
-          let d: Date
-          if (typeof parcel.date === "number") {
-            d = new Date(Date.UTC(1899, 11, 30) + parcel.date * 86400000)
-          } else {
-            d = new Date(parcel.date.toString().trim())
-          }
-          if (isNaN(d.getTime())) {
-            const parts = parcel.date.toString().split(" ")[0].split("-")
-            parcelMonth = Number.parseInt(parts[1], 10)
-          } else {
-            parcelMonth = d.getMonth() + 1
-          }
-        } catch (e) {
-          const parts = parcel.date.toString().split(" ")[0].split("-")
-          parcelMonth = Number.parseInt(parts[1], 10)
-        }
-        return parcelMonth === Number.parseInt(filter.value, 10)
-      }
-      if (filter.type === "year") {
-        if (!parcel.date) return false
-        let parcelYear: number
-        try {
-          let d: Date
-          if (typeof parcel.date === "number") {
-            d = new Date(Date.UTC(1899, 11, 30) + parcel.date * 86400000)
-          } else {
-            d = new Date(parcel.date.toString().trim())
-          }
-          if (isNaN(d.getTime())) {
-            const parts = parcel.date.toString().split(" ")[0].split("-")
-            parcelYear = Number.parseInt(parts[0], 10)
-          } else {
-            parcelYear = d.getFullYear()
-          }
-        } catch (e) {
-          const parts = parcel.date.toString().split(" ")[0].split("-")
-          parcelYear = Number.parseInt(parts[0], 10)
-        }
-        return parcelYear === Number.parseInt(filter.value, 10)
-      }
-      return true
-    })
-
-    // Calculate provinces
-    const provinces: { [key: string]: number } = {}
-    const shippers: { [key: string]: number } = {}
-    filtered.forEach((parcel) => {
-      provinces[parcel.province] = (provinces[parcel.province] || 0) + 1
-      shippers[parcel.shipper] = (shippers[parcel.shipper] || 0) + 1
-    })
-
-    const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
-    const rtsDestinations: { [key: string]: number } = {}
-    filtered
-      .filter((p) => rtsStatuses.includes(p.normalizedStatus))
-      .forEach((parcel) => {
-        rtsDestinations[parcel.province] = (rtsDestinations[parcel.province] || 0) + 1
-      })
-
-    const topProvinces = Object.entries(provinces)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 10)
-
-    const topShippers = Object.entries(shippers)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 10)
-
-    const topRTSDestinations = Object.entries(rtsDestinations)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 10)
-
-    // Calculate regional totals
-    const luzonTotal = filtered.filter((p) => p.island === "Luzon").length
-    const visayasTotal = filtered.filter((p) => p.island === "Visayas").length
-    const mindanaoTotal = filtered.filter((p) => p.island === "Mindanao").length
-
-    return {
-      filteredData: { luzonTotal, visayasTotal, mindanaoTotal, total: filtered.length },
-      topProvinces,
-      topShippers,
-      topRTSDestinations,
-    }
-  }, [data, currentRegion, filter])
+    return sourceData
+  }, [data, currentRegion])
 
   if (!data) {
     return (
@@ -168,10 +33,10 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
   }
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-8 space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-foreground mb-2">ANALYTICAL REPORT</h1>
-        <p className="text-muted-foreground">Deep insights into regional distribution and shipper performance</p>
+        <p className="text-muted-foreground">Advanced analytics for operational excellence and strategic decision-making</p>
       </div>
 
       {/* Region Tabs */}
@@ -278,82 +143,157 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="glass rounded-xl p-6 border border-border/50">
-          <div className="flex items-center gap-3 mb-4">
-            <MapPin className="w-6 h-6 text-primary" />
-            <h2 className="text-xl font-bold text-foreground">Luzon</h2>
-          </div>
-          <p className="text-3xl font-bold text-foreground mb-2">{filteredData?.luzonTotal.toLocaleString() || 0}</p>
-          <p className="text-sm text-muted-foreground">Total Parcels</p>
-        </div>
-
-        <div className="glass rounded-xl p-6 border border-border/50">
-          <div className="flex items-center gap-3 mb-4">
-            <MapPin className="w-6 h-6 text-primary" />
-            <h2 className="text-xl font-bold text-foreground">Visayas</h2>
-          </div>
-          <p className="text-3xl font-bold text-foreground mb-2">{filteredData?.visayasTotal.toLocaleString() || 0}</p>
-          <p className="text-sm text-muted-foreground">Total Parcels</p>
-        </div>
-
-        <div className="glass rounded-xl p-6 border border-border/50">
-          <div className="flex items-center gap-3 mb-4">
-            <MapPin className="w-6 h-6 text-primary" />
-            <h2 className="text-xl font-bold text-foreground">Mindanao</h2>
-          </div>
-          <p className="text-3xl font-bold text-foreground mb-2">{filteredData?.mindanaoTotal.toLocaleString() || 0}</p>
-          <p className="text-sm text-muted-foreground">Total Parcels</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="glass rounded-xl p-6 border border-border/50">
-          <h2 className="text-xl font-bold text-foreground mb-4">Top 10 Provinces</h2>
-          <div className="space-y-3">
-            {topProvinces.map(([province, count], index) => (
-              <div key={province} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-primary w-6">#{index + 1}</span>
-                  <span className="text-sm font-medium text-foreground">{province}</span>
-                </div>
-                <span className="text-sm font-bold text-foreground">{count.toLocaleString()}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="glass rounded-xl p-6 border border-border/50">
-          <h2 className="text-xl font-bold text-foreground mb-4">Top 10 Shippers</h2>
-          <div className="space-y-3">
-            {topShippers.map(([shipper, count], index) => (
-              <div key={shipper} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-primary w-6">#{index + 1}</span>
-                  <span className="text-sm font-medium text-foreground">{shipper}</span>
-                </div>
-                <span className="text-sm font-bold text-foreground">{count.toLocaleString()}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="glass rounded-xl p-6 border border-red-500/50">
-        <div className="flex items-center gap-3 mb-4">
-          <PackageX className="w-6 h-6 text-red-500" />
-          <h2 className="text-xl font-bold text-foreground">Top 10 RTS Destinations</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {topRTSDestinations.map(([destination, count], index) => (
-            <div key={destination} className="flex items-center justify-between p-3 rounded-lg bg-red-500/10">
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-bold text-red-500 w-6">#{index + 1}</span>
-                <span className="text-sm font-medium text-foreground">{destination}</span>
-              </div>
-              <span className="text-sm font-bold text-red-500">{count.toLocaleString()}</span>
+      {/* Geographic Intelligence Section */}
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">Geographic Intelligence</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="glass rounded-xl p-6 border border-border/50">
+            <div className="flex items-center gap-3 mb-4">
+              <MapPin className="w-6 h-6 text-red-500" />
+              <h3 className="text-lg font-bold text-foreground">RTS Hotspot Map</h3>
             </div>
-          ))}
+            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
+              <p className="text-muted-foreground text-sm">Interactive map visualization</p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">Geographic distribution of RTS incidents</p>
+          </div>
+
+          <div className="glass rounded-xl p-6 border border-border/50">
+            <div className="flex items-center gap-3 mb-4">
+              <BarChart3 className="w-6 h-6 text-blue-500" />
+              <h3 className="text-lg font-bold text-foreground">Delivery Efficiency by Region</h3>
+            </div>
+            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
+              <p className="text-muted-foreground text-sm">Regional performance chart</p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">Success rates across Philippine regions</p>
+          </div>
+
+          <div className="glass rounded-xl p-6 border border-border/50">
+            <div className="flex items-center gap-3 mb-4">
+              <TrendingUp className="w-6 h-6 text-green-500" />
+              <h3 className="text-lg font-bold text-foreground">Cost-to-Serve Bubble Chart</h3>
+            </div>
+            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
+              <p className="text-muted-foreground text-sm">Cost analysis visualization</p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">Operational costs vs delivery volume</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Client & Product Analysis Section */}
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">Client & Product Analysis</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="glass rounded-xl p-6 border border-border/50">
+            <div className="flex items-center gap-3 mb-4">
+              <BarChart3 className="w-6 h-6 text-purple-500" />
+              <h3 className="text-lg font-bold text-foreground">Client Performance Matrix</h3>
+            </div>
+            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
+              <p className="text-muted-foreground text-sm">Client performance metrics</p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">Delivery success rates by client</p>
+          </div>
+
+          <div className="glass rounded-xl p-6 border border-border/50">
+            <div className="flex items-center gap-3 mb-4">
+              <PackageX className="w-6 h-6 text-orange-500" />
+              <h3 className="text-lg font-bold text-foreground">Product-wise RTS Rate</h3>
+            </div>
+            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
+              <p className="text-muted-foreground text-sm">Product RTS analysis</p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">RTS rates by product category</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Temporal & Trend Analysis Section */}
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">Temporal & Trend Analysis</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="glass rounded-xl p-6 border border-border/50">
+            <div className="flex items-center gap-3 mb-4">
+              <TrendingUp className="w-6 h-6 text-indigo-500" />
+              <h3 className="text-lg font-bold text-foreground">RTS Trend Line Chart with Forecast</h3>
+            </div>
+            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
+              <p className="text-muted-foreground text-sm">Trend analysis with forecasting</p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">Historical RTS trends and predictions</p>
+          </div>
+
+          <div className="glass rounded-xl p-6 border border-border/50">
+            <div className="flex items-center gap-3 mb-4">
+              <Clock className="w-6 h-6 text-cyan-500" />
+              <h3 className="text-lg font-bold text-foreground">Pick-up Time Heatmap</h3>
+            </div>
+            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
+              <p className="text-muted-foreground text-sm">Time-based heatmap</p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">Peak pickup times and patterns</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Data & Address Quality Section */}
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">Data & Address Quality</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="glass rounded-xl p-6 border border-border/50">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertTriangle className="w-6 h-6 text-yellow-500" />
+              <h3 className="text-lg font-bold text-foreground">Address Complexity Score KPI</h3>
+            </div>
+            <div className="text-center py-8">
+              <p className="text-4xl font-bold text-yellow-500 mb-2">--</p>
+              <p className="text-sm text-muted-foreground">Average complexity score</p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">Address accuracy and delivery difficulty</p>
+          </div>
+
+          <div className="glass rounded-xl p-6 border border-border/50">
+            <div className="flex items-center gap-3 mb-4">
+              <BarChart3 className="w-6 h-6 text-pink-500" />
+              <h3 className="text-lg font-bold text-foreground">Inferred RTS Reason Treemap</h3>
+            </div>
+            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
+              <p className="text-muted-foreground text-sm">RTS reason breakdown</p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">Root cause analysis of RTS incidents</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Financial Impact Section */}
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">Financial Impact</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="glass rounded-xl p-6 border border-red-500/50">
+            <div className="flex items-center gap-3 mb-4">
+              <DollarSign className="w-6 h-6 text-red-500" />
+              <h3 className="text-lg font-bold text-foreground">Total Cost of Failure KPI</h3>
+            </div>
+            <div className="text-center py-8">
+              <p className="text-4xl font-bold text-red-500 mb-2">₱--</p>
+              <p className="text-sm text-muted-foreground">Total operational losses</p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">Combined cost of RTS and failed deliveries</p>
+          </div>
+
+          <div className="glass rounded-xl p-6 border border-orange-500/50">
+            <div className="flex items-center gap-3 mb-4">
+              <DollarSign className="w-6 h-6 text-orange-500" />
+              <h3 className="text-lg font-bold text-foreground">Uncollected COD Amount KPI</h3>
+            </div>
+            <div className="text-center py-8">
+              <p className="text-4xl font-bold text-orange-500 mb-2">₱--</p>
+              <p className="text-sm text-muted-foreground">Outstanding COD value</p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">Value of undelivered cash-on-delivery parcels</p>
+          </div>
         </div>
       </div>
     </div>
