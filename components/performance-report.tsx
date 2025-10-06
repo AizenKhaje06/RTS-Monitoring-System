@@ -1,8 +1,8 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { TrendingUp, Package, CheckCircle, XCircle, DollarSign, AlertCircle, TrendingDown, MapPin, PackageX, Calendar, Store, Globe } from "lucide-react"
-import type { ProcessedData, FilterState } from "@/lib/types"
+import { TrendingUp, Package, CheckCircle, XCircle, DollarSign, Calendar, Store, Globe } from "lucide-react"
+import type { ProcessedData } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -452,27 +452,6 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
 
       {/* Core Visualizations */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Daily Trend */}
-        <div className="glass rounded-xl p-6 border border-border/50">
-          <h3 className="text-xl font-bold text-foreground mb-4">Daily Trend: Delivered vs. RTS</h3>
-          <ChartContainer
-            config={{
-              delivered: { label: "Delivered", color: "#22c55e" },
-              rts: { label: "RTS", color: "#ef4444" },
-            }}
-            className="h-64"
-          >
-            <LineChart data={dailyTrendData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Line type="monotone" dataKey="delivered" stroke="#22c55e" strokeWidth={2} />
-              <Line type="monotone" dataKey="rts" stroke="#ef4444" strokeWidth={2} />
-            </LineChart>
-          </ChartContainer>
-        </div>
-
         {/* Status Distribution */}
         <div className="glass rounded-xl p-6 border border-border/50">
           <h3 className="text-xl font-bold text-foreground mb-4">Status Distribution</h3>
@@ -491,7 +470,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
                 ))}
               </Pie>
               <ChartTooltip content={<ChartTooltipContent />} />
-            </PieChart>
+            </Pie>
           </ChartContainer>
         </div>
 
