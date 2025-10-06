@@ -11,17 +11,14 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import {
-  LineChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Line,
   PieChart,
   Pie,
   Cell,
   BarChart,
   Bar,
-  ResponsiveContainer,
+  CartesianGrid,
+  XAxis,
+  YAxis,
 } from "recharts"
 
 interface PerformanceReportProps {
@@ -36,28 +33,22 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
 
   const {
     metrics,
-    dailyTrendData,
     rtsByShopData,
     rtsByRegionData,
     statusDistributionData,
     topProvinces,
     topRegions,
-    topProducts,
-    topRTSProducts,
     regionSuccessRates,
     regionRTSRates,
   } = useMemo(() => {
     if (!data)
       return {
         metrics: null,
-        dailyTrendData: [],
         rtsByShopData: [],
         rtsByRegionData: [],
         statusDistributionData: [],
         topProvinces: [],
         topRegions: [],
-        topProducts: [],
-        topRTSProducts: [],
         regionSuccessRates: [],
         regionRTSRates: [],
       }
@@ -88,7 +79,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     // Calculate metrics
     const totalParcels = filteredData.length
     const deliveredParcels = filteredData.filter((p) => p.normalizedStatus === "DELIVERED").length
-    const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
+    const rtsStatuses = ["CANCELLED", "RETURNED"]
     const rtsParcels = filteredData.filter((p) => rtsStatuses.includes(p.normalizedStatus))
     const rtsCount = rtsParcels.length
 
@@ -106,32 +97,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     const rtsAvgCost =
       rtsCount > 0 ? rtsParcels.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0) / rtsCount : 0
 
-    // Daily trend data
-    const dailyData: { [key: string]: { delivered: number; rts: number } } = {}
-    filteredData.forEach((parcel) => {
-      if (parcel.date) {
-        const parcelDate = new Date(parcel.date)
-        if (!isNaN(parcelDate.getTime())) {
-          const date = parcelDate.toISOString().split("T")[0]
-          if (!dailyData[date]) {
-            dailyData[date] = { delivered: 0, rts: 0 }
-          }
-          if (parcel.normalizedStatus === "DELIVERED") {
-            dailyData[date].delivered++
-          } else if (rtsStatuses.includes(parcel.normalizedStatus)) {
-            dailyData[date].rts++
-          }
-        }
-      }
-    })
 
-    const dailyTrendData = Object.entries(dailyData)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, counts]) => ({
-        date,
-        delivered: counts.delivered,
-        rts: counts.rts,
-      }))
 
     // RTS by Shop data
     const shopData: { [key: string]: { total: number; rts: number } } = {}
@@ -200,11 +166,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10)
 
-    // Top Products - Not available in current data structure
-    const topProducts: [string, number][] = []
 
-    // Top RTS Products - Not available in current data structure
-    const topRTSProducts: [string, number][] = []
 
     // Region Success Rates
     const regionSuccessData: { [key: string]: { total: number; delivered: number } } = {}
@@ -266,14 +228,11 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         deliveredAvgCost,
         rtsAvgCost,
       },
-      dailyTrendData,
       rtsByShopData,
       rtsByRegionData,
       statusDistributionData: statusData,
       topProvinces,
       topRegions,
-      topProducts,
-      topRTSProducts,
       regionSuccessRates,
       regionRTSRates,
     }
