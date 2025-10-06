@@ -40,14 +40,14 @@ export async function processExcelFile(file: File): Promise<ProcessedData> {
 
     reader.onload = (e) => {
       try {
-        const data = e.target?.result
+        const data = e.target?.result as ArrayBuffer
         const workbook = XLSX.read(data, { type: "array" })
 
         // Combine data from all sheets
-        let combinedData: any[][] = []
+        let combinedData: unknown[][] = []
         workbook.SheetNames.forEach((sheetName) => {
           const worksheet = workbook.Sheets[sheetName]
-          const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
+          const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as unknown[][]
           if (sheetData.length > 1) {
             if (combinedData.length === 0) {
               combinedData = sheetData
@@ -72,8 +72,7 @@ export async function processExcelFile(file: File): Promise<ProcessedData> {
   })
 }
 
-function processData(excelData: any[][]): ProcessedData {
-  const headers = excelData[0]
+function processData(excelData: unknown[][]): ProcessedData {
   const rows = excelData.slice(1)
 
   const processedData: ProcessedData = {
@@ -84,17 +83,17 @@ function processData(excelData: any[][]): ProcessedData {
   }
 
   rows.forEach((row) => {
-    if (row.length < 14) return
+    if (!Array.isArray(row) || row.length < 14) return
 
     const rawStatus = (row[2] || "").toString().toUpperCase().trim() // Column C
     const status = normalizeStatus(rawStatus)
-    const shipper = row[5] || "" // Column F
-    const consigneeRegion = row[13] || "" // Column N
-    const date = row[0] || "" // Column A
+    const shipper = (row[5] || "").toString() // Column F
+    const consigneeRegion = (row[13] || "").toString() // Column N
+    const date = (row[0] || "").toString() // Column A
 
-    const codAmount = Number.parseFloat(row[17]) || 0 // Column R (index 17)
-    const serviceCharge = Number.parseFloat(row[18]) || 0 // Column S (index 18)
-    const totalCost = Number.parseFloat(row[19]) || 0 // Column T (index 19)
+    const codAmount = Number.parseFloat((row[17] || "").toString()) || 0 // Column R (index 17)
+    const serviceCharge = Number.parseFloat((row[18] || "").toString()) || 0 // Column S (index 18)
+    const totalCost = Number.parseFloat((row[19] || "").toString()) || 0 // Column T (index 19)
     const rtsFee = totalCost * 0.2 // RTS FEE = 20% of total cost
 
     if (!rawStatus || !consigneeRegion) return
@@ -105,12 +104,12 @@ function processData(excelData: any[][]): ProcessedData {
     const parcelData: ParcelData = {
       status: rawStatus,
       normalizedStatus: status,
-      shipper,
-      consigneeRegion,
+      shipper: shipper as string,
+      consigneeRegion: consigneeRegion as string,
       province: regionInfo.province,
       region: regionInfo.region,
       island: island,
-      date: date,
+      date: date as string,
       codAmount,
       serviceCharge,
       totalCost,
@@ -161,17 +160,17 @@ function processData(excelData: any[][]): ProcessedData {
 
       // Update winning and RTS shippers
       if (status === "DELIVERED") {
-        processedData.all.winningShippers[shipper] = (processedData.all.winningShippers[shipper] || 0) + 1
+        processedData.all.winningShippers[shipper as string] = (processedData.all.winningShippers[shipper as string] || 0) + 1
         if (processedData[island]) {
-          processedData[island].winningShippers[shipper] = (processedData[island].winningShippers[shipper] || 0) + 1
+          processedData[island].winningShippers[shipper as string] = (processedData[island].winningShippers[shipper as string] || 0) + 1
         }
       }
 
       const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
       if (rtsStatuses.includes(status)) {
-        processedData.all.rtsShippers[shipper] = (processedData.all.rtsShippers[shipper] || 0) + 1
+        processedData.all.rtsShippers[shipper as string] = (processedData.all.rtsShippers[shipper as string] || 0) + 1
         if (processedData[island]) {
-          processedData[island].rtsShippers[shipper] = (processedData[island].rtsShippers[shipper] || 0) + 1
+          processedData[island].rtsShippers[shipper as string] = (processedData[island].rtsShippers[shipper as string] || 0) + 1
         }
       }
     }
