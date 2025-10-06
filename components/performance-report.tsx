@@ -216,7 +216,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     const regionSuccessRates = Object.entries(regionSuccessData)
       .map(([region, counts]) => ({
         region,
-        successRate: counts.total > 0 ? (counts.delivered / counts.total) * 100 : 0,
+        successRate: counts.total > 0 ? Number(((counts.delivered / counts.total) * 100).toFixed(2)) : 0,
         deliveredCount: counts.delivered,
       }))
       .sort((a, b) => b.successRate - a.successRate)
@@ -237,7 +237,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     const regionRTSRates = Object.entries(regionRTSData)
       .map(([region, counts]) => ({
         region,
-        rtsRate: counts.total > 0 ? (counts.rts / counts.total) * 100 : 0,
+        rtsRate: counts.total > 0 ? Number(((counts.rts / counts.total) * 100).toFixed(2)) : 0,
         rtsCount: counts.rts,
       }))
       .sort((a, b) => b.rtsRate - a.rtsRate)
