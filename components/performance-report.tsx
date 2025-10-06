@@ -70,6 +70,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       filteredData = filteredData.filter((parcel) => {
         if (!parcel.date) return false
         const parcelDate = new Date(parcel.date)
+        if (isNaN(parcelDate.getTime())) return false
         const startDate = new Date(dateRange.start)
         const endDate = new Date(dateRange.end)
         return parcelDate >= startDate && parcelDate <= endDate
@@ -109,14 +110,17 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     const dailyData: { [key: string]: { delivered: number; rts: number } } = {}
     filteredData.forEach((parcel) => {
       if (parcel.date) {
-        const date = new Date(parcel.date).toISOString().split("T")[0]
-        if (!dailyData[date]) {
-          dailyData[date] = { delivered: 0, rts: 0 }
-        }
-        if (parcel.normalizedStatus === "DELIVERED") {
-          dailyData[date].delivered++
-        } else if (rtsStatuses.includes(parcel.normalizedStatus)) {
-          dailyData[date].rts++
+        const parcelDate = new Date(parcel.date)
+        if (!isNaN(parcelDate.getTime())) {
+          const date = parcelDate.toISOString().split("T")[0]
+          if (!dailyData[date]) {
+            dailyData[date] = { delivered: 0, rts: 0 }
+          }
+          if (parcel.normalizedStatus === "DELIVERED") {
+            dailyData[date].delivered++
+          } else if (rtsStatuses.includes(parcel.normalizedStatus)) {
+            dailyData[date].rts++
+          }
         }
       }
     })
