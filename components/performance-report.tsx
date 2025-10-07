@@ -63,7 +63,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     // Calculate metrics
     const totalParcels = filteredData.length
     const deliveredParcels = filteredData.filter((p) => p.normalizedStatus === "DELIVERED").length
-    const rtsStatuses = ["CANCELLED", "RETURNED"]
+    const rtsStatuses = ["RETURNED"]
     const rtsParcels = filteredData.filter((p) => rtsStatuses.includes(p.normalizedStatus))
     const rtsCount = rtsParcels.length
 
