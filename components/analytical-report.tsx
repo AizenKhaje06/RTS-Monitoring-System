@@ -328,17 +328,47 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
       {/* Data & Address Quality Section */}
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">Data & Address Quality</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="glass rounded-xl p-6 border border-border/50">
             <div className="flex items-center gap-3 mb-4">
               <AlertTriangle className="w-6 h-6 text-yellow-500" />
               <h3 className="text-lg font-bold text-foreground">Address Complexity Score KPI</h3>
             </div>
             <div className="text-center py-8">
-              <p className="text-4xl font-bold text-yellow-500 mb-2">--</p>
+              <p className="text-4xl font-bold text-yellow-500 mb-2">
+                {metrics?.avgAddressComplexity || "0.0"}
+              </p>
               <p className="text-sm text-muted-foreground">Average complexity score</p>
             </div>
             <p className="text-xs text-muted-foreground mt-2">Address accuracy and delivery difficulty</p>
+          </div>
+
+          <div className="glass rounded-xl p-6 border border-green-500/50">
+            <div className="flex items-center gap-3 mb-4">
+              <TrendingUp className="w-6 h-6 text-green-500" />
+              <h3 className="text-lg font-bold text-foreground">Delivery Rate KPI</h3>
+            </div>
+            <div className="text-center py-8">
+              <p className="text-4xl font-bold text-green-500 mb-2">
+                {metrics ? `${metrics.deliveryRate.toFixed(1)}%` : "0.0%"}
+              </p>
+              <p className="text-sm text-muted-foreground">Successful delivery percentage</p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">Percentage of parcels delivered successfully</p>
+          </div>
+
+          <div className="glass rounded-xl p-6 border border-red-500/50">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertTriangle className="w-6 h-6 text-red-500" />
+              <h3 className="text-lg font-bold text-foreground">RTS Rate KPI</h3>
+            </div>
+            <div className="text-center py-8">
+              <p className="text-4xl font-bold text-red-500 mb-2">
+                {metrics ? `${metrics.rtsRate.toFixed(1)}%` : "0.0%"}
+              </p>
+              <p className="text-sm text-muted-foreground">Return to sender percentage</p>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">Percentage of parcels returned to sender</p>
           </div>
 
           <div className="glass rounded-xl p-6 border border-border/50">
