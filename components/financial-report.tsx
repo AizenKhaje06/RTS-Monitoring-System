@@ -29,7 +29,7 @@ export function FinancialReport({ data }: FinancialReportProps) {
       const totalRTSFee = filtered.reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
 
       // Calculate RTS-specific costs
-      const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
+      const rtsStatuses = ["PROBLEMATIC", "RETURNED"]
       const rtsParcels = filtered.filter((p) => rtsStatuses.includes(p.normalizedStatus))
       const rtsShippingCost = rtsParcels.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
       const rtsFeeLost = rtsParcels.reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
@@ -108,7 +108,7 @@ export function FinancialReport({ data }: FinancialReportProps) {
     const totalRTSFee = filtered.reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
 
     // Calculate RTS-specific costs
-    const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
+    const rtsStatuses = ["PROBLEMATIC", "RETURNED"]
     const rtsParcels = filtered.filter((p) => rtsStatuses.includes(p.normalizedStatus))
     const rtsShippingCost = rtsParcels.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
     const rtsFeeLost = rtsParcels.reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
