@@ -4,3 +4,4 @@
 - [x] Run npm run dev to test the application
 - [x] Use browser to verify the analytical report displays correctly (server running on localhost:3000)
 - [x] Add Top Delivered Shippers and Top RTS Shippers sections to performance dashboard
+- [x] Change RTS computation to only include RETURNED status, exclude CANCELLED
