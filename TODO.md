@@ -1,7 +1,7 @@
-- [x] Fix Address Complexity Score KPI to display avgAddressComplexity value instead of "--"
-- [x] Add display for deliveryRate and rtsRate in appropriate sections
-- [x] Check performance-report.tsx and other components for similar display issues or unused code
-- [x] Run npm run dev to test the application
-- [x] Use browser to verify the analytical report displays correctly (server running on localhost:3000)
-- [x] Add Top Delivered Shippers and Top RTS Shippers sections to performance dashboard
-- [x] Change RTS computation to only include RETURNED status, exclude CANCELLED
+# TODO: Fix Analytical Dashboard KPIs
+
+## Tasks
+- [x] Fix RTS status inconsistency between excel-processor.ts and analytical-report.tsx
+- [x] Review KPI calculations in analytical-report.tsx for accuracy
+- [x] Improve display for KPIs with 0 values (show "No data" instead of 0.00)
+- [x] Verify changes and ensure KPIs display correctly

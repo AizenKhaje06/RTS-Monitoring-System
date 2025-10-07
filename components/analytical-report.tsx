@@ -395,10 +395,12 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
             </div>
             <div className="text-center py-8">
               <p className="text-4xl font-bold text-red-500 mb-2">
-                ₱{metrics?.totalCostOfFailure.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }) || "0.00"}
+                {metrics?.totalCostOfFailure && metrics.totalCostOfFailure > 0
+                  ? `₱${metrics.totalCostOfFailure.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}`
+                  : "No Data"}
               </p>
               <p className="text-sm text-muted-foreground">Total operational losses</p>
             </div>
@@ -412,10 +414,12 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
             </div>
             <div className="text-center py-8">
               <p className="text-4xl font-bold text-orange-500 mb-2">
-                ₱{metrics?.totalCOD.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }) || "0.00"}
+                {metrics?.totalCOD && metrics.totalCOD > 0
+                  ? `₱${metrics.totalCOD.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}`
+                  : "No Data"}
               </p>
               <p className="text-sm text-muted-foreground">Outstanding COD value</p>
             </div>
