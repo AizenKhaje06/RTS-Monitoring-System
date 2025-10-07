@@ -5,21 +5,7 @@ import { TrendingUp, Package, CheckCircle, XCircle, DollarSign, Calendar, Store,
 import type { ProcessedData } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
-import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-} from "recharts"
+
 
 interface PerformanceReportProps {
   data: ProcessedData | null
@@ -33,9 +19,6 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
 
   const {
     metrics,
-    rtsByShopData,
-    rtsByRegionData,
-    statusDistributionData,
     topProvinces,
     topRegions,
     regionSuccessRates,
@@ -44,9 +27,6 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     if (!data)
       return {
         metrics: null,
-        rtsByShopData: [],
-        rtsByRegionData: [],
-        statusDistributionData: [],
         topProvinces: [],
         topRegions: [],
         regionSuccessRates: [],
@@ -96,57 +76,6 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         : 0
     const rtsAvgCost =
       rtsCount > 0 ? rtsParcels.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0) / rtsCount : 0
-
-
-
-    // RTS by Shop data
-    const shopData: { [key: string]: { total: number; rts: number } } = {}
-    filteredData.forEach((parcel) => {
-      if (!shopData[parcel.shipper]) {
-        shopData[parcel.shipper] = { total: 0, rts: 0 }
-      }
-      shopData[parcel.shipper].total++
-      if (rtsStatuses.includes(parcel.normalizedStatus)) {
-        shopData[parcel.shipper].rts++
-      }
-    })
-
-    const rtsByShopData = Object.entries(shopData)
-      .map(([shop, counts]) => ({
-        shop,
-        rtsRate: counts.total > 0 ? (counts.rts / counts.total) * 100 : 0,
-        rtsCount: counts.rts,
-      }))
-      .sort((a, b) => b.rtsRate - a.rtsRate)
-      .slice(0, 10)
-
-    // RTS by Region data
-    const regionData: { [key: string]: { total: number; rts: number } } = {}
-    filteredData.forEach((parcel) => {
-      if (!regionData[parcel.region]) {
-        regionData[parcel.region] = { total: 0, rts: 0 }
-      }
-      regionData[parcel.region].total++
-      if (rtsStatuses.includes(parcel.normalizedStatus)) {
-        regionData[parcel.region].rts++
-      }
-    })
-
-    const rtsByRegionData = Object.entries(regionData)
-      .map(([region, counts]) => ({
-        region,
-        rtsRate: counts.total > 0 ? (counts.rts / counts.total) * 100 : 0,
-        rtsCount: counts.rts,
-      }))
-      .sort((a, b) => b.rtsRate - a.rtsRate)
-      .slice(0, 10)
-
-    // Status distribution data
-    const statusData = [
-      { name: "Delivered", value: deliveredParcels, color: "#22c55e" },
-      { name: "RTS", value: rtsCount, color: "#ef4444" },
-      { name: "Other", value: totalParcels - deliveredParcels - rtsCount, color: "#6b7280" },
-    ].filter((item) => item.value > 0)
 
     // Top Provinces
     const provinceCounts: { [key: string]: number } = {}
@@ -228,9 +157,6 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         deliveredAvgCost,
         rtsAvgCost,
       },
-      rtsByShopData,
-      rtsByRegionData,
-      statusDistributionData: statusData,
       topProvinces,
       topRegions,
       regionSuccessRates,
