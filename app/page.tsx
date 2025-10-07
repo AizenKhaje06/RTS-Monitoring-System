@@ -23,7 +23,7 @@ export default function Home() {
       case "financial":
         return <FinancialReport data={data} />
       default:
-        return <DashboardContent data={data} onDataChange={setData} onUploadClick={() => setIsUploadModalOpen(true)} />
+        return <DashboardContent data={data} onUploadClick={() => setIsUploadModalOpen(true)} />
     }
   }
 
