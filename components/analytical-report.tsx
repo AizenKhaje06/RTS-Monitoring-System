@@ -2,9 +2,11 @@
 
 import { useMemo, useState } from "react"
 import { PieChart, MapPin, PackageX, TrendingUp, BarChart3, DollarSign, Clock, AlertTriangle } from "lucide-react"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, ScatterChart, Scatter, Cell, Treemap } from "recharts"
 import type { ProcessedData, FilterState } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { PhilippinesMap } from "@/components/philippines-map"
 
 interface AnalyticalReportProps {
   data: ProcessedData | null
@@ -91,6 +93,128 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
         }, 0) / parcelData.length
       : 0
 
+    // Regional delivery efficiency data
+    const regionalData = data ? [
+      {
+        region: "Luzon",
+        deliveryRate: data.luzon.total > 0
+          ? ((data.luzon.stats.DELIVERED?.count || 0) / data.luzon.total) * 100
+          : 0,
+        totalParcels: data.luzon.total
+      },
+      {
+        region: "Visayas",
+        deliveryRate: data.visayas.total > 0
+          ? ((data.visayas.stats.DELIVERED?.count || 0) / data.visayas.total) * 100
+          : 0,
+        totalParcels: data.visayas.total
+      },
+      {
+        region: "Mindanao",
+        deliveryRate: data.mindanao.total > 0
+          ? ((data.mindanao.stats.DELIVERED?.count || 0) / data.mindanao.total) * 100
+          : 0,
+        totalParcels: data.mindanao.total
+      }
+    ] : []
+
+    // Cost-to-serve bubble chart data
+    const costToServeData = data ? [
+      {
+        region: "Luzon",
+        volume: data.luzon.total,
+        cost: data.luzon.data.reduce((sum, p) => sum + (p.totalCost || 0), 0),
+        size: data.luzon.total
+      },
+      {
+        region: "Visayas",
+        volume: data.visayas.total,
+        cost: data.visayas.data.reduce((sum, p) => sum + (p.totalCost || 0), 0),
+        size: data.visayas.total
+      },
+      {
+        region: "Mindanao",
+        volume: data.mindanao.total,
+        cost: data.mindanao.data.reduce((sum, p) => sum + (p.totalCost || 0), 0),
+        size: data.mindanao.total
+      }
+    ] : []
+
+    // Client performance matrix data
+    const clientPerformanceData = data ? Object.keys(data.all.winningShippers).map(shipper => {
+      const delivered = data.all.winningShippers[shipper] || 0
+      const rts = data.all.rtsShippers[shipper] || 0
+      const total = delivered + rts
+      const successRate = total > 0 ? (delivered / total) * 100 : 0
+      return {
+        client: shipper,
+        delivered,
+        rts,
+        total,
+        successRate
+      }
+    }).sort((a, b) => b.total - a.total).slice(0, 10) : [] // Top 10 clients
+
+    // Product-wise RTS rate data (using shipper as product/client)
+    const productRtsData = data ? Object.keys(data.all.rtsShippers).map(shipper => {
+      const rts = data.all.rtsShippers[shipper] || 0
+      const delivered = data.all.winningShippers[shipper] || 0
+      const total = delivered + rts
+      const rtsRate = total > 0 ? (rts / total) * 100 : 0
+      return {
+        product: shipper,
+        rtsRate,
+        rts,
+        total
+      }
+    }).sort((a, b) => b.total - a.total).slice(0, 10) : []
+
+    // RTS trend line chart data
+    const rtsTrendData = data ? (() => {
+      const monthlyData: { [month: string]: { total: number, rts: number } } = {}
+      data.all.data.forEach(parcel => {
+        if (parcel.date) {
+          const date = new Date(parcel.date)
+          const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+          if (!monthlyData[monthKey]) {
+            monthlyData[monthKey] = { total: 0, rts: 0 }
+          }
+          monthlyData[monthKey].total++
+          if (rtsStatuses.includes(parcel.normalizedStatus)) {
+            monthlyData[monthKey].rts++
+          }
+        }
+      })
+      return Object.keys(monthlyData).sort().map(month => ({
+        month,
+        rtsRate: monthlyData[month].total > 0 ? (monthlyData[month].rts / monthlyData[month].total) * 100 : 0,
+        total: monthlyData[month].total,
+        rts: monthlyData[month].rts
+      }))
+    })() : []
+
+    // Pick-up time heatmap data (using monthly data as proxy)
+    const pickupHeatmapData = data ? (() => {
+      const monthlyData: { [month: string]: number } = {}
+      data.all.data.forEach(parcel => {
+        if (parcel.date) {
+          const date = new Date(parcel.date)
+          const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+          monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1
+        }
+      })
+      return Object.keys(monthlyData).sort().map(month => ({
+        month,
+        parcels: monthlyData[month]
+      }))
+    })() : []
+
+    // RTS reasons treemap data
+    const rtsReasonsData = data ? rtsStatuses.map(status => ({
+      name: status,
+      size: data.all.stats[status]?.count || 0
+    })).filter(item => item.size > 0) : []
+
     return {
       totalParcels: parcelData.length,
       totalCOD,
@@ -103,7 +227,14 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
       deliveryRate: parcelData.length > 0
         ? ((parcelData.filter(p => p.normalizedStatus === "DELIVERED").length / parcelData.length) * 100)
         : 0,
-      rtsRate: parcelData.length > 0 ? (rtsParcels.length / parcelData.length) * 100 : 0
+      rtsRate: parcelData.length > 0 ? (rtsParcels.length / parcelData.length) * 100 : 0,
+      regionalData,
+      costToServeData,
+      clientPerformanceData,
+      productRtsData,
+      rtsTrendData,
+      pickupHeatmapData,
+      rtsReasonsData
     }
   }, [filteredData])
 
@@ -239,8 +370,8 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
               <MapPin className="w-6 h-6 text-red-500" />
               <h3 className="text-lg font-bold text-foreground">RTS Hotspot Map</h3>
             </div>
-            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
-              <p className="text-muted-foreground text-sm">Interactive map visualization</p>
+            <div className="h-48">
+              {data ? <PhilippinesMap data={data} /> : <p className="text-muted-foreground text-sm">No data available</p>}
             </div>
             <p className="text-xs text-muted-foreground mt-2">Geographic distribution of RTS incidents</p>
           </div>
@@ -250,8 +381,16 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
               <BarChart3 className="w-6 h-6 text-blue-500" />
               <h3 className="text-lg font-bold text-foreground">Delivery Efficiency by Region</h3>
             </div>
-            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
-              <p className="text-muted-foreground text-sm">Regional performance chart</p>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={metrics?.regionalData || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="region" />
+                  <YAxis />
+                  <Tooltip formatter={(value: number) => [`${value.toFixed(1)}%`, 'Delivery Rate']} />
+                  <Bar dataKey="deliveryRate" fill="#3b82f6" />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
             <p className="text-xs text-muted-foreground mt-2">Success rates across Philippine regions</p>
           </div>
@@ -261,8 +400,16 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
               <TrendingUp className="w-6 h-6 text-green-500" />
               <h3 className="text-lg font-bold text-foreground">Cost-to-Serve Bubble Chart</h3>
             </div>
-            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
-              <p className="text-muted-foreground text-sm">Cost analysis visualization</p>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <ScatterChart data={metrics?.costToServeData || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="volume" name="Volume" />
+                  <YAxis dataKey="cost" name="Cost" />
+                  <Tooltip formatter={(value: number, name: string) => [name === 'cost' ? `₱${value.toLocaleString()}` : value, name === 'cost' ? 'Cost' : 'Volume']} />
+                  <Scatter dataKey="size" fill="#10b981" />
+                </ScatterChart>
+              </ResponsiveContainer>
             </div>
             <p className="text-xs text-muted-foreground mt-2">Operational costs vs delivery volume</p>
           </div>
@@ -278,8 +425,16 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
               <BarChart3 className="w-6 h-6 text-purple-500" />
               <h3 className="text-lg font-bold text-foreground">Client Performance Matrix</h3>
             </div>
-            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
-              <p className="text-muted-foreground text-sm">Client performance metrics</p>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={metrics?.clientPerformanceData || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="client" />
+                  <YAxis />
+                  <Tooltip formatter={(value: number) => [`${value.toFixed(1)}%`, 'Success Rate']} />
+                  <Bar dataKey="successRate" fill="#8b5cf6" />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
             <p className="text-xs text-muted-foreground mt-2">Delivery success rates by client</p>
           </div>
@@ -289,8 +444,16 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
               <PackageX className="w-6 h-6 text-orange-500" />
               <h3 className="text-lg font-bold text-foreground">Product-wise RTS Rate</h3>
             </div>
-            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
-              <p className="text-muted-foreground text-sm">Product RTS analysis</p>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={metrics?.productRtsData || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="product" />
+                  <YAxis />
+                  <Tooltip formatter={(value: number) => [`${value.toFixed(1)}%`, 'RTS Rate']} />
+                  <Bar dataKey="rtsRate" fill="#f97316" />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
             <p className="text-xs text-muted-foreground mt-2">RTS rates by product category</p>
           </div>
@@ -306,8 +469,16 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
               <TrendingUp className="w-6 h-6 text-indigo-500" />
               <h3 className="text-lg font-bold text-foreground">RTS Trend Line Chart with Forecast</h3>
             </div>
-            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
-              <p className="text-muted-foreground text-sm">Trend analysis with forecasting</p>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={metrics?.rtsTrendData || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip formatter={(value: number) => [`${value.toFixed(1)}%`, 'RTS Rate']} />
+                  <Line type="monotone" dataKey="rtsRate" stroke="#6366f1" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
             <p className="text-xs text-muted-foreground mt-2">Historical RTS trends and predictions</p>
           </div>
@@ -317,8 +488,16 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
               <Clock className="w-6 h-6 text-cyan-500" />
               <h3 className="text-lg font-bold text-foreground">Pick-up Time Heatmap</h3>
             </div>
-            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
-              <p className="text-muted-foreground text-sm">Time-based heatmap</p>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={metrics?.pickupHeatmapData || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip formatter={(value: number) => [value, 'Parcels']} />
+                  <Bar dataKey="parcels" fill="#06b6d4" />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
             <p className="text-xs text-muted-foreground mt-2">Peak pickup times and patterns</p>
           </div>
@@ -376,8 +555,18 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
               <BarChart3 className="w-6 h-6 text-pink-500" />
               <h3 className="text-lg font-bold text-foreground">Inferred RTS Reason Treemap</h3>
             </div>
-            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
-              <p className="text-muted-foreground text-sm">RTS reason breakdown</p>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <Treemap
+                  data={metrics?.rtsReasonsData || []}
+                  dataKey="size"
+                  aspectRatio={4 / 3}
+                  stroke="#fff"
+                  fill="#8884d8"
+                >
+                  <Tooltip formatter={(value: number) => [value, 'Count']} />
+                </Treemap>
+              </ResponsiveContainer>
             </div>
             <p className="text-xs text-muted-foreground mt-2">Root cause analysis of RTS incidents</p>
           </div>
