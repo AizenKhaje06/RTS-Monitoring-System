@@ -1,22 +1,110 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { Package, TrendingUp, DollarSign, Target, AlertTriangle, Lightbulb } from "lucide-react"
-import type { ProcessedData } from "@/lib/types"
+import type { ProcessedData, FilterState } from "@/lib/types"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 interface AnalyticalReportProps {
   data: ProcessedData | null
 }
 
 export function AnalyticalReport({ data }: AnalyticalReportProps) {
+  const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
+  const [filter, setFilter] = useState<FilterState>({ type: "all", value: "" })
+
+  const filteredData = useMemo(() => {
+    if (!data) return null
+
+    const sourceData = currentRegion === "all" ? data.all : data[currentRegion]
+
+    if (filter.type === "all") {
+      return sourceData
+    }
+
+    let filtered = sourceData.data
+
+    if (filter.type === "province" && filter.value) {
+      filtered = filtered.filter((parcel) =>
+        parcel.province.toLowerCase().includes(filter.value.toLowerCase())
+      )
+    }
+
+    if (filter.type === "month" && filter.value) {
+      filtered = filtered.filter((parcel) => {
+        if (!parcel.date) return false
+        let parcelMonth: number
+        try {
+          let d: Date
+          if (typeof parcel.date === "number") {
+            d = new Date(Date.UTC(1899, 11, 30) + parcel.date * 86400000)
+          } else {
+            d = new Date(parcel.date.toString().trim())
+          }
+          if (isNaN(d.getTime())) {
+            const parts = parcel.date.toString().split(" ")[0].split("-")
+            parcelMonth = Number.parseInt(parts[1], 10)
+          } else {
+            parcelMonth = d.getMonth() + 1
+          }
+        } catch {
+          const parts = parcel.date.toString().split(" ")[0].split("-")
+          parcelMonth = Number.parseInt(parts[1], 10)
+        }
+        return parcelMonth === Number.parseInt(filter.value, 10)
+      })
+    }
+
+    if (filter.type === "year" && filter.value) {
+      filtered = filtered.filter((parcel) => {
+        if (!parcel.date) return false
+        let parcelYear: number
+        try {
+          let d: Date
+          if (typeof parcel.date === "number") {
+            d = new Date(Date.UTC(1899, 11, 30) + parcel.date * 86400000)
+          } else {
+            d = new Date(parcel.date.toString().trim())
+          }
+          if (isNaN(d.getTime())) {
+            const parts = parcel.date.toString().split(" ")[0].split("-")
+            parcelYear = Number.parseInt(parts[0], 10)
+          } else {
+            parcelYear = d.getFullYear()
+          }
+        } catch {
+          const parts = parcel.date.toString().split(" ")[0].split("-")
+          parcelYear = Number.parseInt(parts[0], 10)
+        }
+        return parcelYear === Number.parseInt(filter.value, 10)
+      })
+    }
+
+    // Recalculate stats for filtered data
+    const stats: { [status: string]: { count: number } } = {}
+    filtered.forEach((parcel) => {
+      if (!stats[parcel.normalizedStatus]) {
+        stats[parcel.normalizedStatus] = { count: 0 }
+      }
+      stats[parcel.normalizedStatus].count++
+    })
+
+    return {
+      ...sourceData,
+      data: filtered,
+      stats,
+      total: filtered.length,
+    }
+  }, [data, currentRegion, filter])
 
   // Calculate metrics from filtered data
   const metrics = useMemo(() => {
-    if (!data) return null
+    if (!filteredData) return null
 
-    const parcelData = data.all.data
+    const parcelData = filteredData.data
     const rtsStatuses = ["PROBLEMATIC", "RETURNED"]
 
     // Basic counts
@@ -38,11 +126,11 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
     const deliveryRate = totalShipments > 0 ? (deliveredCount / totalShipments) * 100 : 0
     const rtsRate = totalShipments > 0 ? (rtsCount / totalShipments) * 100 : 0
 
-    // Regional data
+    // Regional data - since we're filtering all data, we need to filter each region's data accordingly
     const regions = [
-      { name: "Luzon", data: data.luzon },
-      { name: "Visayas", data: data.visayas },
-      { name: "Mindanao", data: data.mindanao }
+      { name: "Luzon", data: { ...data!.luzon, data: data!.luzon.data.filter(p => filteredData.data.includes(p)) } },
+      { name: "Visayas", data: { ...data!.visayas, data: data!.visayas.data.filter(p => filteredData.data.includes(p)) } },
+      { name: "Mindanao", data: { ...data!.mindanao, data: data!.mindanao.data.filter(p => filteredData.data.includes(p)) } }
     ]
 
     const topPerformingRegions = regions.map(region => {
@@ -71,9 +159,9 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
     }).sort((a, b) => b.netProfit - a.netProfit)
 
     // Store performance (using shippers as stores)
-    const storePerformance = Object.keys(data.all.winningShippers).map(shipper => {
-      const delivered = data.all.winningShippers[shipper] || 0
-      const rts = data.all.rtsShippers[shipper] || 0
+    const storePerformance = Object.keys(filteredData.winningShippers).map(shipper => {
+      const delivered = filteredData.winningShippers[shipper] || 0
+      const rts = filteredData.rtsShippers[shipper] || 0
       const total = delivered + rts
       const storeDeliveryRate = total > 0 ? (delivered / total) * 100 : 0
 
@@ -144,6 +232,110 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
       <div>
         <h1 className="text-3xl font-bold text-foreground mb-2">CORPORATE PERFORMANCE DASHBOARD</h1>
         <p className="text-muted-foreground">Executive insights for strategic decision-making and operational excellence</p>
+      </div>
+
+      {/* Region Tabs */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex gap-2">
+          <Button
+            variant={currentRegion === "all" ? "default" : "outline"}
+            onClick={() => setCurrentRegion("all")}
+            className="font-medium"
+          >
+            All Regions
+          </Button>
+          <Button
+            variant={currentRegion === "luzon" ? "default" : "outline"}
+            onClick={() => setCurrentRegion("luzon")}
+            className="font-medium"
+          >
+            Luzon
+          </Button>
+          <Button
+            variant={currentRegion === "visayas" ? "default" : "outline"}
+            onClick={() => setCurrentRegion("visayas")}
+            className="font-medium"
+          >
+            Visayas
+          </Button>
+          <Button
+            variant={currentRegion === "mindanao" ? "default" : "outline"}
+            onClick={() => setCurrentRegion("mindanao")}
+            className="font-medium"
+          >
+            Mindanao
+          </Button>
+        </div>
+
+        {/* Filter Controls */}
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-semibold text-foreground">Filter:</label>
+          <select
+            value={filter.type}
+            onChange={(e) => {
+              setFilter({ type: e.target.value as "all" | "province" | "month" | "year", value: "" })
+            }}
+            className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
+          >
+            <option value="all">All</option>
+            <option value="province">Province</option>
+            <option value="month">Month</option>
+            <option value="year">Year</option>
+          </select>
+
+          {filter.type === "province" && (
+            <Input
+              type="text"
+              placeholder="Enter province name"
+              value={filter.value}
+              onChange={(e) => setFilter({ ...filter, value: e.target.value })}
+              className="w-48 h-9 text-sm"
+            />
+          )}
+
+          {filter.type === "month" && (
+            <select
+              value={filter.value}
+              onChange={(e) => setFilter({ ...filter, value: e.target.value })}
+              className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
+            >
+              <option value="">Select month</option>
+              {Array.from({ length: 12 }, (_, i) => (
+                <option key={i + 1} value={String(i + 1).padStart(2, "0")}>
+                  {new Date(2000, i).toLocaleString("default", { month: "long" })}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {filter.type === "year" && (
+            <select
+              value={filter.value}
+              onChange={(e) => setFilter({ ...filter, value: e.target.value })}
+              className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
+            >
+              <option value="">Select year</option>
+              {Array.from({ length: new Date().getFullYear() - 1999 }, (_, i) => (
+                <option key={2000 + i} value={String(2000 + i)}>
+                  {2000 + i}
+                </option>
+              ))}
+            </select>
+          )}
+
+          <Button size="sm" onClick={() => {
+            if (filter.type !== "all" && !filter.value) {
+              alert("Please enter or select a value to filter.")
+              return
+            }
+            // Trigger filtering by updating state (already handled by useMemo)
+          }} className="h-9">
+            Apply
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setFilter({ type: "all", value: "" })} className="h-9 bg-transparent">
+            Clear
+          </Button>
+        </div>
       </div>
 
       {/* EXECUTIVE SUMMARY */}
