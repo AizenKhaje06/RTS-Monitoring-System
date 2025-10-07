@@ -166,7 +166,7 @@ function processData(excelData: unknown[][]): ProcessedData {
         }
       }
 
-    const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
+    const rtsStatuses = ["PROBLEMATIC", "RETURNED"]
       if (rtsStatuses.includes(status)) {
         processedData.all.rtsShippers[shipper as string] = (processedData.all.rtsShippers[shipper as string] || 0) + 1
         if (processedData[island]) {

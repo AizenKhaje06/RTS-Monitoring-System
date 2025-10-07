@@ -17,7 +17,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
     if (!data) return null
 
     const parcelData = data.all.data
-    const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
+    const rtsStatuses = ["PROBLEMATIC", "RETURNED"]
 
     // Basic counts
     const totalShipments = parcelData.length
@@ -27,8 +27,11 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
     // Financial calculations
     const deliveredParcels = parcelData.filter(p => p.normalizedStatus === "DELIVERED")
     const grossSales = deliveredParcels.reduce((sum, parcel) => sum + (parcel.codAmount || 0), 0)
-    const totalCost = parcelData.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
-    const netProfit = grossSales - totalCost
+    const totalShippingCost = parcelData.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
+    const totalRTSFee = parcelData
+      .filter(p => rtsStatuses.includes(p.normalizedStatus))
+      .reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
+    const netProfit = grossSales - totalShippingCost - totalRTSFee
     const avgProfitPerShipment = totalShipments > 0 ? netProfit / totalShipments : 0
 
     // Rates
@@ -51,8 +54,11 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
       const regionGrossSales = regionData
         .filter(p => p.normalizedStatus === "DELIVERED")
         .reduce((sum, p) => sum + (p.codAmount || 0), 0)
-      const regionTotalCost = regionData.reduce((sum, p) => sum + (p.totalCost || 0), 0)
-      const regionNetProfit = regionGrossSales - regionTotalCost
+      const regionTotalShippingCost = regionData.reduce((sum, p) => sum + (p.totalCost || 0), 0)
+      const regionTotalRTSFee = regionData
+        .filter(p => rtsStatuses.includes(p.normalizedStatus))
+        .reduce((sum, p) => sum + (p.rtsFee || 0), 0)
+      const regionNetProfit = regionGrossSales - regionTotalShippingCost - regionTotalRTSFee
       const regionProfitMargin = regionGrossSales > 0 ? (regionNetProfit / regionGrossSales) * 100 : 0
 
       return {
@@ -75,8 +81,11 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
       const shipperParcels = parcelData.filter(p => p.shipper === shipper)
       const shipperDeliveredParcels = shipperParcels.filter(p => p.normalizedStatus === "DELIVERED")
       const storeGrossSales = shipperDeliveredParcels.reduce((sum, p) => sum + (p.codAmount || 0), 0)
-      const storeTotalCost = shipperParcels.reduce((sum, p) => sum + (p.totalCost || 0), 0)
-      const storeNetProfit = storeGrossSales - storeTotalCost
+      const storeTotalShippingCost = shipperParcels.reduce((sum, p) => sum + (p.totalCost || 0), 0)
+      const storeTotalRTSFee = shipperParcels
+        .filter(p => rtsStatuses.includes(p.normalizedStatus))
+        .reduce((sum, p) => sum + (p.rtsFee || 0), 0)
+      const storeNetProfit = storeGrossSales - storeTotalShippingCost - storeTotalRTSFee
 
       return {
         store: shipper,
