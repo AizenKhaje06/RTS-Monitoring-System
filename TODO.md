@@ -3,3 +3,4 @@
 - [x] Check performance-report.tsx and other components for similar display issues or unused code
 - [x] Run npm run dev to test the application
 - [x] Use browser to verify the analytical report displays correctly (server running on localhost:3000)
+- [x] Add Top Delivered Shippers and Top RTS Shippers sections to performance dashboard
