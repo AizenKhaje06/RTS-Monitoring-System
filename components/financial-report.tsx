@@ -23,22 +23,25 @@ export function FinancialReport({ data }: FinancialReportProps) {
       const filtered = sourceData.data
 
       // Calculate financial metrics
-      const totalCOD = filtered.reduce((sum, parcel) => sum + (parcel.codAmount || 0), 0)
+      const deliveredParcels = filtered.filter(p => p.normalizedStatus === "DELIVERED")
+      const grossSales = deliveredParcels.reduce((sum, parcel) => sum + (parcel.codAmount || 0), 0)
       const totalServiceCharge = filtered.reduce((sum, parcel) => sum + (parcel.serviceCharge || 0), 0)
       const totalShippingCost = filtered.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
-      const totalRTSFee = filtered.reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
+      const totalRTSFee = filtered
+        .filter(p => rtsStatuses.includes(p.normalizedStatus))
+        .reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
 
       // Calculate RTS-specific costs
-      const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
+      const rtsStatuses = ["PROBLEMATIC", "RETURNED"]
       const rtsParcels = filtered.filter((p) => rtsStatuses.includes(p.normalizedStatus))
       const rtsShippingCost = rtsParcels.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
       const rtsFeeLost = rtsParcels.reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
 
-      const grossProfit = totalCOD - totalShippingCost
-      const netProfit = grossProfit - rtsShippingCost - rtsFeeLost
+      const grossProfit = grossSales - totalShippingCost
+      const netProfit = grossProfit - totalRTSFee
 
       return {
-        totalCOD,
+        grossSales,
         totalServiceCharge,
         totalShippingCost,
         totalRTSFee,
@@ -102,22 +105,25 @@ export function FinancialReport({ data }: FinancialReportProps) {
     })
 
     // Calculate financial metrics
-    const totalCOD = filtered.reduce((sum, parcel) => sum + (parcel.codAmount || 0), 0)
+    const deliveredParcels = filtered.filter(p => p.normalizedStatus === "DELIVERED")
+    const grossSales = deliveredParcels.reduce((sum, parcel) => sum + (parcel.codAmount || 0), 0)
     const totalServiceCharge = filtered.reduce((sum, parcel) => sum + (parcel.serviceCharge || 0), 0)
     const totalShippingCost = filtered.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
-    const totalRTSFee = filtered.reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
+    const totalRTSFee = filtered
+      .filter(p => rtsStatuses.includes(p.normalizedStatus))
+      .reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
 
     // Calculate RTS-specific costs
-    const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
+    const rtsStatuses = ["PROBLEMATIC", "RETURNED"]
     const rtsParcels = filtered.filter((p) => rtsStatuses.includes(p.normalizedStatus))
     const rtsShippingCost = rtsParcels.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
     const rtsFeeLost = rtsParcels.reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
 
-    const grossProfit = totalCOD - totalShippingCost
-    const netProfit = grossProfit - rtsShippingCost - rtsFeeLost
+    const grossProfit = grossSales - totalShippingCost
+    const netProfit = grossProfit - totalRTSFee
 
     return {
-      totalCOD,
+      grossSales,
       totalServiceCharge,
       totalShippingCost,
       totalRTSFee,
@@ -257,10 +263,10 @@ export function FinancialReport({ data }: FinancialReportProps) {
           <div className="flex items-center justify-between mb-4">
             <DollarSign className="w-8 h-8 text-green-500" />
           </div>
-          <p className="text-sm text-muted-foreground mb-1">Total COD Amount</p>
+          <p className="text-sm text-muted-foreground mb-1">Gross Sales</p>
           <p className="text-3xl font-bold text-foreground">
             ₱
-            {financialData?.totalCOD.toLocaleString(undefined, {
+            {financialData?.grossSales.toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             }) || "0.00"}
@@ -382,10 +388,10 @@ export function FinancialReport({ data }: FinancialReportProps) {
         <h2 className="text-xl font-bold text-foreground mb-4">Financial Summary</h2>
         <div className="space-y-3">
           <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
-            <span className="text-sm font-medium text-muted-foreground">Total Revenue Potential (COD)</span>
+            <span className="text-sm font-medium text-muted-foreground">Gross Sales (Delivered COD)</span>
             <span className="text-sm font-bold text-foreground">
               ₱
-              {financialData?.totalCOD.toLocaleString(undefined, {
+              {financialData?.grossSales.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               }) || "0.00"}
@@ -415,7 +421,7 @@ export function FinancialReport({ data }: FinancialReportProps) {
             <span className="text-sm font-medium text-muted-foreground">RTS Cost Impact</span>
             <span className="text-sm font-bold text-red-500">
               -₱
-              {financialData?.rtsShippingCost.toLocaleString(undefined, {
+              {financialData?.totalRTSFee.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               }) || "0.00"}

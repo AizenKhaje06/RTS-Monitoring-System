@@ -5,24 +5,7 @@ import { TrendingUp, Package, CheckCircle, XCircle, DollarSign, Calendar, Store,
 import type { ProcessedData } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
-import {
-  LineChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  ResponsiveContainer,
-} from "recharts"
+
 
 interface PerformanceReportProps {
   data: ProcessedData | null
@@ -36,28 +19,20 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
 
   const {
     metrics,
-    dailyTrendData,
-    rtsByShopData,
-    rtsByRegionData,
-    statusDistributionData,
     topProvinces,
     topRegions,
-    topProducts,
-    topRTSProducts,
+    topDeliveredShippers,
+    topRtsShippers,
     regionSuccessRates,
     regionRTSRates,
   } = useMemo(() => {
     if (!data)
       return {
         metrics: null,
-        dailyTrendData: [],
-        rtsByShopData: [],
-        rtsByRegionData: [],
-        statusDistributionData: [],
         topProvinces: [],
         topRegions: [],
-        topProducts: [],
-        topRTSProducts: [],
+        topDeliveredShippers: [],
+        topRtsShippers: [],
         regionSuccessRates: [],
         regionRTSRates: [],
       }
@@ -88,7 +63,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     // Calculate metrics
     const totalParcels = filteredData.length
     const deliveredParcels = filteredData.filter((p) => p.normalizedStatus === "DELIVERED").length
-    const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
+    const rtsStatuses = ["RETURNED"]
     const rtsParcels = filteredData.filter((p) => rtsStatuses.includes(p.normalizedStatus))
     const rtsCount = rtsParcels.length
 
@@ -105,82 +80,6 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         : 0
     const rtsAvgCost =
       rtsCount > 0 ? rtsParcels.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0) / rtsCount : 0
-
-    // Daily trend data
-    const dailyData: { [key: string]: { delivered: number; rts: number } } = {}
-    filteredData.forEach((parcel) => {
-      if (parcel.date) {
-        const parcelDate = new Date(parcel.date)
-        if (!isNaN(parcelDate.getTime())) {
-          const date = parcelDate.toISOString().split("T")[0]
-          if (!dailyData[date]) {
-            dailyData[date] = { delivered: 0, rts: 0 }
-          }
-          if (parcel.normalizedStatus === "DELIVERED") {
-            dailyData[date].delivered++
-          } else if (rtsStatuses.includes(parcel.normalizedStatus)) {
-            dailyData[date].rts++
-          }
-        }
-      }
-    })
-
-    const dailyTrendData = Object.entries(dailyData)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, counts]) => ({
-        date,
-        delivered: counts.delivered,
-        rts: counts.rts,
-      }))
-
-    // RTS by Shop data
-    const shopData: { [key: string]: { total: number; rts: number } } = {}
-    filteredData.forEach((parcel) => {
-      if (!shopData[parcel.shipper]) {
-        shopData[parcel.shipper] = { total: 0, rts: 0 }
-      }
-      shopData[parcel.shipper].total++
-      if (rtsStatuses.includes(parcel.normalizedStatus)) {
-        shopData[parcel.shipper].rts++
-      }
-    })
-
-    const rtsByShopData = Object.entries(shopData)
-      .map(([shop, counts]) => ({
-        shop,
-        rtsRate: counts.total > 0 ? (counts.rts / counts.total) * 100 : 0,
-        rtsCount: counts.rts,
-      }))
-      .sort((a, b) => b.rtsRate - a.rtsRate)
-      .slice(0, 10)
-
-    // RTS by Region data
-    const regionData: { [key: string]: { total: number; rts: number } } = {}
-    filteredData.forEach((parcel) => {
-      if (!regionData[parcel.region]) {
-        regionData[parcel.region] = { total: 0, rts: 0 }
-      }
-      regionData[parcel.region].total++
-      if (rtsStatuses.includes(parcel.normalizedStatus)) {
-        regionData[parcel.region].rts++
-      }
-    })
-
-    const rtsByRegionData = Object.entries(regionData)
-      .map(([region, counts]) => ({
-        region,
-        rtsRate: counts.total > 0 ? (counts.rts / counts.total) * 100 : 0,
-        rtsCount: counts.rts,
-      }))
-      .sort((a, b) => b.rtsRate - a.rtsRate)
-      .slice(0, 10)
-
-    // Status distribution data
-    const statusData = [
-      { name: "Delivered", value: deliveredParcels, color: "#22c55e" },
-      { name: "RTS", value: rtsCount, color: "#ef4444" },
-      { name: "Other", value: totalParcels - deliveredParcels - rtsCount, color: "#6b7280" },
-    ].filter((item) => item.value > 0)
 
     // Top Provinces
     const provinceCounts: { [key: string]: number } = {}
@@ -200,11 +99,17 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10)
 
-    // Top Products - Not available in current data structure
-    const topProducts: [string, number][] = []
+    // Top Delivered Shippers
+    const topDeliveredShippers = Object.entries(sourceData.winningShippers)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
 
-    // Top RTS Products - Not available in current data structure
-    const topRTSProducts: [string, number][] = []
+    // Top RTS Shippers
+    const topRtsShippers = Object.entries(sourceData.rtsShippers)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+
+
 
     // Region Success Rates
     const regionSuccessData: { [key: string]: { total: number; delivered: number } } = {}
@@ -266,14 +171,10 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         deliveredAvgCost,
         rtsAvgCost,
       },
-      dailyTrendData,
-      rtsByShopData,
-      rtsByRegionData,
-      statusDistributionData: statusData,
       topProvinces,
       topRegions,
-      topProducts,
-      topRTSProducts,
+      topDeliveredShippers,
+      topRtsShippers,
       regionSuccessRates,
       regionRTSRates,
     }
@@ -456,57 +357,8 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       </div>
 
       {/* Core Visualizations */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Status Distribution */}
-        <div className="glass rounded-xl p-6 border border-border/50">
-          <h3 className="text-xl font-bold text-foreground mb-4">Status Distribution</h3>
-          <ChartContainer
-            config={{
-              delivered: { label: "Delivered", color: "#22c55e" },
-              rts: { label: "RTS", color: "#ef4444" },
-              other: { label: "Other", color: "#6b7280" },
-            }}
-            className="h-64"
-          >
-            <PieChart>
-              <Pie data={statusDistributionData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value">
-                {statusDistributionData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-      <ChartTooltip content={<ChartTooltipContent />} />
-    </PieChart>
-  </ChartContainer>
-        </div>
-
-        {/* RTS by Shop */}
-        <div className="glass rounded-xl p-6 border border-border/50">
-          <h3 className="text-xl font-bold text-foreground mb-4">RTS by Shop (Top 10)</h3>
-          <ChartContainer config={{ rtsRate: { label: "RTS Rate (%)", color: "#ef4444" } }} className="h-64">
-            <BarChart data={rtsByShopData} layout="horizontal">
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" />
-              <YAxis dataKey="shop" type="category" width={100} />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="rtsRate" fill="#ef4444" />
-            </BarChart>
-          </ChartContainer>
-        </div>
-
-        {/* RTS by Region */}
-        <div className="glass rounded-xl p-6 border border-border/50">
-          <h3 className="text-xl font-bold text-foreground mb-4">RTS by Region (Top 10)</h3>
-          <ChartContainer config={{ rtsRate: { label: "RTS Rate (%)", color: "#f97316" } }} className="h-64">
-            <BarChart data={rtsByRegionData} layout="horizontal">
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" />
-              <YAxis dataKey="region" type="category" width={100} />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="rtsRate" fill="#f97316" />
-            </BarChart>
-          </ChartContainer>
-        </div>
-      </div>
+      {/* Core Visualizations */}
+      {/* Removed Status Distribution, RTS by Shop, and RTS by Region charts as requested */}
 
       {/* Additional Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -541,8 +393,41 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
             ))}
           </div>
         </div>
+      </div>
 
+      {/* Top Shippers */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Delivered Shippers */}
+        <div className="glass rounded-xl p-6 border border-green-500/50">
+          <h3 className="text-xl font-bold text-foreground mb-4">Top Delivered Shippers</h3>
+          <div className="space-y-3 max-h-64 overflow-y-auto">
+            {topDeliveredShippers.map(([shipper, count], index) => (
+              <div key={shipper} className="flex items-center justify-between p-3 rounded-lg bg-green-500/10">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-green-500 w-6">#{index + 1}</span>
+                  <span className="text-sm font-medium text-foreground">{shipper}</span>
+                </div>
+                <span className="text-sm font-bold text-green-500">{count.toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        </div>
 
+        {/* Top RTS Shippers */}
+        <div className="glass rounded-xl p-6 border border-red-500/50">
+          <h3 className="text-xl font-bold text-foreground mb-4">Top RTS Shippers</h3>
+          <div className="space-y-3 max-h-64 overflow-y-auto">
+            {topRtsShippers.map(([shipper, count], index) => (
+              <div key={shipper} className="flex items-center justify-between p-3 rounded-lg bg-red-500/10">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-red-500 w-6">#{index + 1}</span>
+                  <span className="text-sm font-medium text-foreground">{shipper}</span>
+                </div>
+                <span className="text-sm font-bold text-red-500">{count.toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Region Performance */}

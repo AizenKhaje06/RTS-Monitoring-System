@@ -1,8 +1,10 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { PieChart, MapPin, PackageX, TrendingUp, BarChart3, DollarSign, Clock, AlertTriangle } from "lucide-react"
+import { Package, TrendingUp, DollarSign, Target, AlertTriangle, Lightbulb } from "lucide-react"
 import type { ProcessedData, FilterState } from "@/lib/types"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
@@ -34,17 +36,50 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
     if (filter.type === "month" && filter.value) {
       filtered = filtered.filter((parcel) => {
         if (!parcel.date) return false
-        const parcelDate = new Date(parcel.date)
-        const parcelMonth = String(parcelDate.getMonth() + 1).padStart(2, "0")
-        return parcelMonth === filter.value
+        let parcelMonth: number
+        try {
+          let d: Date
+          if (typeof parcel.date === "number") {
+            d = new Date(Date.UTC(1899, 11, 30) + parcel.date * 86400000)
+          } else {
+            d = new Date(parcel.date.toString().trim())
+          }
+          if (isNaN(d.getTime())) {
+            const parts = parcel.date.toString().split(" ")[0].split("-")
+            parcelMonth = Number.parseInt(parts[1], 10)
+          } else {
+            parcelMonth = d.getMonth() + 1
+          }
+        } catch {
+          const parts = parcel.date.toString().split(" ")[0].split("-")
+          parcelMonth = Number.parseInt(parts[1], 10)
+        }
+        return parcelMonth === Number.parseInt(filter.value, 10)
       })
     }
 
     if (filter.type === "year" && filter.value) {
       filtered = filtered.filter((parcel) => {
         if (!parcel.date) return false
-        const parcelDate = new Date(parcel.date)
-        return String(parcelDate.getFullYear()) === filter.value
+        let parcelYear: number
+        try {
+          let d: Date
+          if (typeof parcel.date === "number") {
+            d = new Date(Date.UTC(1899, 11, 30) + parcel.date * 86400000)
+          } else {
+            d = new Date(parcel.date.toString().trim())
+          }
+          if (isNaN(d.getTime())) {
+            const parts = parcel.date.toString().split(" ")[0].split("-")
+            parcelYear = Number.parseInt(parts[0], 10)
+          } else {
+            parcelYear = d.getFullYear()
+          }
+        } catch {
+          const parts = parcel.date.toString().split(" ")[0].split("-")
+          parcelYear = Number.parseInt(parts[0], 10)
+        }
+        return parcelYear === Number.parseInt(filter.value, 10)
       })
     }
 
@@ -70,60 +105,133 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
     if (!filteredData) return null
 
     const parcelData = filteredData.data
+    const rtsStatuses = ["PROBLEMATIC", "RETURNED"]
 
-    // Financial metrics
-    const totalCOD = parcelData.reduce((sum, parcel) => sum + (parcel.codAmount || 0), 0)
+    // Basic counts
+    const totalShipments = parcelData.length
+    const deliveredCount = parcelData.filter(p => p.normalizedStatus === "DELIVERED").length
+    const rtsCount = parcelData.filter(p => rtsStatuses.includes(p.normalizedStatus)).length
+
+    // Financial calculations
+    const deliveredParcels = parcelData.filter(p => p.normalizedStatus === "DELIVERED")
+    const grossSales = deliveredParcels.reduce((sum, parcel) => sum + (parcel.codAmount || 0), 0)
     const totalShippingCost = parcelData.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
-    const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
-    const rtsParcels = parcelData.filter((p) => rtsStatuses.includes(p.normalizedStatus))
-    const rtsShippingCost = rtsParcels.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
-    const rtsFeeLost = rtsParcels.reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
-    const totalCostOfFailure = rtsShippingCost + rtsFeeLost
+    const totalRTSFee = parcelData
+      .filter(p => rtsStatuses.includes(p.normalizedStatus))
+      .reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
+    const netProfit = grossSales - totalShippingCost - totalRTSFee
+    const avgProfitPerShipment = totalShipments > 0 ? netProfit / totalShipments : 0
 
-    // Address complexity score (simplified calculation)
-    const avgAddressComplexity = parcelData.length > 0
-      ? parcelData.reduce((sum, parcel) => {
-          // Simple complexity based on address length and special characters
-          const complexity = (parcel.consigneeRegion?.length || 0) +
-                           (parcel.province?.length || 0) +
-                           (parcel.consigneeRegion?.match(/[^a-zA-Z0-9\s]/g)?.length || 0) * 2
-          return sum + complexity
-        }, 0) / parcelData.length
-      : 0
+    // Rates
+    const deliveryRate = totalShipments > 0 ? (deliveredCount / totalShipments) * 100 : 0
+    const rtsRate = totalShipments > 0 ? (rtsCount / totalShipments) * 100 : 0
+
+    // Regional data - since we're filtering all data, we need to filter each region's data accordingly
+    const regions = [
+      { name: "Luzon", data: { ...data!.luzon, data: data!.luzon.data.filter(p => filteredData.data.includes(p)) } },
+      { name: "Visayas", data: { ...data!.visayas, data: data!.visayas.data.filter(p => filteredData.data.includes(p)) } },
+      { name: "Mindanao", data: { ...data!.mindanao, data: data!.mindanao.data.filter(p => filteredData.data.includes(p)) } }
+    ]
+
+    const topPerformingRegions = regions.map(region => {
+      const regionData = region.data.data
+      const regionTotal = regionData.length
+      const regionDelivered = regionData.filter(p => p.normalizedStatus === "DELIVERED").length
+      const regionDeliveryRate = regionTotal > 0 ? (regionDelivered / regionTotal) * 100 : 0
+
+      const regionGrossSales = regionData
+        .filter(p => p.normalizedStatus === "DELIVERED")
+        .reduce((sum, p) => sum + (p.codAmount || 0), 0)
+      const regionTotalShippingCost = regionData.reduce((sum, p) => sum + (p.totalCost || 0), 0)
+      const regionTotalRTSFee = regionData
+        .filter(p => rtsStatuses.includes(p.normalizedStatus))
+        .reduce((sum, p) => sum + (p.rtsFee || 0), 0)
+      const regionNetProfit = regionGrossSales - regionTotalShippingCost - regionTotalRTSFee
+      const regionProfitMargin = regionGrossSales > 0 ? (regionNetProfit / regionGrossSales) * 100 : 0
+
+      return {
+        region: region.name,
+        deliveryRate: regionDeliveryRate,
+        grossSales: regionGrossSales,
+        netProfit: regionNetProfit,
+        profitMargin: regionProfitMargin
+      }
+    }).sort((a, b) => b.netProfit - a.netProfit)
+
+    // Store performance (using shippers as stores)
+    const storePerformance = Object.keys(filteredData.winningShippers).map(shipper => {
+      const delivered = filteredData.winningShippers[shipper] || 0
+      const rts = filteredData.rtsShippers[shipper] || 0
+      const total = delivered + rts
+      const storeDeliveryRate = total > 0 ? (delivered / total) * 100 : 0
+
+      // Calculate financials for this shipper
+      const shipperParcels = parcelData.filter(p => p.shipper === shipper)
+      const shipperDeliveredParcels = shipperParcels.filter(p => p.normalizedStatus === "DELIVERED")
+      const storeGrossSales = shipperDeliveredParcels.reduce((sum, p) => sum + (p.codAmount || 0), 0)
+      const storeTotalShippingCost = shipperParcels.reduce((sum, p) => sum + (p.totalCost || 0), 0)
+      const storeTotalRTSFee = shipperParcels
+        .filter(p => rtsStatuses.includes(p.normalizedStatus))
+        .reduce((sum, p) => sum + (p.rtsFee || 0), 0)
+      const storeNetProfit = storeGrossSales - storeTotalShippingCost - storeTotalRTSFee
+
+      return {
+        store: shipper,
+        deliveryRate: storeDeliveryRate,
+        grossSales: storeGrossSales,
+        netProfit: storeNetProfit
+      }
+    }).sort((a, b) => b.netProfit - a.netProfit)
+
+    // Critical insights
+    const highestPerformingRegion = topPerformingRegions[0]
+    const worstRTSRegion = regions.reduce((worst, region) => {
+      const regionData = region.data.data
+      const regionRTS = regionData.filter((p: any) => rtsStatuses.includes(p.normalizedStatus)).length
+      const regionTotal = regionData.length
+      const regionRTSRate = regionTotal > 0 ? (regionRTS / regionTotal) * 100 : 0
+      return regionRTSRate > (worst.rtsRate || 0) ? { region: region.name, rtsRate: regionRTSRate } : worst
+    }, { region: "", rtsRate: 0 })
+    const topPerformingStore = storePerformance[0]
 
     return {
-      totalParcels: parcelData.length,
-      totalCOD,
-      totalShippingCost,
-      rtsParcelsCount: rtsParcels.length,
-      rtsShippingCost,
-      rtsFeeLost,
-      totalCostOfFailure,
-      avgAddressComplexity: Math.round(avgAddressComplexity * 10) / 10,
-      deliveryRate: parcelData.length > 0
-        ? ((parcelData.filter(p => p.normalizedStatus === "DELIVERED").length / parcelData.length) * 100)
-        : 0,
-      rtsRate: parcelData.length > 0 ? (rtsParcels.length / parcelData.length) * 100 : 0
+      totalShipments,
+      deliveryRate,
+      rtsRate,
+      grossSales,
+      netProfit,
+      avgProfitPerShipment,
+      topPerformingRegions,
+      storePerformance,
+      highestPerformingRegion,
+      worstRTSRegion,
+      topPerformingStore
     }
-  }, [filteredData])
+  }, [data])
 
   if (!data) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <PieChart className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-foreground mb-2">No Data Available</h2>
-          <p className="text-muted-foreground">Upload data to view analytical insights</p>
+          <p className="text-muted-foreground">Upload data to view corporate performance insights</p>
         </div>
       </div>
     )
   }
 
+  const getColorClass = (deliveryRate: number, profitMargin: number) => {
+    if (deliveryRate >= 80 && profitMargin >= 25) return "text-green-600"
+    if (deliveryRate >= 70 && profitMargin >= 15) return "text-amber-600"
+    return "text-red-600"
+  }
+
   return (
     <div className="p-8 space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">ANALYTICAL REPORT</h1>
-        <p className="text-muted-foreground">Advanced analytics for operational excellence and strategic decision-making</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">CORPORATE PERFORMANCE DASHBOARD</h1>
+        <p className="text-muted-foreground">Executive insights for strategic decision-making and operational excellence</p>
       </div>
 
       {/* Region Tabs */}
@@ -230,167 +338,229 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
         </div>
       </div>
 
-      {/* Geographic Intelligence Section */}
+      {/* EXECUTIVE SUMMARY */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">Geographic Intelligence</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="glass rounded-xl p-6 border border-border/50">
-            <div className="flex items-center gap-3 mb-4">
-              <MapPin className="w-6 h-6 text-red-500" />
-              <h3 className="text-lg font-bold text-foreground">RTS Hotspot Map</h3>
-            </div>
-            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
-              <p className="text-muted-foreground text-sm">Interactive map visualization</p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">Geographic distribution of RTS incidents</p>
-          </div>
+        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">EXECUTIVE SUMMARY</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Shipments</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{metrics?.totalShipments.toLocaleString()}</div>
+            </CardContent>
+          </Card>
 
-          <div className="glass rounded-xl p-6 border border-border/50">
-            <div className="flex items-center gap-3 mb-4">
-              <BarChart3 className="w-6 h-6 text-blue-500" />
-              <h3 className="text-lg font-bold text-foreground">Delivery Efficiency by Region</h3>
-            </div>
-            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
-              <p className="text-muted-foreground text-sm">Regional performance chart</p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">Success rates across Philippine regions</p>
-          </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Delivery Rate</CardTitle>
+              <Target className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{metrics?.deliveryRate.toFixed(1)}%</div>
+            </CardContent>
+          </Card>
 
-          <div className="glass rounded-xl p-6 border border-border/50">
-            <div className="flex items-center gap-3 mb-4">
-              <TrendingUp className="w-6 h-6 text-green-500" />
-              <h3 className="text-lg font-bold text-foreground">Cost-to-Serve Bubble Chart</h3>
-            </div>
-            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
-              <p className="text-muted-foreground text-sm">Cost analysis visualization</p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">Operational costs vs delivery volume</p>
-          </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">RTS Rate</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{metrics?.rtsRate.toFixed(1)}%</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Gross Sales</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">₱{metrics?.grossSales.toLocaleString()}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">₱{metrics?.netProfit.toLocaleString()}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Avg Profit/Shipment</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">₱{metrics?.avgProfitPerShipment.toFixed(2)}</div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
-      {/* Client & Product Analysis Section */}
+      {/* TOP PERFORMING REGIONS */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">Client & Product Analysis</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="glass rounded-xl p-6 border border-border/50">
-            <div className="flex items-center gap-3 mb-4">
-              <BarChart3 className="w-6 h-6 text-purple-500" />
-              <h3 className="text-lg font-bold text-foreground">Client Performance Matrix</h3>
-            </div>
-            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
-              <p className="text-muted-foreground text-sm">Client performance metrics</p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">Delivery success rates by client</p>
-          </div>
-
-          <div className="glass rounded-xl p-6 border border-border/50">
-            <div className="flex items-center gap-3 mb-4">
-              <PackageX className="w-6 h-6 text-orange-500" />
-              <h3 className="text-lg font-bold text-foreground">Product-wise RTS Rate</h3>
-            </div>
-            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
-              <p className="text-muted-foreground text-sm">Product RTS analysis</p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">RTS rates by product category</p>
-          </div>
-        </div>
+        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">TOP PERFORMING REGIONS</h2>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Region</TableHead>
+                  <TableHead>Delivery Rate (%)</TableHead>
+                  <TableHead>Gross Sales (PHP)</TableHead>
+                  <TableHead>Net Profit (PHP)</TableHead>
+                  <TableHead>Profit Margin (%)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {metrics?.topPerformingRegions.map((region) => (
+                  <TableRow key={region.region}>
+                    <TableCell className="font-medium">{region.region}</TableCell>
+                    <TableCell className={getColorClass(region.deliveryRate, region.profitMargin)}>
+                      {region.deliveryRate.toFixed(1)}%
+                    </TableCell>
+                    <TableCell>₱{region.grossSales.toLocaleString()}</TableCell>
+                    <TableCell>₱{region.netProfit.toLocaleString()}</TableCell>
+                    <TableCell className={getColorClass(region.deliveryRate, region.profitMargin)}>
+                      {region.profitMargin.toFixed(1)}%
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Temporal & Trend Analysis Section */}
+      {/* STORE PERFORMANCE */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">Temporal & Trend Analysis</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="glass rounded-xl p-6 border border-border/50">
-            <div className="flex items-center gap-3 mb-4">
-              <TrendingUp className="w-6 h-6 text-indigo-500" />
-              <h3 className="text-lg font-bold text-foreground">RTS Trend Line Chart with Forecast</h3>
-            </div>
-            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
-              <p className="text-muted-foreground text-sm">Trend analysis with forecasting</p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">Historical RTS trends and predictions</p>
-          </div>
-
-          <div className="glass rounded-xl p-6 border border-border/50">
-            <div className="flex items-center gap-3 mb-4">
-              <Clock className="w-6 h-6 text-cyan-500" />
-              <h3 className="text-lg font-bold text-foreground">Pick-up Time Heatmap</h3>
-            </div>
-            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
-              <p className="text-muted-foreground text-sm">Time-based heatmap</p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">Peak pickup times and patterns</p>
-          </div>
-        </div>
+        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">STORE PERFORMANCE</h2>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Store</TableHead>
+                  <TableHead>Delivery Rate (%)</TableHead>
+                  <TableHead>Gross Sales (PHP)</TableHead>
+                  <TableHead>Net Profit (PHP)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {metrics?.storePerformance.slice(0, 10).map((store) => (
+                  <TableRow key={store.store}>
+                    <TableCell className="font-medium">{store.store}</TableCell>
+                    <TableCell>{store.deliveryRate.toFixed(1)}%</TableCell>
+                    <TableCell>₱{store.grossSales.toLocaleString()}</TableCell>
+                    <TableCell>₱{store.netProfit.toLocaleString()}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Data & Address Quality Section */}
+      {/* CRITICAL INSIGHTS */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">Data & Address Quality</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="glass rounded-xl p-6 border border-border/50">
-            <div className="flex items-center gap-3 mb-4">
-              <AlertTriangle className="w-6 h-6 text-yellow-500" />
-              <h3 className="text-lg font-bold text-foreground">Address Complexity Score KPI</h3>
-            </div>
-            <div className="text-center py-8">
-              <p className="text-4xl font-bold text-yellow-500 mb-2">--</p>
-              <p className="text-sm text-muted-foreground">Average complexity score</p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">Address accuracy and delivery difficulty</p>
-          </div>
-
-          <div className="glass rounded-xl p-6 border border-border/50">
-            <div className="flex items-center gap-3 mb-4">
-              <BarChart3 className="w-6 h-6 text-pink-500" />
-              <h3 className="text-lg font-bold text-foreground">Inferred RTS Reason Treemap</h3>
-            </div>
-            <div className="h-48 flex items-center justify-center bg-secondary/20 rounded-lg">
-              <p className="text-muted-foreground text-sm">RTS reason breakdown</p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">Root cause analysis of RTS incidents</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Financial Impact Section */}
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">Financial Impact</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="glass rounded-xl p-6 border border-red-500/50">
-            <div className="flex items-center gap-3 mb-4">
-              <DollarSign className="w-6 h-6 text-red-500" />
-              <h3 className="text-lg font-bold text-foreground">Total Cost of Failure KPI</h3>
-            </div>
-            <div className="text-center py-8">
-              <p className="text-4xl font-bold text-red-500 mb-2">
-                ₱{metrics?.totalCostOfFailure.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }) || "0.00"}
+        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">CRITICAL INSIGHTS</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+                Highest Performing Region
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm">
+                {metrics?.highestPerformingRegion?.region} leads with {metrics?.highestPerformingRegion?.profitMargin.toFixed(1)}% profit margin
               </p>
-              <p className="text-sm text-muted-foreground">Total operational losses</p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">Combined cost of RTS and failed deliveries</p>
-          </div>
+            </CardContent>
+          </Card>
 
-          <div className="glass rounded-xl p-6 border border-orange-500/50">
-            <div className="flex items-center gap-3 mb-4">
-              <DollarSign className="w-6 h-6 text-orange-500" />
-              <h3 className="text-lg font-bold text-foreground">Uncollected COD Amount KPI</h3>
-            </div>
-            <div className="text-center py-8">
-              <p className="text-4xl font-bold text-orange-500 mb-2">
-                ₱{metrics?.totalCOD.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }) || "0.00"}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-red-600" />
+                Worst RTS Region
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm">
+                {metrics?.worstRTSRegion?.region} has the highest RTS rate at {metrics?.worstRTSRegion?.rtsRate.toFixed(1)}%
               </p>
-              <p className="text-sm text-muted-foreground">Outstanding COD value</p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">Value of undelivered cash-on-delivery parcels</p>
-          </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-blue-600" />
+                Top Performing Store
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm">
+                {metrics?.topPerformingStore?.store} leads with ₱{metrics?.topPerformingStore?.netProfit.toLocaleString()} net profit
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* RECOMMENDATIONS */}
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">RECOMMENDATIONS</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-red-600" />
+                Address RTS Issues
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm">
+                Focus on {metrics?.worstRTSRegion?.region} to reduce RTS rate from {metrics?.worstRTSRegion?.rtsRate.toFixed(1)}%
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lightbulb className="h-5 w-5 text-yellow-600" />
+                Scale Best Practices
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm">
+                Implement {metrics?.highestPerformingRegion?.region} strategies across other regions to improve overall performance
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+                Optimize Operations
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm">
+                Review low-margin areas and optimize cost structures to improve profitability
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
