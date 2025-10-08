@@ -36,7 +36,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
     if (filter.type === "month" && filter.value) {
       filtered = filtered.filter((parcel) => {
         if (!parcel.date) return false
-        let parcelMonth: number
+        let parcelMonth = 0
         try {
           let d: Date
           if (typeof parcel.date === "number") {
@@ -61,7 +61,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
     if (filter.type === "year" && filter.value) {
       filtered = filtered.filter((parcel) => {
         if (!parcel.date) return false
-        let parcelYear: number
+        let parcelYear = 0
         try {
           let d: Date
           if (typeof parcel.date === "number") {
@@ -127,10 +127,11 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
     const rtsRate = totalShipments > 0 ? (rtsCount / totalShipments) * 100 : 0
 
     // Regional data - since we're filtering all data, we need to filter each region's data accordingly
+    const filteredSet = new Set(filteredData.data)
     const regions = [
-      { name: "Luzon", data: { ...data!.luzon, data: data!.luzon.data.filter(p => filteredData.data.includes(p)) } },
-      { name: "Visayas", data: { ...data!.visayas, data: data!.visayas.data.filter(p => filteredData.data.includes(p)) } },
-      { name: "Mindanao", data: { ...data!.mindanao, data: data!.mindanao.data.filter(p => filteredData.data.includes(p)) } }
+      { name: "Luzon", data: { ...data!.luzon, data: data!.luzon.data.filter(p => filteredSet.has(p)) } },
+      { name: "Visayas", data: { ...data!.visayas, data: data!.visayas.data.filter(p => filteredSet.has(p)) } },
+      { name: "Mindanao", data: { ...data!.mindanao, data: data!.mindanao.data.filter(p => filteredSet.has(p)) } }
     ]
 
     const topPerformingRegions = regions.map(region => {

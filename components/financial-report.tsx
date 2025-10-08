@@ -10,6 +10,8 @@ interface FinancialReportProps {
   data: ProcessedData | null
 }
 
+const rtsStatuses = ["PROBLEMATIC", "RETURNED"]
+
 export function FinancialReport({ data }: FinancialReportProps) {
   const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
   const [filter, setFilter] = useState<FilterState>({ type: "all", value: "" })
@@ -18,7 +20,6 @@ export function FinancialReport({ data }: FinancialReportProps) {
     if (!data) return null
 
     const sourceData = currentRegion === "all" ? data.all : data[currentRegion]
-    const rtsStatuses = ["PROBLEMATIC", "RETURNED"]
 
     if (filter.type === "all") {
       const filtered = sourceData.data
@@ -59,7 +60,7 @@ export function FinancialReport({ data }: FinancialReportProps) {
       }
       if (filter.type === "month") {
         if (!parcel.date) return false
-        let parcelMonth: number
+        let parcelMonth = 0
         try {
           let d: Date
           if (typeof parcel.date === "number") {
@@ -81,7 +82,7 @@ export function FinancialReport({ data }: FinancialReportProps) {
       }
       if (filter.type === "year") {
         if (!parcel.date) return false
-        let parcelYear: number
+        let parcelYear = 0
         try {
           let d: Date
           if (typeof parcel.date === "number") {
