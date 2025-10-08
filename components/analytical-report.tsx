@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { Package, TrendingUp, DollarSign, Target, AlertTriangle, Lightbulb } from "lucide-react"
-import type { ProcessedData, FilterState } from "@/lib/types"
+import type { ProcessedData, FilterState, ParcelData } from "@/lib/types"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -188,7 +188,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
     const highestPerformingRegion = topPerformingRegions[0]
     const worstRTSRegion = regions.reduce((worst, region) => {
       const regionData = region.data.data
-      const regionRTS = regionData.filter((p: any) => rtsStatuses.includes(p.normalizedStatus)).length
+      const regionRTS = regionData.filter((p: ParcelData) => rtsStatuses.includes(p.normalizedStatus)).length
       const regionTotal = regionData.length
       const regionRTSRate = regionTotal > 0 ? (regionRTS / regionTotal) * 100 : 0
       return regionRTSRate > (worst.rtsRate || 0) ? { region: region.name, rtsRate: regionRTSRate } : worst
@@ -208,7 +208,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
       worstRTSRegion,
       topPerformingStore
     }
-  }, [data])
+  }, [data, filteredData])
 
   if (!data) {
     return (
