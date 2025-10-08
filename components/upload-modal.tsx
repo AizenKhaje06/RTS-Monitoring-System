@@ -1,6 +1,6 @@
 "use client"
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { FileUpload } from "@/components/file-upload"
 import type { ProcessedData } from "@/lib/types"
 
@@ -21,6 +21,9 @@ export function UploadModal({ open, onOpenChange, onDataUpload }: UploadModalPro
       <DialogContent className="sm:max-w-2xl glass-strong border-border/50">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-foreground">Upload Excel Data</DialogTitle>
+          <DialogDescription>
+            Upload your Excel file containing parcel data to generate reports and analytics.
+          </DialogDescription>
         </DialogHeader>
         <div className="mt-4">
           <FileUpload onDataUpload={handleDataUpload} />

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { Package, TrendingUp, DollarSign, Target, AlertTriangle, Lightbulb } from "lucide-react"
-import type { ProcessedData, FilterState } from "@/lib/types"
+import type { ProcessedData, FilterState, ParcelData } from "@/lib/types"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -36,7 +36,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
     if (filter.type === "month" && filter.value) {
       filtered = filtered.filter((parcel) => {
         if (!parcel.date) return false
-        let parcelMonth: number
+        let parcelMonth = 0
         try {
           let d: Date
           if (typeof parcel.date === "number") {
@@ -61,7 +61,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
     if (filter.type === "year" && filter.value) {
       filtered = filtered.filter((parcel) => {
         if (!parcel.date) return false
-        let parcelYear: number
+        let parcelYear = 0
         try {
           let d: Date
           if (typeof parcel.date === "number") {
@@ -127,10 +127,11 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
     const rtsRate = totalShipments > 0 ? (rtsCount / totalShipments) * 100 : 0
 
     // Regional data - since we're filtering all data, we need to filter each region's data accordingly
+    const filteredSet = new Set(filteredData.data)
     const regions = [
-      { name: "Luzon", data: { ...data!.luzon, data: data!.luzon.data.filter(p => filteredData.data.includes(p)) } },
-      { name: "Visayas", data: { ...data!.visayas, data: data!.visayas.data.filter(p => filteredData.data.includes(p)) } },
-      { name: "Mindanao", data: { ...data!.mindanao, data: data!.mindanao.data.filter(p => filteredData.data.includes(p)) } }
+      { name: "Luzon", data: { ...data!.luzon, data: data!.luzon.data.filter(p => filteredSet.has(p)) } },
+      { name: "Visayas", data: { ...data!.visayas, data: data!.visayas.data.filter(p => filteredSet.has(p)) } },
+      { name: "Mindanao", data: { ...data!.mindanao, data: data!.mindanao.data.filter(p => filteredSet.has(p)) } }
     ]
 
     const topPerformingRegions = regions.map(region => {
@@ -187,7 +188,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
     const highestPerformingRegion = topPerformingRegions[0]
     const worstRTSRegion = regions.reduce((worst, region) => {
       const regionData = region.data.data
-      const regionRTS = regionData.filter((p: any) => rtsStatuses.includes(p.normalizedStatus)).length
+      const regionRTS = regionData.filter((p: ParcelData) => rtsStatuses.includes(p.normalizedStatus)).length
       const regionTotal = regionData.length
       const regionRTSRate = regionTotal > 0 ? (regionRTS / regionTotal) * 100 : 0
       return regionRTSRate > (worst.rtsRate || 0) ? { region: region.name, rtsRate: regionRTSRate } : worst
@@ -207,7 +208,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
       worstRTSRegion,
       topPerformingStore
     }
-  }, [data])
+  }, [data, filteredData])
 
   if (!data) {
     return (

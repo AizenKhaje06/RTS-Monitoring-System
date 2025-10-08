@@ -46,7 +46,7 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
       }
       if (filter.type === "month") {
         if (!parcel.date) return false
-        let parcelMonth: number
+        let parcelMonth = 0
         try {
           let d: Date
           if (typeof parcel.date === "number") {
@@ -68,7 +68,7 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
       }
       if (filter.type === "year") {
         if (!parcel.date) return false
-        let parcelYear: number
+        let parcelYear = 0
         try {
           let d: Date
           if (typeof parcel.date === "number") {

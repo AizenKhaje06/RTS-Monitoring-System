@@ -1,40 +1,19 @@
-# TODO: Implement Corporate Performance Dashboard
+# TODO: Change Financial Impact Report Computation Focus
 
-## Tasks
-- [x] Update metrics calculations for new KPIs (Gross Sales, Net Profit, Profit Margin, etc.)
-- [x] Implement Executive Summary section with KPI cards
-- [x] Create Top Performing Regions table with sorting and color coding
-- [x] Create Store Performance table with sorting
-- [x] Add Critical Insights section with 3 bullet points
-- [x] Add Recommendations section with 3 action items
-- [x] Test calculations with sample data
+## Task: Focus computation only to Delivered and Returned
 
-# TODO: Expand Reports Module
+### Steps:
+- [x] Update rtsStatuses in components/financial-report.tsx to only include "RETURNED"
+- [x] Verify the change excludes PROBLEMATIC from RTS calculations
 
-## Tasks
-- [x] Create lib/reports.ts with 10 admin-side report functions
-- [x] Implement User Summary Report
-- [x] Implement Deposit Summary
-- [x] Implement Withdrawal Summary
-- [x] Implement Transaction Report
-- [x] Implement Commission Report
-- [x] Implement Agent Performance Report
-- [x] Implement Financial Summary
-- [x] Implement Audit Log Report
-- [x] Implement System Health Report
-- [x] Implement Customer Support Report
+### Information Gathered:
+- Financial report computes gross sales from DELIVERED parcels (codAmount)
+- RTS impact calculated from parcels with statuses in rtsStatuses array
+- Currently rtsStatuses = ["PROBLEMATIC", "RETURNED"]
+- Change to rtsStatuses = ["RETURNED"] to focus only on Delivered (sales) and Returned (RTS)
 
-# TODO: Add Filter Section to Analytical Report
+### Dependent Files:
+- components/financial-report.tsx
 
-## Tasks
-- [x] Add filter controls UI to analytical-report.tsx (province, month, year)
-- [x] Verify filtering logic consistency between analytical and financial reports
-- [x] Test filter functionality across both dashboards
-- [x] Ensure date parsing handles various Excel date formats correctly
-
-# TODO: Fix Parcel Counting Discrepancy
-
-## Tasks
-- [x] Double-check code in counting parcel status for total parcels and delivered parcels
-- [x] Modify excel-processor.ts to include all parcels with valid status in counts, even if region is unknown
-- [x] Test updated logic to ensure counts match Excel data
+### Followup Steps:
+- Test the report to ensure RTS calculations now only consider RETURNED parcels
