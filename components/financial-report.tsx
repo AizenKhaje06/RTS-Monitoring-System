@@ -10,7 +10,7 @@ interface FinancialReportProps {
   data: ProcessedData | null
 }
 
-const rtsStatuses = ["PROBLEMATIC", "RETURNED"]
+const rtsStatuses = ["RETURNED"]
 
 export function FinancialReport({ data }: FinancialReportProps) {
   const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
