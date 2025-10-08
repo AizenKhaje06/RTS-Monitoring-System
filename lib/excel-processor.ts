@@ -96,7 +96,7 @@ function processData(excelData: unknown[][]): ProcessedData {
     const totalCost = Number.parseFloat((row[19] || "").toString()) || 0 // Column T (index 19)
     const rtsFee = totalCost * 0.2 // RTS FEE = 20% of total cost
 
-    if (!rawStatus || !consigneeRegion) return
+    if (!rawStatus) return
 
     const regionInfo = determineRegion(consigneeRegion)
     const island = regionInfo.island
@@ -116,11 +116,12 @@ function processData(excelData: unknown[][]): ProcessedData {
       rtsFee,
     }
 
-    // Add to all regions and specific island
-    if (island !== "unknown") {
-      processedData.all.data.push(parcelData)
-      processedData.all.total++
+    // Add to all regions
+    processedData.all.data.push(parcelData)
+    processedData.all.total++
 
+    // Add to specific island if known
+    if (island !== "unknown") {
       if (processedData[island]) {
         processedData[island].data.push(parcelData)
         processedData[island].total++
@@ -137,41 +138,41 @@ function processData(excelData: unknown[][]): ProcessedData {
           processedData[island].regions[regionInfo.region] = (processedData[island].regions[regionInfo.region] || 0) + 1
         }
       }
+    }
 
-      // Update status counts
-      if (STATUSES.includes(status)) {
-        processedData.all.stats[status].count++
+    // Update status counts
+    if (STATUSES.includes(status)) {
+      processedData.all.stats[status].count++
 
-        if (processedData[island]) {
-          processedData[island].stats[status].count++
-        }
-
-        // Count by province for locations
-        const location = regionInfo.province
-        if (location !== "Unknown") {
-          processedData.all.stats[status].locations[location] =
-            (processedData.all.stats[status].locations[location] || 0) + 1
-          if (processedData[island]) {
-            processedData[island].stats[status].locations[location] =
-              (processedData[island].stats[status].locations[location] || 0) + 1
-          }
-        }
+      if (island !== "unknown" && processedData[island]) {
+        processedData[island].stats[status].count++
       }
 
-      // Update winning and RTS shippers
-      if (status === "DELIVERED") {
-        processedData.all.winningShippers[shipper as string] = (processedData.all.winningShippers[shipper as string] || 0) + 1
-        if (processedData[island]) {
-          processedData[island].winningShippers[shipper as string] = (processedData[island].winningShippers[shipper as string] || 0) + 1
+      // Count by province for locations
+      const location = regionInfo.province
+      if (location !== "Unknown") {
+        processedData.all.stats[status].locations[location] =
+          (processedData.all.stats[status].locations[location] || 0) + 1
+        if (island !== "unknown" && processedData[island]) {
+          processedData[island].stats[status].locations[location] =
+            (processedData[island].stats[status].locations[location] || 0) + 1
         }
       }
+    }
+
+    // Update winning and RTS shippers
+    if (status === "DELIVERED") {
+      processedData.all.winningShippers[shipper as string] = (processedData.all.winningShippers[shipper as string] || 0) + 1
+      if (island !== "unknown" && processedData[island]) {
+        processedData[island].winningShippers[shipper as string] = (processedData[island].winningShippers[shipper as string] || 0) + 1
+      }
+    }
 
     const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
-      if (rtsStatuses.includes(status)) {
-        processedData.all.rtsShippers[shipper as string] = (processedData.all.rtsShippers[shipper as string] || 0) + 1
-        if (processedData[island]) {
-          processedData[island].rtsShippers[shipper as string] = (processedData[island].rtsShippers[shipper as string] || 0) + 1
-        }
+    if (rtsStatuses.includes(status)) {
+      processedData.all.rtsShippers[shipper as string] = (processedData.all.rtsShippers[shipper as string] || 0) + 1
+      if (island !== "unknown" && processedData[island]) {
+        processedData[island].rtsShippers[shipper as string] = (processedData[island].rtsShippers[shipper as string] || 0) + 1
       }
     }
   })

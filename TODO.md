@@ -23,3 +23,18 @@
 - [x] Implement Audit Log Report
 - [x] Implement System Health Report
 - [x] Implement Customer Support Report
+
+# TODO: Add Filter Section to Analytical Report
+
+## Tasks
+- [x] Add filter controls UI to analytical-report.tsx (province, month, year)
+- [x] Verify filtering logic consistency between analytical and financial reports
+- [x] Test filter functionality across both dashboards
+- [x] Ensure date parsing handles various Excel date formats correctly
+
+# TODO: Fix Parcel Counting Discrepancy
+
+## Tasks
+- [x] Double-check code in counting parcel status for total parcels and delivered parcels
+- [x] Modify excel-processor.ts to include all parcels with valid status in counts, even if region is unknown
+- [x] Test updated logic to ensure counts match Excel data
