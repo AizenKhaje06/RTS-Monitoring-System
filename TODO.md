@@ -38,3 +38,10 @@
 - [x] Double-check code in counting parcel status for total parcels and delivered parcels
 - [x] Modify excel-processor.ts to include all parcels with valid status in counts, even if region is unknown
 - [x] Test updated logic to ensure counts match Excel data
+
+# TODO: Fix Financial Report JavaScript Error
+
+## Tasks
+- [x] Fix "Cannot access 'n' before initialization" error in financial-report.tsx
+- [x] Move rtsStatuses declaration before use in useMemo
+- [x] Remove duplicate declaration

@@ -18,6 +18,7 @@ export function FinancialReport({ data }: FinancialReportProps) {
     if (!data) return null
 
     const sourceData = currentRegion === "all" ? data.all : data[currentRegion]
+    const rtsStatuses = ["PROBLEMATIC", "RETURNED"]
 
     if (filter.type === "all") {
       const filtered = sourceData.data
@@ -32,7 +33,6 @@ export function FinancialReport({ data }: FinancialReportProps) {
         .reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
 
       // Calculate RTS-specific costs
-      const rtsStatuses = ["PROBLEMATIC", "RETURNED"]
       const rtsParcels = filtered.filter((p) => rtsStatuses.includes(p.normalizedStatus))
       const rtsShippingCost = rtsParcels.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
       const rtsFeeLost = rtsParcels.reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
@@ -114,7 +114,6 @@ export function FinancialReport({ data }: FinancialReportProps) {
       .reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
 
     // Calculate RTS-specific costs
-    const rtsStatuses = ["PROBLEMATIC", "RETURNED"]
     const rtsParcels = filtered.filter((p) => rtsStatuses.includes(p.normalizedStatus))
     const rtsShippingCost = rtsParcels.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
     const rtsFeeLost = rtsParcels.reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
