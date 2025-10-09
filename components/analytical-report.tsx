@@ -462,8 +462,8 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
                   <TableHead>Store</TableHead>
                   <TableHead>Delivery Rate (%)</TableHead>
                   <TableHead>RTS Rate (%)</TableHead>
-                  <TableHead>Delivered Parcel (Count)</TableHead>
-                  <TableHead>RTS Parcel (Count)</TableHead>
+                  <TableHead>Delivered</TableHead>
+                  <TableHead>Returned</TableHead>
                   <TableHead>Gross Sales (PHP)</TableHead>
                   <TableHead>Net Profit (PHP)</TableHead>
                 </TableRow>
