@@ -20,6 +20,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
   const {
     metrics,
     topProvinces,
+    topReturnedProvinces,
     topRegions,
     topDeliveredShippers,
     topRtsShippers,
@@ -87,6 +88,18 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       provinceCounts[parcel.province] = (provinceCounts[parcel.province] || 0) + 1
     })
     const topProvinces = Object.entries(provinceCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10)
+
+    // Top Returned Provinces
+    const returnedStatuses = ["RETURNED"]
+    const returnedProvinceCounts: { [key: string]: number } = {}
+    filteredData.forEach((parcel) => {
+      if (returnedStatuses.includes(parcel.normalizedStatus)) {
+        returnedProvinceCounts[parcel.province] = (returnedProvinceCounts[parcel.province] || 0) + 1
+      }
+    })
+    const topReturnedProvinces = Object.entries(returnedProvinceCounts)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10)
 
@@ -172,6 +185,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         rtsAvgCost,
       },
       topProvinces,
+      topReturnedProvinces,
       topRegions,
       topDeliveredShippers,
       topRtsShippers,
@@ -324,7 +338,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         <div className="glass rounded-xl p-6 border border-border/50">
           <h3 className="text-xl font-bold text-foreground mb-4">Top Province (Returned)</h3>
           <div className="space-y-3 max-h-64 overflow-y-auto">
-            {topRegions.map(([province, count], index) => {
+            {topReturnedProvinces && topReturnedProvinces.map(([province, count]: [string, number], index: number) => {
               const percentage = data ? ((count / data.all.data.length) * 100).toFixed(2) : "0.00"
               return (
                 <div key={province} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
