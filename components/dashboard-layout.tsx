@@ -92,7 +92,7 @@ export function DashboardLayout({
             </button>
             */}
 
-            {(currentView === "performance" || !isCollapsed) && (
+            {(currentView === "performance" || true) && (
               <button
                 onClick={() => onViewChange?.("performance")}
                 className={`w-full flex items-center gap-3 ${
