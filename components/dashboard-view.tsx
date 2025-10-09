@@ -305,28 +305,60 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
       </div>
 
       {/* Summary Card */}
-      <Card className="mb-6">
+      <Card className="mb-6 p-4 bg-black rounded-lg text-white">
         <CardHeader>
           <CardTitle>Total Parcels</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-primary mb-2">{displayData.total.toLocaleString()}</div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-              <div className="font-semibold text-green-600">Delivered</div>
-              <div>{displayData.total > 0 ? ((displayData.stats.DELIVERED.count / displayData.total) * 100).toFixed(1) : 0}%</div>
+          <div className="text-3xl font-bold text-orange-600 mb-2">{displayData.total.toLocaleString()}</div>
+          <div className="flex justify-between text-sm flex-wrap gap-4">
+            <div className="flex flex-col items-center">
+              <span className="font-semibold text-green-500">Delivered</span>
+              <span className="text-green-400">
+                {displayData.total > 0 ? ((displayData.stats.DELIVERED.count / displayData.total) * 100).toFixed(1) : 0}%
+              </span>
             </div>
-            <div>
-              <div className="font-semibold text-red-600">RTS</div>
-              <div>{displayData.total > 0 ? (((displayData.stats.CANCELLED.count + displayData.stats.PROBLEMATIC.count + displayData.stats.RETURNED.count) / displayData.total) * 100).toFixed(1) : 0}%</div>
+            <div className="flex flex-col items-center">
+              <span className="font-semibold text-red-500">Cancelled</span>
+              <span className="text-red-400">
+                {displayData.total > 0 ? ((displayData.stats.CANCELLED.count / displayData.total) * 100).toFixed(1) : 0}%
+              </span>
             </div>
-            <div>
-              <div className="font-semibold text-yellow-600">Undelivered</div>
-              <div>{displayData.total > 0 ? (((displayData.stats.ONDELIVERY.count + displayData.stats.PICKUP.count + displayData.stats.INTRANSIT.count + displayData.stats.DETAINED.count + displayData.stats.PROBLEMATIC.count) / displayData.total) * 100).toFixed(1) : 0}%</div>
+            <div className="flex flex-col items-center">
+              <span className="font-semibold text-red-500">Problematic</span>
+              <span className="text-red-400">
+                {displayData.total > 0 ? ((displayData.stats.PROBLEMATIC.count / displayData.total) * 100).toFixed(1) : 0}%
+              </span>
             </div>
-            <div>
-              <div className="font-semibold text-blue-600">In Transit</div>
-              <div>{displayData.total > 0 ? ((displayData.stats.INTRANSIT.count / displayData.total) * 100).toFixed(1) : 0}%</div>
+            <div className="flex flex-col items-center">
+              <span className="font-semibold text-red-500">Returned</span>
+              <span className="text-red-400">
+                {displayData.total > 0 ? ((displayData.stats.RETURNED.count / displayData.total) * 100).toFixed(1) : 0}%
+              </span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="font-semibold text-yellow-500">On Delivery</span>
+              <span className="text-yellow-400">
+                {displayData.total > 0 ? ((displayData.stats.ONDELIVERY.count / displayData.total) * 100).toFixed(1) : 0}%
+              </span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="font-semibold text-yellow-500">Pickup</span>
+              <span className="text-yellow-400">
+                {displayData.total > 0 ? ((displayData.stats.PICKUP.count / displayData.total) * 100).toFixed(1) : 0}%
+              </span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="font-semibold text-yellow-500">Detained</span>
+              <span className="text-yellow-400">
+                {displayData.total > 0 ? ((displayData.stats.DETAINED.count / displayData.total) * 100).toFixed(1) : 0}%
+              </span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="font-semibold text-blue-500">In Transit</span>
+              <span className="text-blue-400">
+                {displayData.total > 0 ? ((displayData.stats.INTRANSIT.count / displayData.total) * 100).toFixed(1) : 0}%
+              </span>
             </div>
           </div>
         </CardContent>
