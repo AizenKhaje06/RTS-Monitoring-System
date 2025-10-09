@@ -248,71 +248,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         </div>
 
         {/* Filters */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-muted-foreground" />
-            <Input
-              type="date"
-              placeholder="Start Date"
-              value={dateRange.start}
-              onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-              className="w-32 h-9 text-sm"
-            />
-            <span className="text-muted-foreground">to</span>
-            <Input
-              type="date"
-              placeholder="End Date"
-              value={dateRange.end}
-              onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-              className="w-32 h-9 text-sm"
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Store className="w-4 h-4 text-muted-foreground" />
-            <select
-              value={selectedShipper}
-              onChange={(e) => setSelectedShipper(e.target.value)}
-              className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
-            >
-              <option value="">All Shippers</option>
-              {uniqueShippers.map((shipper) => (
-                <option key={shipper} value={shipper}>
-                  {shipper}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Globe className="w-4 h-4 text-muted-foreground" />
-            <select
-              value={selectedConsigneeRegion}
-              onChange={(e) => setSelectedConsigneeRegion(e.target.value)}
-              className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
-            >
-              <option value="">All Regions</option>
-              {uniqueConsigneeRegions.map((region) => (
-                <option key={region} value={region}>
-                  {region}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <Button
-            size="sm"
-            onClick={() => {
-              setDateRange({ start: "", end: "" });
-              setSelectedShipper("");
-              setSelectedConsigneeRegion("");
-            }}
-            variant="outline"
-            className="h-9"
-          >
-            Clear Filters
-          </Button>
-        </div>
+        {/* Removed filter controls as requested */}
       </div>
 
       {/* Headline KPIs */}
