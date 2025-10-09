@@ -139,6 +139,8 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
       const regionTotal = regionData.length
       const regionDelivered = regionData.filter(p => p.normalizedStatus === "DELIVERED").length
       const regionDeliveryRate = regionTotal > 0 ? (regionDelivered / regionTotal) * 100 : 0
+      const regionRTS = regionData.filter(p => rtsStatuses.includes(p.normalizedStatus)).length
+      const regionRTSRate = regionTotal > 0 ? (regionRTS / regionTotal) * 100 : 0
 
       const regionGrossSales = regionData
         .filter(p => p.normalizedStatus === "DELIVERED")
@@ -153,6 +155,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
       return {
         region: region.name,
         deliveryRate: regionDeliveryRate,
+        rtsRate: regionRTSRate,
         grossSales: regionGrossSales,
         netProfit: regionNetProfit,
         profitMargin: regionProfitMargin
@@ -415,6 +418,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
                 <TableRow>
                   <TableHead>Region</TableHead>
                   <TableHead>Delivery Rate (%)</TableHead>
+                  <TableHead>RTS Rate (%)</TableHead>
                   <TableHead>Gross Sales (PHP)</TableHead>
                   <TableHead>Net Profit (PHP)</TableHead>
                   <TableHead>Profit Margin (%)</TableHead>
@@ -424,8 +428,11 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
                 {metrics?.topPerformingRegions.map((region) => (
                   <TableRow key={region.region}>
                     <TableCell className="font-medium">{region.region}</TableCell>
-                    <TableCell className={getColorClass(region.deliveryRate, region.profitMargin)}>
+                    <TableCell className="text-green-600">
                       {region.deliveryRate.toFixed(1)}%
+                    </TableCell>
+                    <TableCell className="text-red-600">
+                      {region.rtsRate.toFixed(1)}%
                     </TableCell>
                     <TableCell>₱{region.grossSales.toLocaleString()}</TableCell>
                     <TableCell>₱{region.netProfit.toLocaleString()}</TableCell>
