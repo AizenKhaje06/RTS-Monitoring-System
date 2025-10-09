@@ -319,14 +319,14 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
             {topProvinces.map(([province, count], index) => {
               const percentage = data ? ((count / data.all.data.length) * 100).toFixed(2) : "0.00"
               return (
-                <div key={province} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                <div key={province} className="flex items-center justify-between p-3 rounded-lg bg-green-900/30">
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-primary w-6">#{index + 1}</span>
-                    <span className="text-sm font-medium text-foreground">{province}</span>
+                    <span className="text-sm font-bold text-green-500 w-6">#{index + 1}</span>
+                    <span className="text-sm font-semibold text-foreground">{province}</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-sm font-bold text-foreground">{count.toLocaleString()}</span>
-                    <p className="text-xs text-muted-foreground">{percentage}%</p>
+                    <span className="text-sm font-bold text-green-500">{percentage}%</span>
+                    <p className="text-xs text-green-400">{count.toLocaleString()} delivered</p>
                   </div>
                 </div>
               )
@@ -341,14 +341,14 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
             {topReturnedProvinces && topReturnedProvinces.map(([province, count]: [string, number], index: number) => {
               const percentage = data ? ((count / data.all.data.length) * 100).toFixed(2) : "0.00"
               return (
-                <div key={province} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                <div key={province} className="flex items-center justify-between p-3 rounded-lg bg-red-900/30">
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-primary w-6">#{index + 1}</span>
-                    <span className="text-sm font-medium text-foreground">{province}</span>
+                    <span className="text-sm font-bold text-red-500 w-6">#{index + 1}</span>
+                    <span className="text-sm font-semibold text-foreground">{province}</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-sm font-bold text-foreground">{count.toLocaleString()}</span>
-                    <p className="text-xs text-muted-foreground">{percentage}%</p>
+                    <span className="text-sm font-bold text-red-500">{percentage}%</span>
+                    <p className="text-xs text-red-400">{count.toLocaleString()} returned</p>
                   </div>
                 </div>
               )
