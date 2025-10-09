@@ -168,6 +168,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
       const rts = filteredData.rtsShippers[shipper] || 0
       const total = delivered + rts
       const storeDeliveryRate = total > 0 ? (delivered / total) * 100 : 0
+      const storeRTSRate = total > 0 ? (rts / total) * 100 : 0
 
       // Calculate financials for this shipper
       const shipperParcels = parcelData.filter(p => p.shipper === shipper)
@@ -182,6 +183,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
       return {
         store: shipper,
         deliveryRate: storeDeliveryRate,
+        rtsRate: storeRTSRate,
         grossSales: storeGrossSales,
         netProfit: storeNetProfit
       }
@@ -457,6 +459,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
                 <TableRow>
                   <TableHead>Store</TableHead>
                   <TableHead>Delivery Rate (%)</TableHead>
+                  <TableHead>RTS Rate (%)</TableHead>
                   <TableHead>Gross Sales (PHP)</TableHead>
                   <TableHead>Net Profit (PHP)</TableHead>
                 </TableRow>
@@ -465,7 +468,8 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
                 {metrics?.storePerformance.slice(0, 10).map((store) => (
                   <TableRow key={store.store}>
                     <TableCell className="font-medium">{store.store}</TableCell>
-                    <TableCell>{store.deliveryRate.toFixed(1)}%</TableCell>
+                    <TableCell className="text-green-600">{store.deliveryRate.toFixed(1)}%</TableCell>
+                    <TableCell className="text-red-600">{store.rtsRate.toFixed(1)}%</TableCell>
                     <TableCell>₱{store.grossSales.toLocaleString()}</TableCell>
                     <TableCell>₱{store.netProfit.toLocaleString()}</TableCell>
                   </TableRow>
