@@ -330,7 +330,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         {/* Top Provinces */}
         <div className="glass rounded-xl p-6 border border-border/50">
           <h3 className="text-xl font-bold text-foreground mb-4">Top Province (Delivered)</h3>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
+          <div className="space-y-3">
             {topProvinces.map(([province, count], index) => {
               const percentage = data ? ((count / data.all.data.length) * 100).toFixed(2) : "0.00"
               return (
@@ -352,7 +352,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         {/* Top Returned Provinces */}
         <div className="glass rounded-xl p-6 border border-border/50">
           <h3 className="text-xl font-bold text-foreground mb-4">Top Province (Returned)</h3>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
+          <div className="space-y-3">
             {topReturnedProvinces && topReturnedProvinces.map(([province, count]: [string, number], index: number) => {
               const percentage = data ? ((count / data.all.data.length) * 100).toFixed(2) : "0.00"
               return (
@@ -380,7 +380,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         {/* Region Success Rates */}
         <div className="glass rounded-xl p-6 border border-green-500/50">
           <h3 className="text-xl font-bold text-foreground mb-4">Region Success Rates</h3>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
+          <div className="space-y-3">
             {regionSuccessRates.map((item, index) => (
               <div key={item.region} className="flex items-center justify-between p-3 rounded-lg bg-green-500/10">
                 <div className="flex items-center gap-3">
@@ -399,7 +399,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         {/* Region RTS Rates */}
         <div className="glass rounded-xl p-6 border border-red-500/50">
           <h3 className="text-xl font-bold text-foreground mb-4">Region RTS Rates</h3>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
+          <div className="space-y-3">
             {regionRTSRates.map((item, index) => (
               <div key={item.region} className="flex items-center justify-between p-3 rounded-lg bg-red-500/10">
                 <div className="flex items-center gap-3">
