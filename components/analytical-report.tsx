@@ -156,6 +156,8 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
         region: region.name,
         deliveryRate: regionDeliveryRate,
         rtsRate: regionRTSRate,
+        deliveredCount: regionDelivered,
+        rtsCount: regionRTS,
         grossSales: regionGrossSales,
         netProfit: regionNetProfit,
         profitMargin: regionProfitMargin
@@ -414,7 +416,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
 
       {/* TOP PERFORMING REGIONS */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">TOP PERFORMING REGIONS</h2>
+        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">ZONE PERFORMANCE</h2>
         <Card>
           <CardContent className="p-0">
             <Table>
@@ -423,6 +425,8 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
                   <TableHead>Region</TableHead>
                   <TableHead>Delivery Rate (%)</TableHead>
                   <TableHead>RTS Rate (%)</TableHead>
+                  <TableHead>Delivered</TableHead>
+                  <TableHead>Returned</TableHead>
                   <TableHead>Gross Sales (PHP)</TableHead>
                   <TableHead>Net Profit (PHP)</TableHead>
                   <TableHead>Profit Margin (%)</TableHead>
@@ -438,6 +442,8 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
                     <TableCell className="text-red-600">
                       {region.rtsRate.toFixed(1)}%
                     </TableCell>
+                    <TableCell>{region.deliveredCount}</TableCell>
+                    <TableCell>{region.rtsCount}</TableCell>
                     <TableCell>₱{region.grossSales.toLocaleString()}</TableCell>
                     <TableCell>₱{region.netProfit.toLocaleString()}</TableCell>
                     <TableCell className={getColorClass(region.deliveryRate, region.profitMargin)}>
