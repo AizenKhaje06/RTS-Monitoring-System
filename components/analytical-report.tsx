@@ -130,6 +130,11 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
     const deliveryRate = totalShipments > 0 ? (deliveredCount / totalShipments) * 100 : 0
     const rtsRate = totalShipments > 0 ? (rtsCount / totalShipments) * 100 : 0
 
+    // Calculate Undelivered Parcel Rate (On Delivery, Pickup, In Transit, Detained, Problematic)
+    const undeliveredStatuses = ["ONDELIVERY", "PICKUP", "INTRANSIT", "DETAINED", "PROBLEMATIC"]
+    const undeliveredCount = parcelData.filter((parcel) => undeliveredStatuses.includes(parcel.normalizedStatus)).length
+    const undeliveredRate = totalShipments > 0 ? (undeliveredCount / totalShipments) * 100 : 0
+
     // Regional data - since we're filtering all data, we need to filter each region's data accordingly
     const filteredSet = new Set(filteredData.data)
     const regions = [
@@ -162,6 +167,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
         region: region.name,
         deliveryRate: regionDeliveryRate,
         rtsRate: regionRTSRate,
+        undeliveredRate,
         deliveredCount: regionDelivered,
         rtsCount: regionRTS,
         grossSales: regionGrossSales,
@@ -217,6 +223,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
       totalShipments,
       deliveryRate,
       rtsRate,
+      undeliveredRate,
       grossSales,
       netProfit,
       avgProfitPerShipment,
