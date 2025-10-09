@@ -184,6 +184,8 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
         store: shipper,
         deliveryRate: storeDeliveryRate,
         rtsRate: storeRTSRate,
+        deliveredCount: delivered,
+        rtsCount: rts,
         grossSales: storeGrossSales,
         netProfit: storeNetProfit
       }
@@ -460,6 +462,8 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
                   <TableHead>Store</TableHead>
                   <TableHead>Delivery Rate (%)</TableHead>
                   <TableHead>RTS Rate (%)</TableHead>
+                  <TableHead>Delivered Parcel (Count)</TableHead>
+                  <TableHead>RTS Parcel (Count)</TableHead>
                   <TableHead>Gross Sales (PHP)</TableHead>
                   <TableHead>Net Profit (PHP)</TableHead>
                 </TableRow>
@@ -470,6 +474,8 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
                     <TableCell className="font-medium">{store.store}</TableCell>
                     <TableCell className="text-green-600">{store.deliveryRate.toFixed(1)}%</TableCell>
                     <TableCell className="text-red-600">{store.rtsRate.toFixed(1)}%</TableCell>
+                    <TableCell>{store.deliveredCount}</TableCell>
+                    <TableCell>{store.rtsCount}</TableCell>
                     <TableCell>₱{store.grossSales.toLocaleString()}</TableCell>
                     <TableCell>₱{store.netProfit.toLocaleString()}</TableCell>
                   </TableRow>
