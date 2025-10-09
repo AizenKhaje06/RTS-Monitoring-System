@@ -57,7 +57,7 @@ function ChartContainer({
         data-slot="chart"
         data-chart={chartId}
         className={cn(
-          "[&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border flex aspect-video justify-center text-xs [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-sector]:outline-hidden [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-surface]:outline-hidden",
+          "[&_.recharts-cartesian-axis-tick_text]:fill-[#a0a0a0] [&_.recharts-cartesian-grid_line[stroke='#444']]:stroke-[#333] [&_.recharts-curve.recharts-tooltip-cursor]:stroke-[#555] [&_.recharts-polar-grid_[stroke='#444']]:stroke-[#333] [&_.recharts-radial-bar-background-sector]:fill-[#222] [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-[#222] [&_.recharts-reference-line_[stroke='#444']]:stroke-[#333] flex aspect-video justify-center text-xs bg-gradient-to-b from-[#0a0a23] to-[#1a1a3d] rounded-lg shadow-lg",
           className,
         )}
         {...props}
@@ -92,7 +92,7 @@ ${colorConfig
     const color =
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ||
       itemConfig.color
-    return color ? `  --color-${key}: ${color};` : null
+    return color ? `  --color-${key}: linear-gradient(180deg, ${color} 0%, rgba(0,0,0,0) 100%);` : null
   })
   .join('\n')}
 }
