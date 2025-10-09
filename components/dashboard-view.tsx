@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 import { Input } from "@/components/ui/input"
 import { StatusCard } from "@/components/status-card"
@@ -305,7 +305,32 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
       </div>
 
       {/* Summary Card */}
-      {/* Removed All Regions Dashboard summary card as requested */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Total Parcels</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-3xl font-bold text-primary mb-2">{displayData.total.toLocaleString()}</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <div className="font-semibold text-green-600">Delivered</div>
+              <div>{displayData.total > 0 ? ((displayData.stats.DELIVERED.count / displayData.total) * 100).toFixed(1) : 0}%</div>
+            </div>
+            <div>
+              <div className="font-semibold text-red-600">RTS</div>
+              <div>{displayData.total > 0 ? (((displayData.stats.CANCELLED.count + displayData.stats.PROBLEMATIC.count + displayData.stats.RETURNED.count) / displayData.total) * 100).toFixed(1) : 0}%</div>
+            </div>
+            <div>
+              <div className="font-semibold text-yellow-600">Undelivered</div>
+              <div>{displayData.total > 0 ? (((displayData.stats.ONDELIVERY.count + displayData.stats.PICKUP.count + displayData.stats.INTRANSIT.count + displayData.stats.DETAINED.count + displayData.stats.PROBLEMATIC.count) / displayData.total) * 100).toFixed(1) : 0}%</div>
+            </div>
+            <div>
+              <div className="font-semibold text-blue-600">In Transit</div>
+              <div>{displayData.total > 0 ? ((displayData.stats.INTRANSIT.count / displayData.total) * 100).toFixed(1) : 0}%</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Status Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
