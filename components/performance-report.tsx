@@ -396,39 +396,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       </div>
 
       {/* Top Shippers */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Delivered Shippers */}
-        <div className="glass rounded-xl p-6 border border-green-500/50">
-          <h3 className="text-xl font-bold text-foreground mb-4">Top Delivered Shippers</h3>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
-            {topDeliveredShippers.map(([shipper, count], index) => (
-              <div key={shipper} className="flex items-center justify-between p-3 rounded-lg bg-green-500/10">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-green-500 w-6">#{index + 1}</span>
-                  <span className="text-sm font-medium text-foreground">{shipper}</span>
-                </div>
-                <span className="text-sm font-bold text-green-500">{count.toLocaleString()}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Top RTS Shippers */}
-        <div className="glass rounded-xl p-6 border border-red-500/50">
-          <h3 className="text-xl font-bold text-foreground mb-4">Top RTS Shippers</h3>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
-            {topRtsShippers.map(([shipper, count], index) => (
-              <div key={shipper} className="flex items-center justify-between p-3 rounded-lg bg-red-500/10">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-red-500 w-6">#{index + 1}</span>
-                  <span className="text-sm font-medium text-foreground">{shipper}</span>
-                </div>
-                <span className="text-sm font-bold text-red-500">{count.toLocaleString()}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* Removed Top Delivered Shippers and Top RTS Shippers sections as requested */}
 
       {/* Region Performance */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
