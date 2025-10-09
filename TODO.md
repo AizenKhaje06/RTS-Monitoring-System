@@ -1,9 +1,11 @@
-# TODO: Update Financial Computations
+# Task: Rename Side Nav Items and Undelivered Parcel Rate KPI
 
-## Tasks
-- [x] Modify metrics calculation in analytical-report.tsx to compute only from DELIVERED and RETURNED parcels
-- [x] Change RTS statuses to only ["RETURNED"]
-- [x] Add Total Service Charge calculation
-- [x] Update Gross Profit and Net Profit formulas
-- [x] Adjust regional and store performance calculations accordingly
-- [x] Test the updated computations
+## Steps to Complete:
+- [x] Rename side nav items in components/dashboard-layout.tsx:
+  - Dashboard -> Parcel
+  - Performance Report -> Region
+  - Analytical Report -> Store
+  - Financial Impact Report -> Profit And Loss
+- [x] Rename "Undelivered Parcel Rate" to "Undelivered Rate" in components/performance-report.tsx
+- [x] Rename "Undelivered Parcel Rate" to "Undelivered Rate" in components/analytical-report.tsx
+- [ ] Verify changes by running the application or checking the UI

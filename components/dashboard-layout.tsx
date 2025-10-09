@@ -74,7 +74,7 @@ export function DashboardLayout({
               <Home className="w-5 h-5 flex-shrink-0" />
               {!isCollapsed && (
                 <>
-                  <span>Dashboard</span>
+                  <span>Parcel</span>
                   {currentView === "dashboard" && <TrendingUp className="w-4 h-4 ml-auto" />}
                 </>
               )}
@@ -104,7 +104,7 @@ export function DashboardLayout({
                 } transition-all font-medium`}
               >
                 <TrendingUp className="w-5 h-5 flex-shrink-0" />
-                {!isCollapsed && <span>Performance Report</span>}
+                {!isCollapsed && <span>Region</span>}
               </button>
             )}
 
@@ -119,7 +119,7 @@ export function DashboardLayout({
               } transition-all font-medium`}
             >
               <PieChart className="w-5 h-5 flex-shrink-0" />
-              {!isCollapsed && <span>Analytical Report</span>}
+              {!isCollapsed && <span>Store</span>}
             </button>
 
             <button
@@ -133,7 +133,7 @@ export function DashboardLayout({
               } transition-all font-medium`}
             >
               <DollarSign className="w-5 h-5 flex-shrink-0" />
-              {!isCollapsed && <span>Financial Impact Report</span>}
+              {!isCollapsed && <span>Profit And Loss</span>}
             </button>
           </nav>
 

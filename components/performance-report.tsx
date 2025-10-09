@@ -294,7 +294,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         <div className="glass rounded-xl p-6 border border-yellow-500/50">
           <div className="flex items-center gap-3 mb-4">
             <XCircle className="w-6 h-6 text-yellow-500" />
-            <h3 className="text-lg font-bold text-foreground">Undelivered Parcel Rate</h3>
+            <h3 className="text-lg font-bold text-foreground">Undelivered Rate</h3>
           </div>
           <p className="text-3xl font-bold text-yellow-500 mb-2">{metrics?.undeliveredRate.toFixed(2)}%</p>
           <p className="text-sm text-muted-foreground">Undelivered / Total parcels</p>
