@@ -38,7 +38,7 @@ export function FinancialReport({ data }: FinancialReportProps) {
       const rtsShippingCost = rtsParcels.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
       const rtsFeeLost = rtsParcels.reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
 
-      const grossProfit = grossSales - totalShippingCost
+      const grossProfit = grossSales - totalShippingCost - totalServiceCharge
       const netProfit = grossProfit - totalRTSFee
 
       return {
