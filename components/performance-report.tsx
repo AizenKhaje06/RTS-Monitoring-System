@@ -300,33 +300,45 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Provinces */}
         <div className="glass rounded-xl p-6 border border-border/50">
-          <h3 className="text-xl font-bold text-foreground mb-4">Top Provinces</h3>
+          <h3 className="text-xl font-bold text-foreground mb-4">Top Province (Delivered)</h3>
           <div className="space-y-3 max-h-64 overflow-y-auto">
-            {topProvinces.map(([province, count], index) => (
-              <div key={province} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-primary w-6">#{index + 1}</span>
-                  <span className="text-sm font-medium text-foreground">{province}</span>
+            {topProvinces.map(([province, count], index) => {
+              const percentage = data ? ((count / data.all.data.length) * 100).toFixed(2) : "0.00"
+              return (
+                <div key={province} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold text-primary w-6">#{index + 1}</span>
+                    <span className="text-sm font-medium text-foreground">{province}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-sm font-bold text-foreground">{count.toLocaleString()}</span>
+                    <p className="text-xs text-muted-foreground">{percentage}%</p>
+                  </div>
                 </div>
-                <span className="text-sm font-bold text-foreground">{count.toLocaleString()}</span>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
 
-        {/* Top Regions */}
+        {/* Top Returned Provinces */}
         <div className="glass rounded-xl p-6 border border-border/50">
-          <h3 className="text-xl font-bold text-foreground mb-4">Top Regions</h3>
+          <h3 className="text-xl font-bold text-foreground mb-4">Top Province (Returned)</h3>
           <div className="space-y-3 max-h-64 overflow-y-auto">
-            {topRegions.map(([region, count], index) => (
-              <div key={region} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-primary w-6">#{index + 1}</span>
-                  <span className="text-sm font-medium text-foreground">{region}</span>
+            {topRegions.map(([province, count], index) => {
+              const percentage = data ? ((count / data.all.data.length) * 100).toFixed(2) : "0.00"
+              return (
+                <div key={province} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold text-primary w-6">#{index + 1}</span>
+                    <span className="text-sm font-medium text-foreground">{province}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-sm font-bold text-foreground">{count.toLocaleString()}</span>
+                    <p className="text-xs text-muted-foreground">{percentage}%</p>
+                  </div>
                 </div>
-                <span className="text-sm font-bold text-foreground">{count.toLocaleString()}</span>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </div>
