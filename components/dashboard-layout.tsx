@@ -89,19 +89,21 @@ export function DashboardLayout({
               {!isCollapsed && <span>Upload Data</span>}
             </button>
 
-            <button
-              onClick={() => onViewChange?.("performance")}
-              className={`w-full flex items-center gap-3 ${
-                isCollapsed ? "justify-center px-0" : "px-4"
-              } py-3 rounded-xl ${
-                currentView === "performance"
-                  ? "gradient-orange text-primary-foreground shadow-lg shadow-primary/20"
-                  : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
-              } transition-all font-medium`}
-            >
-              <TrendingUp className="w-5 h-5 flex-shrink-0" />
-              {!isCollapsed && <span>Performance Report</span>}
-            </button>
+            {(currentView === "performance" || !isCollapsed) && (
+              <button
+                onClick={() => onViewChange?.("performance")}
+                className={`w-full flex items-center gap-3 ${
+                  isCollapsed ? "justify-center px-0" : "px-4"
+                } py-3 rounded-xl ${
+                  currentView === "performance"
+                    ? "gradient-orange text-primary-foreground shadow-lg shadow-primary/20"
+                    : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                } transition-all font-medium`}
+              >
+                <TrendingUp className="w-5 h-5 flex-shrink-0" />
+                {!isCollapsed && <span>Performance Report</span>}
+              </button>
+            )}
 
             <button
               onClick={() => onViewChange?.("analytical")}
