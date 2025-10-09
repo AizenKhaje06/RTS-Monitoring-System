@@ -1,14 +1,9 @@
-# TODO: Adjust TOP PERFORMING REGIONS Section
+# TODO: Update Financial Computations
 
-- [x] Calculate RTS Rate for each region in topPerformingRegions array
-- [x] Add "RTS Rate (%)" column to the table header
-- [x] Add RTS Rate cell with red text color in the table body
-- [x] Change Delivery Rate cell to green text color
-- [x] Test the changes by running the development server
-
-# TODO: Adjust STORE PERFORMANCE Section
-
-- [x] Calculate RTS Rate for each store in storePerformance array
-- [x] Add "RTS Rate (%)" column to the table header
-- [x] Add RTS Rate cell with red text color in the table body
-- [x] Change Delivery Rate cell to green text color
+## Tasks
+- [ ] Modify metrics calculation in analytical-report.tsx to compute only from DELIVERED and RETURNED parcels
+- [ ] Change RTS statuses to only ["RETURNED"]
+- [ ] Add Total Service Charge calculation
+- [ ] Update Gross Profit and Net Profit formulas
+- [ ] Adjust regional and store performance calculations accordingly
+- [ ] Test the updated computations
