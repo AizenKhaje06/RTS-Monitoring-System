@@ -79,6 +79,8 @@ export function DashboardLayout({
                 </>
               )}
             </button>
+            {/* Removed Upload Data menu item as requested */}
+            {/*
             <button
               onClick={onUploadClick}
               className={`w-full flex items-center gap-3 ${
@@ -88,6 +90,7 @@ export function DashboardLayout({
               <Upload className="w-5 h-5 flex-shrink-0" />
               {!isCollapsed && <span>Upload Data</span>}
             </button>
+            */}
 
             {(currentView === "performance" || !isCollapsed) && (
               <button
