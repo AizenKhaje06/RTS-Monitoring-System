@@ -394,7 +394,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{metrics?.rtsRate.toFixed(1)}%</div>
+            <div className="text-2xl font-bold text-red-600">{metrics?.rtsRate.toFixed(1)}%</div>
           </CardContent>
         </Card>
 

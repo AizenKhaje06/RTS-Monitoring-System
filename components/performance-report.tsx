@@ -82,6 +82,11 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     const rtsAvgCost =
       rtsCount > 0 ? rtsParcels.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0) / rtsCount : 0
 
+    // Calculate Undelivered Parcel Rate (On Delivery, Pickup, In Transit, Detained, Problematic)
+    const undeliveredStatuses = ["ONDELIVERY", "PICKUP", "INTRANSIT", "DETAINED", "PROBLEMATIC"]
+    const undeliveredCount = filteredData.filter((parcel) => undeliveredStatuses.includes(parcel.normalizedStatus)).length
+    const undeliveredRate = totalParcels > 0 ? (undeliveredCount / totalParcels) * 100 : 0
+
     // Top Provinces
     const provinceCounts: { [key: string]: number } = {}
     filteredData.forEach((parcel) => {
@@ -183,6 +188,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         totalCostOfReturns,
         deliveredAvgCost,
         rtsAvgCost,
+        undeliveredRate,
       },
       topProvinces,
       topReturnedProvinces,
@@ -266,7 +272,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       </div>
 
       {/* Headline KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <div className="glass rounded-xl p-6 border border-green-500/50">
           <div className="flex items-center gap-3 mb-4">
             <CheckCircle className="w-6 h-6 text-green-500" />
@@ -283,6 +289,15 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
           </div>
           <p className="text-3xl font-bold text-red-500 mb-2">{metrics?.rtsRate.toFixed(2)}%</p>
           <p className="text-sm text-muted-foreground">Returned / Total parcels</p>
+        </div>
+
+        <div className="glass rounded-xl p-6 border border-yellow-500/50">
+          <div className="flex items-center gap-3 mb-4">
+            <XCircle className="w-6 h-6 text-yellow-500" />
+            <h3 className="text-lg font-bold text-foreground">Undelivered Parcel Rate</h3>
+          </div>
+          <p className="text-3xl font-bold text-yellow-500 mb-2">{metrics?.undeliveredRate.toFixed(2)}%</p>
+          <p className="text-sm text-muted-foreground">Undelivered / Total parcels</p>
         </div>
 
         <div className="glass rounded-xl p-6 border border-orange-500/50">
