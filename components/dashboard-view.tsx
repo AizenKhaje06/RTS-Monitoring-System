@@ -355,7 +355,7 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
         </CardHeader>
       <CardContent className="pt-0">
         <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1 flex flex-col justify-center">
+          <div className="w-32 flex flex-col justify-center">
             <span className="text-5xl font-extrabold text-orange-600">{displayData.total.toLocaleString()}</span>
           </div>
 
@@ -364,7 +364,7 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
               <BarChart
                 data={statusChartData}
                 layout="vertical"
-                margin={{ top: 20, right: 30, left: 150, bottom: 20 }}
+                margin={{ top: 20, right: 30, left: 200, bottom: 20 }}
               >
                 <XAxis
                   type="number"
@@ -379,8 +379,8 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
                   type="category"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "white", fontSize: 11, fontWeight: "medium" }}
-                  width={150}
+                  tick={{ fill: "white", fontSize: 10, fontWeight: "medium" }}
+                  width={200}
                 />
                 <Tooltip
                   contentStyle={{
