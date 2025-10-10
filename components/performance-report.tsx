@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { TrendingUp, Package, CheckCircle, XCircle, DollarSign, Calendar, Store, Globe } from "lucide-react"
-import type { ProcessedData } from "@/lib/types"
+import type { ProcessedData, FilterState } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
@@ -16,6 +16,24 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: "", end: "" })
   const [selectedShipper, setSelectedShipper] = useState<string>("")
   const [selectedConsigneeRegion, setSelectedConsigneeRegion] = useState<string>("")
+  const [filterType, setFilterType] = useState<"all" | "province" | "month" | "year">("all")
+  const [filterValue, setFilterValue] = useState("")
+
+  const handleApplyFilter = () => {
+    if (filterType !== "all" && !filterValue) {
+      alert("Please enter or select a value to filter.")
+      return
+    }
+    setFilter({ type: filterType, value: filterValue })
+  }
+
+  const handleClearFilter = () => {
+    setFilterType("all")
+    setFilterValue("")
+    setFilter({ type: "all", value: "" })
+  }
+
+  const [filter, setFilter] = useState<FilterState>({ type: "all", value: "" })
 
   const {
     metrics,
@@ -31,6 +49,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       return {
         metrics: null,
         topProvinces: [],
+        topReturnedProvinces: [],
         topRegions: [],
         topDeliveredShippers: [],
         topRtsShippers: [],
@@ -59,6 +78,59 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
 
     if (selectedConsigneeRegion) {
       filteredData = filteredData.filter((parcel) => parcel.region === selectedConsigneeRegion)
+    }
+
+    // Apply additional filter
+    if (filter.type === "province") {
+      filteredData = filteredData.filter((parcel) => parcel.province.toLowerCase().includes(filter.value.toLowerCase()))
+    }
+    if (filter.type === "month") {
+      filteredData = filteredData.filter((parcel) => {
+        if (!parcel.date) return false
+        let parcelMonth = 0
+        try {
+          let d: Date
+          if (typeof parcel.date === "number") {
+            d = new Date(Date.UTC(1899, 11, 30) + parcel.date * 86400000)
+          } else {
+            d = new Date(parcel.date.toString().trim())
+          }
+          if (isNaN(d.getTime())) {
+            const parts = parcel.date.toString().split(" ")[0].split("-")
+            parcelMonth = Number.parseInt(parts[1], 10)
+          } else {
+            parcelMonth = d.getMonth() + 1
+          }
+        } catch {
+          const parts = parcel.date.toString().split(" ")[0].split("-")
+          parcelMonth = Number.parseInt(parts[1], 10)
+        }
+        return parcelMonth === Number.parseInt(filter.value, 10)
+      })
+    }
+    if (filter.type === "year") {
+      filteredData = filteredData.filter((parcel) => {
+        if (!parcel.date) return false
+        let parcelYear = 0
+        try {
+          let d: Date
+          if (typeof parcel.date === "number") {
+            d = new Date(Date.UTC(1899, 11, 30) + parcel.date * 86400000)
+          } else {
+            d = new Date(parcel.date.toString().trim())
+          }
+          if (isNaN(d.getTime())) {
+            const parts = parcel.date.toString().split(" ")[0].split("-")
+            parcelYear = Number.parseInt(parts[0], 10)
+          } else {
+            parcelYear = d.getFullYear()
+          }
+        } catch {
+          const parts = parcel.date.toString().split(" ")[0].split("-")
+          parcelYear = Number.parseInt(parts[0], 10)
+        }
+        return parcelYear === Number.parseInt(filter.value, 10)
+      })
     }
 
     // Calculate metrics
@@ -198,7 +270,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       regionSuccessRates,
       regionRTSRates,
     }
-  }, [data, currentRegion, dateRange, selectedShipper, selectedConsigneeRegion])
+  }, [data, currentRegion, dateRange, selectedShipper, selectedConsigneeRegion, filter])
 
   // Get unique values for filters
   const uniqueShippers = useMemo(() => {
@@ -267,8 +339,70 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
           </Button>
         </div>
 
-        {/* Filters */}
-        {/* Removed filter controls as requested */}
+        {/* Filter Controls */}
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-semibold text-foreground">Filter:</label>
+          <select
+            value={filterType}
+            onChange={(e) => {
+              setFilterType(e.target.value as "all" | "province" | "month" | "year")
+              setFilterValue("")
+            }}
+            className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
+          >
+            <option value="all">All</option>
+            <option value="province">Province</option>
+            <option value="month">Month</option>
+            <option value="year">Year</option>
+          </select>
+
+          {filterType === "province" && (
+            <Input
+              type="text"
+              placeholder="Enter province name"
+              value={filterValue}
+              onChange={(e) => setFilterValue(e.target.value)}
+              className="w-48 h-9 text-sm"
+            />
+          )}
+
+          {filterType === "month" && (
+            <select
+              value={filterValue}
+              onChange={(e) => setFilterValue(e.target.value)}
+              className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
+            >
+              <option value="">Select month</option>
+              {Array.from({ length: 12 }, (_, i) => (
+                <option key={i + 1} value={String(i + 1).padStart(2, "0")}>
+                  {new Date(2000, i).toLocaleString("default", { month: "long" })}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {filterType === "year" && (
+            <select
+              value={filterValue}
+              onChange={(e) => setFilterValue(e.target.value)}
+              className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
+            >
+              <option value="">Select year</option>
+              {Array.from({ length: new Date().getFullYear() - 1999 }, (_, i) => (
+                <option key={2000 + i} value={String(2000 + i)}>
+                  {2000 + i}
+                </option>
+              ))}
+            </select>
+          )}
+
+          <Button size="sm" onClick={handleApplyFilter} className="h-9">
+            Apply
+          </Button>
+          <Button size="sm" variant="outline" onClick={handleClearFilter} className="h-9 bg-transparent">
+            Clear
+          </Button>
+        </div>
       </div>
 
       {/* Headline KPIs */}
@@ -331,7 +465,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         <div className="glass rounded-xl p-6 border border-border/50">
           <h3 className="text-xl font-bold text-foreground mb-4">Top Province (Delivered)</h3>
           <div className="space-y-3">
-            {topProvinces.map(([province, count], index) => {
+            {topProvinces.map(([province, count]: [string, number], index: number) => {
               const percentage = data ? ((count / data.all.data.length) * 100).toFixed(2) : "0.00"
               return (
                 <div key={province} className="flex items-center justify-between p-3 rounded-lg bg-green-900/30">
@@ -381,7 +515,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         <div className="glass rounded-xl p-6 border border-green-500/50">
           <h3 className="text-xl font-bold text-foreground mb-4">Region Success Rates</h3>
           <div className="space-y-3">
-            {regionSuccessRates.map((item, index) => (
+            {regionSuccessRates.map((item: { region: string; successRate: number; deliveredCount: number }, index: number) => (
               <div key={item.region} className="flex items-center justify-between p-3 rounded-lg bg-green-500/10">
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-bold text-green-500 w-6">#{index + 1}</span>
@@ -400,7 +534,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         <div className="glass rounded-xl p-6 border border-red-500/50">
           <h3 className="text-xl font-bold text-foreground mb-4">Region RTS Rates</h3>
           <div className="space-y-3">
-            {regionRTSRates.map((item, index) => (
+            {regionRTSRates.map((item: { region: string; rtsRate: number; rtsCount: number }, index: number) => (
               <div key={item.region} className="flex items-center justify-between p-3 rounded-lg bg-red-500/10">
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-bold text-red-500 w-6">#{index + 1}</span>
