@@ -256,7 +256,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
   return (
     <div className="p-8 space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">CORPORATE PERFORMANCE DASHBOARD</h1>
+        <h1 className="text-3xl font-bold text-foreground mb-2">PRODUCT PERFORMANCE REPORT</h1>
         <p className="text-muted-foreground">Executive insights for strategic decision-making and operational excellence</p>
       </div>
 

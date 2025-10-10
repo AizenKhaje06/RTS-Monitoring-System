@@ -230,7 +230,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
   return (
     <div className="p-8 space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">PERFORMANCE DASHBOARD</h1>
+        <h1 className="text-3xl font-bold text-foreground mb-2">REGION/PROVINCE PERFORMANCE REPORT</h1>
         <p className="text-muted-foreground">Real-time monitoring of key operational health metrics</p>
       </div>
 
