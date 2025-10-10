@@ -364,7 +364,7 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
               <BarChart
                 data={statusChartData}
                 layout="vertical"
-                margin={{ top: 20, right: 30, left: 100, bottom: 20 }}
+                margin={{ top: 20, right: 30, left: 150, bottom: 20 }}
               >
                 <XAxis
                   type="number"
@@ -379,8 +379,8 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
                   type="category"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "white", fontSize: 12, fontWeight: "medium" }}
-                  width={80}
+                  tick={{ fill: "white", fontSize: 11, fontWeight: "medium" }}
+                  width={150}
                 />
                 <Tooltip
                   contentStyle={{
