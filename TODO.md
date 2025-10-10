@@ -12,3 +12,4 @@
 - [x] Adjust layout: Position bar chart alongside total parcels in a horizontal flex layout for better alignment.
 - [x] Verify changes by running the application (pnpm dev) and using browser to check improved UI.
 - [x] Create pull request to main branch.
+- [x] Update PR with layout adjustments.
