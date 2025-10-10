@@ -14,3 +14,13 @@
 - [x] Resize chart and place directly after total parcel without title for tighter integration.
 - [x] Verify changes by running the application (pnpm dev) and using browser to check improved UI.
 - [x] Create and merge pull request to main branch.
+
+# Task: Remove Total Parcels Section and Bar Chart from Parcel Page (Dashboard View)
+
+## Steps to Complete:
+- [x] Update TODO.md with the new task steps
+- [x] Edit components/dashboard-view.tsx to remove the Summary Card section (Total Parcels display and vertical bar chart)
+- [x] Verify the removal by inspecting the updated file
+- [x] Test application functionality (e.g., run `pnpm dev`, check filtering and region switching)
+- [x] Mark steps as complete in TODO.md
+- [x] Confirm with user that the changes meet requirements
