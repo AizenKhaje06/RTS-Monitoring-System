@@ -255,7 +255,7 @@ export function determineRegion(consigneeRegion: string): RegionInfo {
   const regionText = (consigneeRegion || "").toUpperCase().trim()
 
   // Enhanced matching for region names first, including common abbreviations and variations
-  const regionMappings: Record<string, { island: Island; region: string }> = {
+  const regionMappings: Record<string, { island: Island; region: string; province?: string }> = {
     // Luzon regions
     "NCR": { island: "luzon", region: "NCR" },
     "METRO MANILA": { island: "luzon", region: "NCR" },
@@ -280,6 +280,7 @@ export function determineRegion(consigneeRegion: string): RegionInfo {
     "ILOCOS": { island: "luzon", region: "Region I" },
     "CAGAYAN": { island: "luzon", region: "Region II" },
     "CENTRAL LUZON": { island: "luzon", region: "Region III" },
+    "MANILA": { island: "luzon", region: "NCR", province: "Manila" },
 
     // Visayas regions
     "REGION VI": { island: "visayas", region: "Region VI" },
@@ -319,7 +320,7 @@ export function determineRegion(consigneeRegion: string): RegionInfo {
       return {
         island: mapping.island,
         region: mapping.region,
-        province: "Unknown", // Province determination would need separate logic if available
+        province: mapping.province || "Unknown",
       }
     }
   }
