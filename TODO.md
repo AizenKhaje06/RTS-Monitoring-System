@@ -24,3 +24,14 @@
 - [x] Test application functionality (e.g., run `pnpm dev`, check filtering and region switching)
 - [x] Mark steps as complete in TODO.md
 - [x] Confirm with user that the changes meet requirements
+
+# Task: Add Percentage Display to Parcel Status Cards in Dashboard (Corporate Futuristic Style)
+
+## Steps to Complete:
+- [x] Update TODO.md with the new task steps
+- [x] Edit components/dashboard-view.tsx to pass total parcels as prop to each StatusCard
+- [x] Edit components/status-card.tsx: Add total prop to interface, calculate percentage (count / total * 100, formatted to 1 decimal + '%'), and render it on the right side of the header in a corporate futuristic style (e.g., small rounded badge with glassmorphism, subtle gradient background matching colorClass, clean sans-serif font, white text with slight glow/shadow for futuristic effect)
+- [x] Verify the edits for syntax and logic (e.g., percentage calculation handles total=0, styling aligns without overlap)
+- [ ] Test application: Run `pnpm dev`, upload data, navigate to dashboard, confirm percentages display correctly on right of each card, update with filters/regions, check responsive layout
+- [ ] Create feature branch (e.g., blackboxai/status-card-percentages), commit changes with message "Add percentage display to status cards in futuristic style", push, and open PR to main
+- [ ] Mark steps as complete in TODO.md and confirm with user
