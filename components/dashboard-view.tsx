@@ -2,22 +2,9 @@
 
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-
 import { Input } from "@/components/ui/input"
 import { StatusCard } from "@/components/status-card"
 import type { ProcessedData, FilterState } from "@/lib/types"
-
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell
-} from "recharts"
-import { Package, CheckCircle, Truck, AlertCircle, RotateCcw } from "lucide-react"
 
 interface DashboardViewProps {
   data: ProcessedData
@@ -38,48 +25,6 @@ const STATUS_COLORS = {
   DETAINED: "from-gray-600 to-gray-700",
   PROBLEMATIC: "from-orange-600 to-orange-700",
   RETURNED: "from-cyan-500 to-cyan-600",
-}
-
-const STATUS_CHART_COLORS = {
-  DELIVERED: "#10B981",
-  ONDELIVERY: "#3B82F6",
-  PICKUP: "#8B5CF6",
-  INTRANSIT: "#F59E0B",
-  CANCELLED: "#EF4444",
-  DETAINED: "#6B7280",
-  PROBLEMATIC: "#F97316",
-  RETURNED: "#06B6D4",
-}
-
-const STATUS_ICONS = {
-  DELIVERED: CheckCircle,
-  ONDELIVERY: Truck,
-  INTRANSIT: Truck,
-  PICKUP: Package,
-  CANCELLED: AlertCircle,
-  DETAINED: AlertCircle,
-  PROBLEMATIC: AlertCircle,
-  RETURNED: RotateCcw,
-}
-
-const CustomYAxisTick = (props: any) => {
-  const { x, y, payload } = props
-  return (
-    <g transform={`translate(${x},${y})`}>
-      <text
-        x={0}
-        y={0}
-        dy={16}
-        textAnchor="end"
-        fill="white"
-        fontSize={9}
-        fontWeight="medium"
-        transform="rotate(-45 0 0)"
-      >
-        {payload.value}
-      </text>
-    </g>
-  )
 }
 
 export function DashboardView({ data, currentRegion, onRegionChange, filter, onFilterChange }: DashboardViewProps) {
@@ -193,60 +138,6 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
 
   const displayData = filter.type === "all" ? regionData : filteredData
 
-  const rtsPercentage = useMemo(() => {
-    const rtsCount =
-      displayData.stats.CANCELLED.count + displayData.stats.PROBLEMATIC.count + displayData.stats.RETURNED.count
-    return displayData.total > 0 ? ((rtsCount / displayData.total) * 100).toFixed(2) : "0.00"
-  }, [displayData])
-
-  const statusChartData = useMemo(() => {
-    return STATUSES.map((status) => ({
-      status,
-      percentage: displayData.total > 0 ? ((displayData.stats[status].count / displayData.total) * 100) : 0,
-      color: STATUS_CHART_COLORS[status as keyof typeof STATUS_CHART_COLORS],
-    }))
-  }, [displayData])
-
-  const topProvinces = useMemo(() => {
-    return Object.entries(displayData.provinces)
-      .sort(([, a], [, b]) => (b as number) - (a as number))
-      .slice(0, 5)
-  }, [displayData])
-
-  const topRegions = useMemo(() => {
-    return Object.entries(displayData.regions)
-      .sort(([, a], [, b]) => (b as number) - (a as number))
-      .slice(0, 5)
-  }, [displayData])
-
-  const topRTSProvinces = useMemo(() => {
-    const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
-    const provinceRTSCounts: { [key: string]: number } = {}
-
-    rtsStatuses.forEach((status) => {
-      const statusLocations = displayData.stats[status].locations
-      for (const [province, count] of Object.entries(statusLocations)) {
-        provinceRTSCounts[province] = (provinceRTSCounts[province] || 0) + (count as number)
-      }
-    })
-
-    return Object.entries(provinceRTSCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-  }, [displayData])
-
-  const topWinningShippers = useMemo(() => {
-    return Object.entries(displayData.winningShippers)
-      .sort(([, a], [, b]) => (b as number) - (a as number))
-      .slice(0, 5)
-  }, [displayData])
-
-  const topRTSShippers = useMemo(() => {
-    return Object.entries(displayData.rtsShippers)
-      .sort(([, a], [, b]) => (b as number) - (a as number))
-      .slice(0, 5)
-  }, [displayData])
-
   const handleApplyFilter = () => {
     if (filterType !== "all" && !filterValue) {
       alert("Please enter or select a value to filter.")
@@ -260,9 +151,6 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
     setFilterValue("")
     onFilterChange({ type: "all", value: "" })
   }
-
-  const regionName =
-    currentRegion === "all" ? "All Regions" : currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1)
 
   return (
     <div>
