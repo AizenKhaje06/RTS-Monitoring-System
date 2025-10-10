@@ -365,62 +365,6 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
         </div>
       </div>
 
-      {/* Summary Card */}
-      <Card className="mb-6 p-4 bg-black rounded-lg text-white shadow-lg">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2">
-            <Package className="w-5 h-5" />
-            Total Parcels
-          </CardTitle>
-        </CardHeader>
-      <CardContent className="pt-0">
-        <div className="space-y-4">
-          <div className="text-center">
-            <span className="text-5xl font-extrabold text-orange-600 block">{displayData.total.toLocaleString()}</span>
-          </div>
-
-          <ResponsiveContainer width="100%" height={180}>
-            <BarChart
-              data={statusChartData}
-              layout="vertical"
-              margin={{ top: 20, right: 30, left: 220, bottom: 40 }}
-            >
-              <XAxis
-                type="number"
-                axisLine={false}
-                tickLine={false}
-                tickMargin={10}
-                tickFormatter={(value) => `${value}%`}
-                tick={{ fill: "white", fontSize: 12 }}
-              />
-              <YAxis
-                dataKey="status"
-                type="category"
-                axisLine={false}
-                tickLine={false}
-                tick={<CustomYAxisTick />}
-                width={220}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "rgba(0, 0, 0, 0.8)",
-                  border: "none",
-                  borderRadius: "8px",
-                  color: "white",
-                }}
-                formatter={(value, name) => [(value as number).toFixed(2) + "%", name]}
-              />
-              <Bar dataKey="percentage" radius={[4, 0, 0, 4]}>
-                {statusChartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </CardContent>
-      </Card>
-
       {/* Status Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {STATUSES.map((status) => (
