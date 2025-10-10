@@ -408,7 +408,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
                 </div>
                 <div className="text-right">
                   <span className="text-sm font-bold text-red-500">{item.rtsRate.toFixed(2)}%</span>
-                  <p className="text-xs text-muted-foreground">{item.rtsCount.toLocaleString()} RTS</p>
+                  <p className="text-xs text-muted-foreground">{item.rtsCount.toLocaleString()} RTS</p>                                       
                 </div>
               </div>
             ))}
