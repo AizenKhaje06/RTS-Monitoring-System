@@ -356,8 +356,7 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
       <CardContent className="pt-0">
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="flex-1 flex flex-col justify-center">
-            <span className="text-base font-semibold text-white/80">Total Parcels</span>
-            <span className="text-5xl font-extrabold text-orange-600 block mt-1">{displayData.total.toLocaleString()}</span>
+            <span className="text-5xl font-extrabold text-orange-600">{displayData.total.toLocaleString()}</span>
           </div>
 
           <div className="flex-1 space-y-2">
