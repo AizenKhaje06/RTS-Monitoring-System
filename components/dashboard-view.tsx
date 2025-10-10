@@ -318,19 +318,27 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
           <div className="grid grid-cols-4 gap-x-12 text-sm">
             <div className="flex flex-col gap-1">
               <span className="font-semibold text-green-500">Delivered</span>
+              <span className="font-semibold text-green-500">{((displayData.stats.DELIVERED.count / displayData.total) * 100).toFixed(2)}%</span>
               <span className="font-semibold text-yellow-500">On Delivery</span>
+              <span className="font-semibold text-yellow-500">{((displayData.stats.ONDELIVERY.count / displayData.total) * 100).toFixed(2)}%</span>
             </div>
             <div className="flex flex-col gap-1">
               <span className="font-semibold text-blue-500">In Transit</span>
+              <span className="font-semibold text-blue-500">{((displayData.stats.INTRANSIT.count / displayData.total) * 100).toFixed(2)}%</span>
               <span className="font-semibold text-yellow-500">Pick up</span>
+              <span className="font-semibold text-yellow-500">{((displayData.stats.PICKUP.count / displayData.total) * 100).toFixed(2)}%</span>
             </div>
             <div className="flex flex-col gap-1">
               <span className="font-semibold text-red-500">Cancelled</span>
+              <span className="font-semibold text-red-500">{((displayData.stats.CANCELLED.count / displayData.total) * 100).toFixed(2)}%</span>
               <span className="font-semibold text-red-500">Problematic</span>
+              <span className="font-semibold text-red-500">{((displayData.stats.PROBLEMATIC.count / displayData.total) * 100).toFixed(2)}%</span>
             </div>
             <div className="flex flex-col gap-1">
               <span className="font-semibold text-yellow-500">Detained</span>
+              <span className="font-semibold text-yellow-500">{((displayData.stats.DETAINED.count / displayData.total) * 100).toFixed(2)}%</span>
               <span className="font-semibold text-red-500">Returned</span>
+              <span className="font-semibold text-red-500">{((displayData.stats.RETURNED.count / displayData.total) * 100).toFixed(2)}%</span>
             </div>
           </div>
         </div>
