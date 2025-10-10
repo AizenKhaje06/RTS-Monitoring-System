@@ -377,7 +377,6 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
         <div className="space-y-4">
           <div className="text-center">
             <span className="text-5xl font-extrabold text-orange-600 block">{displayData.total.toLocaleString()}</span>
-            <span className="text-base font-semibold text-white/80">Total Parcels</span>
           </div>
 
           <ResponsiveContainer width="100%" height={180}>
