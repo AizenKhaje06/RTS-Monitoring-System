@@ -374,6 +374,7 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
             count={displayData.stats[status].count}
             locations={displayData.stats[status].locations}
             colorClass={STATUS_COLORS[status as keyof typeof STATUS_COLORS]}
+            total={displayData.total}
           />
         ))}
       </div>

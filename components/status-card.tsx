@@ -9,15 +9,22 @@ interface StatusCardProps {
   count: number
   locations: { [province: string]: number }
   colorClass: string
+  total: number
 }
 
-export function StatusCard({ status, count, locations, colorClass }: StatusCardProps) {
+export function StatusCard({ status, count, locations, colorClass, total }: StatusCardProps) {
   const topLocations = useMemo(() => {
     return Object.entries(locations)
       .sort(([, a], [, b]) => b - a)
       .slice(0, 5)
       .map(([location, count]) => ({ location, count }))
   }, [locations])
+
+  const percentage = useMemo(() => {
+    if (total === 0) return '0%'
+    const pct = (count / total) * 100
+    return `${pct.toFixed(1)}%`
+  }, [count, total])
 
   const barColors = [
     "oklch(0.65 0.19 45)",
@@ -40,6 +47,11 @@ export function StatusCard({ status, count, locations, colorClass }: StatusCardP
               <span className="text-3xl font-bold text-white">{count.toLocaleString()}</span>
               <TrendingUp className="w-4 h-4 text-white/60" />
             </div>
+          </div>
+          <div className="text-right">
+            <span className={`inline-block px-2 py-1 text-xs font-medium text-white bg-white/10 backdrop-blur-sm rounded-full shadow-lg border border-white/20 ${colorClass.replace('from-', 'bg-gradient-to-r from-').replace('to-', ' to-')} min-w-[3rem] text-center`}>
+              {percentage}
+            </span>
           </div>
         </div>
       </div>
