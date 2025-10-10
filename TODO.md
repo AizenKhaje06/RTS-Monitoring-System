@@ -9,4 +9,6 @@
 
 ## Steps to Complete:
 - [x] Update components/dashboard-view.tsx: Enhance summary card with icons for statuses and replace text grid with a horizontal bar chart for status distribution using Recharts.
+- [x] Adjust layout: Position bar chart alongside total parcels in a horizontal flex layout for better alignment.
 - [x] Verify changes by running the application (pnpm dev) and using browser to check improved UI.
+- [x] Create pull request to main branch.
