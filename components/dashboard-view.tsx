@@ -8,6 +8,17 @@ import { Input } from "@/components/ui/input"
 import { StatusCard } from "@/components/status-card"
 import type { ProcessedData, FilterState } from "@/lib/types"
 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Cell
+} from "recharts"
+import { Package, CheckCircle, Truck, AlertCircle, RotateCcw } from "lucide-react"
+
 interface DashboardViewProps {
   data: ProcessedData
   currentRegion: "all" | "luzon" | "visayas" | "mindanao"
@@ -27,6 +38,28 @@ const STATUS_COLORS = {
   DETAINED: "from-gray-600 to-gray-700",
   PROBLEMATIC: "from-orange-600 to-orange-700",
   RETURNED: "from-cyan-500 to-cyan-600",
+}
+
+const STATUS_CHART_COLORS = {
+  DELIVERED: "#10B981",
+  ONDELIVERY: "#3B82F6",
+  PICKUP: "#8B5CF6",
+  INTRANSIT: "#F59E0B",
+  CANCELLED: "#EF4444",
+  DETAINED: "#6B7280",
+  PROBLEMATIC: "#F97316",
+  RETURNED: "#06B6D4",
+}
+
+const STATUS_ICONS = {
+  DELIVERED: CheckCircle,
+  ONDELIVERY: Truck,
+  INTRANSIT: Truck,
+  PICKUP: Package,
+  CANCELLED: AlertCircle,
+  DETAINED: AlertCircle,
+  PROBLEMATIC: AlertCircle,
+  RETURNED: RotateCcw,
 }
 
 export function DashboardView({ data, currentRegion, onRegionChange, filter, onFilterChange }: DashboardViewProps) {
@@ -144,6 +177,14 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
     const rtsCount =
       displayData.stats.CANCELLED.count + displayData.stats.PROBLEMATIC.count + displayData.stats.RETURNED.count
     return displayData.total > 0 ? ((rtsCount / displayData.total) * 100).toFixed(2) : "0.00"
+  }, [displayData])
+
+  const statusChartData = useMemo(() => {
+    return STATUSES.map((status) => ({
+      status,
+      percentage: displayData.total > 0 ? ((displayData.stats[status].count / displayData.total) * 100) : 0,
+      color: STATUS_CHART_COLORS[status as keyof typeof STATUS_CHART_COLORS],
+    }))
   }, [displayData])
 
   const topProvinces = useMemo(() => {
@@ -305,42 +346,61 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
       </div>
 
       {/* Summary Card */}
-      <Card className="mb-6 p-4 bg-black rounded-lg text-white">
-        <CardHeader>
-          <CardTitle>Total Parcels</CardTitle>
+      <Card className="mb-6 p-4 bg-black rounded-lg text-white shadow-lg">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2">
+            <Package className="w-5 h-5" />
+            Total Parcels
+          </CardTitle>
         </CardHeader>
-      <CardContent>
-        <div className="flex gap-12">
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold">Total Parcels</span>
-            <span className="text-4xl font-bold text-orange-600">{displayData.total.toLocaleString()}</span>
-          </div>
-          <div className="grid grid-cols-4 gap-x-12 text-sm">
-            <div className="flex flex-col gap-1">
-              <span className="font-semibold text-green-500">Delivered</span>
-              <span className="font-semibold text-green-500">{((displayData.stats.DELIVERED.count / displayData.total) * 100).toFixed(2)}%</span>
-              <span className="font-semibold text-yellow-500">On Delivery</span>
-              <span className="font-semibold text-yellow-500">{((displayData.stats.ONDELIVERY.count / displayData.total) * 100).toFixed(2)}%</span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="font-semibold text-blue-500">In Transit</span>
-              <span className="font-semibold text-blue-500">{((displayData.stats.INTRANSIT.count / displayData.total) * 100).toFixed(2)}%</span>
-              <span className="font-semibold text-yellow-500">Pick up</span>
-              <span className="font-semibold text-yellow-500">{((displayData.stats.PICKUP.count / displayData.total) * 100).toFixed(2)}%</span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="font-semibold text-red-500">Cancelled</span>
-              <span className="font-semibold text-red-500">{((displayData.stats.CANCELLED.count / displayData.total) * 100).toFixed(2)}%</span>
-              <span className="font-semibold text-red-500">Problematic</span>
-              <span className="font-semibold text-red-500">{((displayData.stats.PROBLEMATIC.count / displayData.total) * 100).toFixed(2)}%</span>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="font-semibold text-yellow-500">Detained</span>
-              <span className="font-semibold text-yellow-500">{((displayData.stats.DETAINED.count / displayData.total) * 100).toFixed(2)}%</span>
-              <span className="font-semibold text-red-500">Returned</span>
-              <span className="font-semibold text-red-500">{((displayData.stats.RETURNED.count / displayData.total) * 100).toFixed(2)}%</span>
-            </div>
-          </div>
+      <CardContent className="pt-0">
+        <div className="mb-6">
+          <span className="text-base font-semibold text-white/80">Total Parcels</span>
+          <span className="text-5xl font-extrabold text-orange-600 block mt-1">{displayData.total.toLocaleString()}</span>
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-white/90 flex items-center gap-2">
+            Status Distribution
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart
+              data={statusChartData}
+              layout="vertical"
+              margin={{ top: 20, right: 30, left: 100, bottom: 20 }}
+            >
+              <XAxis
+                type="number"
+                axisLine={false}
+                tickLine={false}
+                tickMargin={10}
+                tickFormatter={(value) => `${value}%`}
+                tick={{ fill: "white", fontSize: 12 }}
+              />
+              <YAxis
+                dataKey="status"
+                type="category"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "white", fontSize: 12, fontWeight: "medium" }}
+                width={80}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "rgba(0, 0, 0, 0.8)",
+                  border: "none",
+                  borderRadius: "8px",
+                  color: "white",
+                }}
+                formatter={(value, name) => [(value as number).toFixed(2) + "%", name]}
+              />
+              <Bar dataKey="percentage" radius={[4, 0, 0, 4]}>
+                {statusChartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </CardContent>
       </Card>
