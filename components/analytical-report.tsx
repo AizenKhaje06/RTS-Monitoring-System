@@ -36,23 +36,42 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
     if (filter.type === "month" && filter.value) {
       filtered = filtered.filter((parcel) => {
         if (!parcel.date) return false
+        const dateStr = parcel.date.toString().trim()
         let parcelMonth = 0
         try {
           let d: Date
-          if (typeof parcel.date === "number") {
-            d = new Date(Date.UTC(1899, 11, 30) + parcel.date * 86400000)
+          const numDate = parseFloat(dateStr)
+          if (!isNaN(numDate) && numDate.toString() === dateStr) {
+            // Excel serial date
+            d = new Date(Date.UTC(1899, 11, 30) + numDate * 86400000)
           } else {
-            d = new Date(parcel.date.toString().trim())
+            d = new Date(dateStr)
           }
           if (isNaN(d.getTime())) {
-            const parts = parcel.date.toString().split(" ")[0].split("-")
-            parcelMonth = Number.parseInt(parts[1], 10)
+            const parts = dateStr.split(" ")[0].split("-")
+            if (parts.length >= 2) {
+              parcelMonth = Number.parseInt(parts[1], 10)
+            } else {
+              // Try MM/DD/YYYY format
+              const slashParts = dateStr.split("/").map(p => p.trim())
+              if (slashParts.length >= 3) {
+                parcelMonth = Number.parseInt(slashParts[0], 10)
+              }
+            }
           } else {
             parcelMonth = d.getMonth() + 1
           }
         } catch {
-          const parts = parcel.date.toString().split(" ")[0].split("-")
-          parcelMonth = Number.parseInt(parts[1], 10)
+          const parts = dateStr.split(" ")[0].split("-")
+          if (parts.length >= 2) {
+            parcelMonth = Number.parseInt(parts[1], 10)
+          } else {
+            // Try MM/DD/YYYY
+            const slashParts = dateStr.split("/").map(p => p.trim())
+            if (slashParts.length >= 3) {
+              parcelMonth = Number.parseInt(slashParts[0], 10)
+            }
+          }
         }
         return parcelMonth === Number.parseInt(filter.value, 10)
       })
@@ -61,23 +80,42 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
     if (filter.type === "year" && filter.value) {
       filtered = filtered.filter((parcel) => {
         if (!parcel.date) return false
+        const dateStr = parcel.date.toString().trim()
         let parcelYear = 0
         try {
           let d: Date
-          if (typeof parcel.date === "number") {
-            d = new Date(Date.UTC(1899, 11, 30) + parcel.date * 86400000)
+          const numDate = parseFloat(dateStr)
+          if (!isNaN(numDate) && numDate.toString() === dateStr) {
+            // Excel serial date
+            d = new Date(Date.UTC(1899, 11, 30) + numDate * 86400000)
           } else {
-            d = new Date(parcel.date.toString().trim())
+            d = new Date(dateStr)
           }
           if (isNaN(d.getTime())) {
-            const parts = parcel.date.toString().split(" ")[0].split("-")
-            parcelYear = Number.parseInt(parts[0], 10)
+            const parts = dateStr.split(" ")[0].split("-")
+            if (parts.length >= 3) {
+              parcelYear = Number.parseInt(parts[0], 10)
+            } else {
+              // Try MM/DD/YYYY format
+              const slashParts = dateStr.split("/").map(p => p.trim())
+              if (slashParts.length >= 3) {
+                parcelYear = Number.parseInt(slashParts[2], 10)
+              }
+            }
           } else {
             parcelYear = d.getFullYear()
           }
         } catch {
-          const parts = parcel.date.toString().split(" ")[0].split("-")
-          parcelYear = Number.parseInt(parts[0], 10)
+          const parts = dateStr.split(" ")[0].split("-")
+          if (parts.length >= 3) {
+            parcelYear = Number.parseInt(parts[0], 10)
+          } else {
+            // Try MM/DD/YYYY
+            const slashParts = dateStr.split("/").map(p => p.trim())
+            if (slashParts.length >= 3) {
+              parcelYear = Number.parseInt(slashParts[2], 10)
+            }
+          }
         }
         return parcelYear === Number.parseInt(filter.value, 10)
       })
