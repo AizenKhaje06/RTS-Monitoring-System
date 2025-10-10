@@ -62,6 +62,26 @@ const STATUS_ICONS = {
   RETURNED: RotateCcw,
 }
 
+const CustomYAxisTick = (props: any) => {
+  const { x, y, payload } = props
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0}
+        y={0}
+        dy={16}
+        textAnchor="end"
+        fill="white"
+        fontSize={9}
+        fontWeight="medium"
+        transform="rotate(-45 0 0)"
+      >
+        {payload.value}
+      </text>
+    </g>
+  )
+}
+
 export function DashboardView({ data, currentRegion, onRegionChange, filter, onFilterChange }: DashboardViewProps) {
   const [filterType, setFilterType] = useState<"all" | "province" | "month" | "year">("all")
   const [filterValue, setFilterValue] = useState("")
@@ -364,7 +384,7 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
               <BarChart
                 data={statusChartData}
                 layout="vertical"
-                margin={{ top: 20, right: 30, left: 200, bottom: 20 }}
+                margin={{ top: 20, right: 30, left: 220, bottom: 40 }}
               >
                 <XAxis
                   type="number"
@@ -379,8 +399,8 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
                   type="category"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "white", fontSize: 10, fontWeight: "medium" }}
-                  width={200}
+                  tick={<CustomYAxisTick />}
+                  width={220}
                 />
                 <Tooltip
                   contentStyle={{
