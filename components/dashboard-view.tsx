@@ -374,51 +374,50 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
           </CardTitle>
         </CardHeader>
       <CardContent className="pt-0">
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="w-32 flex flex-col justify-center">
-            <span className="text-5xl font-extrabold text-orange-600">{displayData.total.toLocaleString()}</span>
+        <div className="space-y-4">
+          <div className="text-center">
+            <span className="text-5xl font-extrabold text-orange-600 block">{displayData.total.toLocaleString()}</span>
+            <span className="text-base font-semibold text-white/80">Total Parcels</span>
           </div>
 
-          <div className="flex-1">
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart
-                data={statusChartData}
-                layout="vertical"
-                margin={{ top: 20, right: 30, left: 220, bottom: 40 }}
-              >
-                <XAxis
-                  type="number"
-                  axisLine={false}
-                  tickLine={false}
-                  tickMargin={10}
-                  tickFormatter={(value) => `${value}%`}
-                  tick={{ fill: "white", fontSize: 12 }}
-                />
-                <YAxis
-                  dataKey="status"
-                  type="category"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={<CustomYAxisTick />}
-                  width={220}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "rgba(0, 0, 0, 0.8)",
-                    border: "none",
-                    borderRadius: "8px",
-                    color: "white",
-                  }}
-                  formatter={(value, name) => [(value as number).toFixed(2) + "%", name]}
-                />
-                <Bar dataKey="percentage" radius={[4, 0, 0, 4]}>
-                  {statusChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart
+              data={statusChartData}
+              layout="vertical"
+              margin={{ top: 20, right: 30, left: 220, bottom: 40 }}
+            >
+              <XAxis
+                type="number"
+                axisLine={false}
+                tickLine={false}
+                tickMargin={10}
+                tickFormatter={(value) => `${value}%`}
+                tick={{ fill: "white", fontSize: 12 }}
+              />
+              <YAxis
+                dataKey="status"
+                type="category"
+                axisLine={false}
+                tickLine={false}
+                tick={<CustomYAxisTick />}
+                width={220}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "rgba(0, 0, 0, 0.8)",
+                  border: "none",
+                  borderRadius: "8px",
+                  color: "white",
+                }}
+                formatter={(value, name) => [(value as number).toFixed(2) + "%", name]}
+              />
+              <Bar dataKey="percentage" radius={[4, 0, 0, 4]}>
+                {statusChartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </CardContent>
       </Card>
