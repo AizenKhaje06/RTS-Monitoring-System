@@ -254,45 +254,63 @@ export interface RegionInfo {
 export function determineRegion(consigneeRegion: string): RegionInfo {
   const regionText = (consigneeRegion || "").toUpperCase().trim()
 
-  // Enhanced matching for region names first
+  // Enhanced matching for region names first, including common abbreviations and variations
   const regionMappings: Record<string, { island: Island; region: string }> = {
     // Luzon regions
     "NCR": { island: "luzon", region: "NCR" },
+    "METRO MANILA": { island: "luzon", region: "NCR" },
     "CAR": { island: "luzon", region: "CAR" },
     "REGION I": { island: "luzon", region: "Region I" },
+    "REGION 1": { island: "luzon", region: "Region I" },
     "REGION II": { island: "luzon", region: "Region II" },
+    "REGION 2": { island: "luzon", region: "Region II" },
     "REGION III": { island: "luzon", region: "Region III" },
+    "REGION 3": { island: "luzon", region: "Region III" },
     "REGION IV-A": { island: "luzon", region: "Region IV-A" },
+    "REGION IV": { island: "luzon", region: "Region IV-A" },
+    "REGION 4": { island: "luzon", region: "Region IV-A" },
+    "REGION 4A": { island: "luzon", region: "Region IV-A" },
+    "CALABARZON": { island: "luzon", region: "Region IV-A" },
     "REGION IV-B": { island: "luzon", region: "Region IV-B" },
+    "REGION 4B": { island: "luzon", region: "Region IV-B" },
+    "MIMAROPA": { island: "luzon", region: "Region IV-B" },
     "REGION V": { island: "luzon", region: "Region V" },
+    "REGION 5": { island: "luzon", region: "Region V" },
+    "BICOL": { island: "luzon", region: "Region V" },
     "ILOCOS": { island: "luzon", region: "Region I" },
     "CAGAYAN": { island: "luzon", region: "Region II" },
     "CENTRAL LUZON": { island: "luzon", region: "Region III" },
-    "CALABARZON": { island: "luzon", region: "Region IV-A" },
-    "MIMAROPA": { island: "luzon", region: "Region IV-B" },
-    "BICOL": { island: "luzon", region: "Region V" },
 
     // Visayas regions
     "REGION VI": { island: "visayas", region: "Region VI" },
-    "REGION VII": { island: "visayas", region: "Region VII" },
-    "REGION VIII": { island: "visayas", region: "Region VIII" },
+    "REGION 6": { island: "visayas", region: "Region VI" },
     "WESTERN VISAYAS": { island: "visayas", region: "Region VI" },
+    "REGION VII": { island: "visayas", region: "Region VII" },
+    "REGION 7": { island: "visayas", region: "Region VII" },
     "CENTRAL VISAYAS": { island: "visayas", region: "Region VII" },
+    "REGION VIII": { island: "visayas", region: "Region VIII" },
+    "REGION 8": { island: "visayas", region: "Region VIII" },
     "EASTERN VISAYAS": { island: "visayas", region: "Region VIII" },
 
     // Mindanao regions
     "REGION IX": { island: "mindanao", region: "Region IX" },
-    "REGION X": { island: "mindanao", region: "Region X" },
-    "REGION XI": { island: "mindanao", region: "Region XI" },
-    "REGION XII": { island: "mindanao", region: "Region XII" },
-    "REGION XIII": { island: "mindanao", region: "Region XIII" },
-    "BARMM": { island: "mindanao", region: "BARMM" },
+    "REGION 9": { island: "mindanao", region: "Region IX" },
     "ZAMBOANGA": { island: "mindanao", region: "Region IX" },
+    "REGION X": { island: "mindanao", region: "Region X" },
+    "REGION 10": { island: "mindanao", region: "Region X" },
     "NORTHERN MINDANAO": { island: "mindanao", region: "Region X" },
+    "REGION XI": { island: "mindanao", region: "Region XI" },
+    "REGION 11": { island: "mindanao", region: "Region XI" },
     "DAVAO": { island: "mindanao", region: "Region XI" },
+    "REGION XII": { island: "mindanao", region: "Region XII" },
+    "REGION 12": { island: "mindanao", region: "Region XII" },
     "SOCCSKSARGEN": { island: "mindanao", region: "Region XII" },
+    "REGION XIII": { island: "mindanao", region: "Region XIII" },
+    "REGION 13": { island: "mindanao", region: "Region XIII" },
     "CARAGA": { island: "mindanao", region: "Region XIII" },
+    "BARMM": { island: "mindanao", region: "BARMM" },
     "BANG SAMORO": { island: "mindanao", region: "BARMM" },
+    "ARMM": { island: "mindanao", region: "BARMM" },
   }
 
   // Check for region name matches
@@ -321,12 +339,12 @@ export function determineRegion(consigneeRegion: string): RegionInfo {
     }
   }
 
-  // Fallback to island-level matching
-  if (regionText.includes("LUZON") || regionText.includes("NCR") || regionText.includes("CAR")) {
+  // Fallback to island-level matching with more keywords
+  if (regionText.includes("LUZON") || regionText.includes("NCR") || regionText.includes("CAR") || regionText.includes("MANILA") || regionText.includes("QUEZON")) {
     return { island: "luzon", region: "Unknown", province: "Unknown" }
-  } else if (regionText.includes("VISAYAS") || regionText.includes("CEBU") || regionText.includes("ILOILO")) {
+  } else if (regionText.includes("VISAYAS") || regionText.includes("CEBU") || regionText.includes("ILOILO") || regionText.includes("NEGROS") || regionText.includes("LEYTE")) {
     return { island: "visayas", region: "Unknown", province: "Unknown" }
-  } else if (regionText.includes("MINDANAO") || regionText.includes("DAVAO") || regionText.includes("CAGAYAN DE ORO")) {
+  } else if (regionText.includes("MINDANAO") || regionText.includes("DAVAO") || regionText.includes("CAGAYAN DE ORO") || regionText.includes("ZAMBOANGA") || regionText.includes("COTABATO")) {
     return { island: "mindanao", region: "Unknown", province: "Unknown" }
   }
 
