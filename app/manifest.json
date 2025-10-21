@@ -1,0 +1,21 @@
+{
+  "name": "RTS Monitoring Dashboard",
+  "short_name": "RTS Dashboard",
+  "description": "Professional parcel tracking and analytics platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/RTS ICON.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/RTS ICON.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

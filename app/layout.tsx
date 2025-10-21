@@ -10,6 +10,10 @@ export const metadata: Metadata = {
   title: "RTS Monitoring Dashboard",
   description: "Professional parcel tracking and analytics platform",
   generator: "v0.app",
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/RTS ICON.png",
+  },
 }
 
 export default function RootLayout({
