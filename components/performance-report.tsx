@@ -171,7 +171,9 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     // Top Provinces
     const provinceCounts: { [key: string]: number } = {}
     filteredData.forEach((parcel) => {
-      provinceCounts[parcel.province] = (provinceCounts[parcel.province] || 0) + 1
+      if (parcel.province && parcel.province !== "unknown location" && parcel.province.trim() !== "") {
+        provinceCounts[parcel.province] = (provinceCounts[parcel.province] || 0) + 1
+      }
     })
     const topProvinces = Object.entries(provinceCounts)
       .sort(([, a], [, b]) => b - a)
@@ -181,7 +183,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     const returnedStatuses = ["RETURNED"]
     const returnedProvinceCounts: { [key: string]: number } = {}
     filteredData.forEach((parcel) => {
-      if (returnedStatuses.includes(parcel.normalizedStatus)) {
+      if (returnedStatuses.includes(parcel.normalizedStatus) && parcel.province && parcel.province !== "unknown location" && parcel.province.trim() !== "") {
         returnedProvinceCounts[parcel.province] = (returnedProvinceCounts[parcel.province] || 0) + 1
       }
     })
