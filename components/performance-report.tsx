@@ -13,9 +13,6 @@ interface PerformanceReportProps {
 
 export function PerformanceReport({ data }: PerformanceReportProps) {
   const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
-  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: "", end: "" })
-  const [selectedShipper, setSelectedShipper] = useState<string>("")
-  const [selectedConsigneeRegion, setSelectedConsigneeRegion] = useState<string>("")
   const [filterType, setFilterType] = useState<"all" | "province" | "month" | "year">("all")
   const [filterValue, setFilterValue] = useState("")
 
@@ -39,48 +36,20 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     metrics,
     topProvinces,
     topReturnedProvinces,
-    topRegions,
-    topDeliveredShippers,
-    topRtsShippers,
     regionSuccessRates,
     regionRTSRates,
-    totalParcelsInView,
   } = useMemo(() => {
     if (!data)
       return {
         metrics: null,
         topProvinces: [],
         topReturnedProvinces: [],
-        topRegions: [],
-        topDeliveredShippers: [],
-        topRtsShippers: [],
         regionSuccessRates: [],
         regionRTSRates: [],
-        totalParcelsInView: 0,
       }
 
     const sourceData = currentRegion === "all" ? data.all : data[currentRegion]
     let filteredData = sourceData.data
-
-    // Apply filters
-    if (dateRange.start && dateRange.end) {
-      filteredData = filteredData.filter((parcel) => {
-        if (!parcel.date) return false
-        const parcelDate = new Date(parcel.date)
-        if (isNaN(parcelDate.getTime())) return false
-        const startDate = new Date(dateRange.start)
-        const endDate = new Date(dateRange.end)
-        return parcelDate >= startDate && parcelDate <= endDate
-      })
-    }
-
-    if (selectedShipper) {
-      filteredData = filteredData.filter((parcel) => parcel.shipper === selectedShipper)
-    }
-
-    if (selectedConsigneeRegion) {
-      filteredData = filteredData.filter((parcel) => parcel.region === selectedConsigneeRegion)
-    }
 
     // Apply additional filter
     if (filter.type === "province") {
@@ -220,27 +189,6 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10)
 
-    // Top Regions
-    const regionCounts: { [key: string]: number } = {}
-    filteredData.forEach((parcel) => {
-      regionCounts[parcel.region] = (regionCounts[parcel.region] || 0) + 1
-    })
-    const topRegions = Object.entries(regionCounts)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 10)
-
-    // Top Delivered Shippers
-    const topDeliveredShippers = Object.entries(sourceData.winningShippers)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 10)
-
-    // Top RTS Shippers
-    const topRtsShippers = Object.entries(sourceData.rtsShippers)
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 10)
-
-
-
     // Region Success Rates
     const regionSuccessData: { [key: string]: { total: number; delivered: number } } = {}
     filteredData.forEach((parcel) => {
@@ -304,29 +252,10 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       },
       topProvinces,
       topReturnedProvinces,
-      topRegions,
-      topDeliveredShippers,
-      topRtsShippers,
       regionSuccessRates,
       regionRTSRates,
-      totalParcelsInView: totalParcels,
     }
-  }, [data, currentRegion, dateRange, selectedShipper, selectedConsigneeRegion, filter])
-
-  // Get unique values for filters
-  const uniqueShippers = useMemo(() => {
-    if (!data) return []
-    const sourceData = currentRegion === "all" ? data.all : data[currentRegion]
-    const shippers = new Set(sourceData.data.map((p) => p.shipper).filter(Boolean))
-    return Array.from(shippers).sort()
-  }, [data, currentRegion])
-
-  const uniqueConsigneeRegions = useMemo(() => {
-    if (!data) return []
-    const sourceData = currentRegion === "all" ? data.all : data[currentRegion]
-    const regions = new Set(sourceData.data.map((p) => p.region).filter(Boolean))
-    return Array.from(regions).sort()
-  }, [data, currentRegion])
+  }, [data, currentRegion, filter])
 
   if (!data) {
     return (
