@@ -148,10 +148,14 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
 
       if (STATUSES.includes(status)) {
         stats[status].count++
-        stats[status].locations[province] = (stats[status].locations[province] || 0) + 1
+        if (province && province !== "unknown location" && province !== "Unknown" && province.trim() !== "") {
+          stats[status].locations[province] = (stats[status].locations[province] || 0) + 1
+        }
       }
 
-      provinces[province] = (provinces[province] || 0) + 1
+      if (province && province !== "unknown location" && province !== "Unknown" && province.trim() !== "") {
+        provinces[province] = (provinces[province] || 0) + 1
+      }
       regions[region] = (regions[region] || 0) + 1
 
       if (status === "DELIVERED") {
