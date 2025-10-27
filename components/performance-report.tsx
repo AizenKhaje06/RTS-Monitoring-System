@@ -38,6 +38,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     topReturnedProvinces,
     regionSuccessRates,
     regionRTSRates,
+    filteredData,
   } = useMemo(() => {
     if (!data)
       return {
@@ -256,6 +257,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       topReturnedProvinces,
       regionSuccessRates,
       regionRTSRates,
+      filteredData,
     }
   }, [data, currentRegion, filter])
 
