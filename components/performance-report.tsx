@@ -172,7 +172,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     // Top Provinces
     const provinceCounts: { [key: string]: number } = {}
     filteredData.forEach((parcel) => {
-      if (parcel.province && parcel.province !== "unknown location" && parcel.province.trim() !== "") {
+      if (parcel.province && parcel.province !== "unknown location" && parcel.province !== "Unknown" && parcel.province.trim() !== "") {
         provinceCounts[parcel.province] = (provinceCounts[parcel.province] || 0) + 1
       }
     })
@@ -184,7 +184,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     const returnedStatuses = ["RETURNED"]
     const returnedProvinceCounts: { [key: string]: number } = {}
     filteredData.forEach((parcel) => {
-      if (returnedStatuses.includes(parcel.normalizedStatus) && parcel.province && parcel.province !== "unknown location" && parcel.province.trim() !== "") {
+      if (returnedStatuses.includes(parcel.normalizedStatus) && parcel.province && parcel.province !== "unknown location" && parcel.province !== "Unknown" && parcel.province.trim() !== "") {
         returnedProvinceCounts[parcel.province] = (returnedProvinceCounts[parcel.province] || 0) + 1
       }
     })
