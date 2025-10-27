@@ -75,29 +75,35 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     }
     // Helper function to parse date and extract month/year
     const parseDateForMonthYear = (dateStr: string): { month: number; year: number } | null => {
+      // Remove time part if present
+      const datePart = dateStr.split(' ')[0]
+
+      // Try YYYY-MM-DD format
+      const dashParts = datePart.split("-")
+      if (dashParts.length === 3) {
+        const year = Number.parseInt(dashParts[0], 10)
+        const month = Number.parseInt(dashParts[1], 10)
+        const day = Number.parseInt(dashParts[2], 10)
+        if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+          return { month, year }
+        }
+      }
+
+      // Try MM/DD/YYYY format
+      const slashParts = datePart.split("/")
+      if (slashParts.length === 3) {
+        const month = Number.parseInt(slashParts[0], 10)
+        const day = Number.parseInt(slashParts[1], 10)
+        const year = Number.parseInt(slashParts[2], 10)
+        if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+          return { month, year }
+        }
+      }
+
+      // Try new Date as fallback
       const d = new Date(dateStr)
       if (!isNaN(d.getTime())) {
         return { month: d.getMonth() + 1, year: d.getFullYear() }
-      }
-
-      // Try DD/MM/YYYY format (Excel format)
-      const slashParts = dateStr.split("/")
-      if (slashParts.length >= 3) {
-        const month = Number.parseInt(slashParts[1], 10)
-        const year = Number.parseInt(slashParts[2].split(" ")[0], 10)
-        if (!isNaN(month) && !isNaN(year)) {
-          return { month, year }
-        }
-      }
-
-      // Try YYYY-MM-DD format
-      const dashParts = dateStr.split("-")
-      if (dashParts.length >= 3) {
-        const year = Number.parseInt(dashParts[0], 10)
-        const month = Number.parseInt(dashParts[1], 10)
-        if (!isNaN(month) && !isNaN(year)) {
-          return { month, year }
-        }
       }
 
       return null
