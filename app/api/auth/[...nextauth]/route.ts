@@ -14,14 +14,13 @@ const handler = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, account }) {
+    async jwt({ token, account }: any) {
       if (account) {
         token.accessToken = account.access_token
       }
       return token
     },
-    async session({ session, token }) {
-      // @ts-expect-error - accessToken is added to session
+    async session({ session, token }: any) {
       session.accessToken = token.accessToken as string
       return session
     },
