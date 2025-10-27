@@ -11,6 +11,22 @@ interface PerformanceReportProps {
   data: ProcessedData | null
 }
 
+interface PerformanceData {
+  metrics: {
+    deliverySuccessRate: number
+    rtsRate: number
+    totalCostOfReturns: number
+    deliveredAvgCost: number
+    rtsAvgCost: number
+    undeliveredRate: number
+  } | null
+  topProvinces: [string, number][]
+  topReturnedProvinces: [string, number][]
+  regionSuccessRates: { region: string; successRate: number; deliveredCount: number; totalCount: number }[]
+  regionRTSRates: { region: string; rtsRate: number; rtsCount: number; totalCount: number }[]
+  filteredData: unknown[]
+}
+
 export function PerformanceReport({ data }: PerformanceReportProps) {
   const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
   const [filterType, setFilterType] = useState<"all" | "province" | "month" | "year">("all")
@@ -57,48 +73,50 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     if (filter.type === "province") {
       filteredData = filteredData.filter((parcel) => parcel.province.toLowerCase().includes(filter.value.toLowerCase()))
     }
+    // Helper function to parse date and extract month/year
+    const parseDateForMonthYear = (dateStr: string): { month: number; year: number } | null => {
+      const d = new Date(dateStr)
+      if (!isNaN(d.getTime())) {
+        return { month: d.getMonth() + 1, year: d.getFullYear() }
+      }
+
+      // Try DD/MM/YYYY format (Excel format)
+      const slashParts = dateStr.split("/")
+      if (slashParts.length >= 3) {
+        const month = Number.parseInt(slashParts[1], 10)
+        const year = Number.parseInt(slashParts[2].split(" ")[0], 10)
+        if (!isNaN(month) && !isNaN(year)) {
+          return { month, year }
+        }
+      }
+
+      // Try YYYY-MM-DD format
+      const dashParts = dateStr.split("-")
+      if (dashParts.length >= 3) {
+        const year = Number.parseInt(dashParts[0], 10)
+        const month = Number.parseInt(dashParts[1], 10)
+        if (!isNaN(month) && !isNaN(year)) {
+          return { month, year }
+        }
+      }
+
+      return null
+    }
+
     if (filter.type === "month") {
       filteredData = filteredData.filter((parcel) => {
         if (!parcel.date) return false
         const dateStr = parcel.date.toString().trim()
-        let parcelMonth = 0
-
-        // Try to parse as standard date first
-        const d = new Date(dateStr)
-        if (!isNaN(d.getTime())) {
-          parcelMonth = d.getMonth() + 1
-        } else {
-          // Fallback for YYYY-MM-DD HH:MM:SS format
-          const datePart = dateStr.split(" ")[0]
-          const parts = datePart.split("-")
-          if (parts.length >= 2) {
-            parcelMonth = Number.parseInt(parts[1], 10)
-          }
-        }
-
-        return parcelMonth === Number.parseInt(filter.value, 10)
+        const parsed = parseDateForMonthYear(dateStr)
+        return parsed ? parsed.month === Number.parseInt(filter.value, 10) : false
       })
     }
     if (filter.type === "year") {
       filteredData = filteredData.filter((parcel) => {
         if (!parcel.date) return false
         const dateStr = parcel.date.toString().trim()
-        let parcelYear = 0
-
-        // Try to parse as standard date first
-        const d = new Date(dateStr)
-        if (!isNaN(d.getTime())) {
-          parcelYear = d.getFullYear()
-        } else {
-          // Fallback for YYYY-MM-DD HH:MM:SS format
-          const datePart = dateStr.split(" ")[0]
-          const parts = datePart.split("-")
-          if (parts.length >= 3) {
-            parcelYear = Number.parseInt(parts[0], 10)
-          }
-        }
-
-        return parcelYear === Number.parseInt(filter.value, 10)
+        const parsed = parseDateForMonthYear(dateStr)
+        return parsed ? parsed.year === Number.parseInt(filter.value, 10) : false
       })
     }
 
