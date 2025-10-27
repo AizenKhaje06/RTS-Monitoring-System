@@ -43,11 +43,27 @@ export async function processExcelFile(file: File): Promise<ProcessedData> {
         const data = e.target?.result as ArrayBuffer
         const workbook = XLSX.read(data, { type: "array" })
 
-        // Combine data from all sheets
+        // Combine data from all sheets, excluding summary tabs
         let combinedData: unknown[][] = []
         workbook.SheetNames.forEach((sheetName) => {
           const worksheet = workbook.Sheets[sheetName]
           const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as unknown[][]
+
+          // Skip sheets that start with summary headers: DATE, CUSTOMER NAME, WAYBILL NO., STATUS
+          if (sheetData.length > 0) {
+            const firstRow = sheetData[0] as unknown[]
+            if (firstRow.length >= 4) {
+              const header1 = (firstRow[0] || "").toString().toUpperCase().trim()
+              const header2 = (firstRow[1] || "").toString().toUpperCase().trim()
+              const header3 = (firstRow[2] || "").toString().toUpperCase().trim()
+              const header4 = (firstRow[3] || "").toString().toUpperCase().trim()
+
+              if (header1 === "DATE" && header2 === "CUSTOMER NAME" && header3 === "WAYBILL NO." && header4 === "STATUS") {
+                return // Skip this sheet
+              }
+            }
+          }
+
           if (sheetData.length > 1) {
             if (combinedData.length === 0) {
               combinedData = sheetData

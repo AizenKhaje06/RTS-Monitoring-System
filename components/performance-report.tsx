@@ -55,7 +55,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     regionSuccessRates,
     regionRTSRates,
     filteredData,
-  } = useMemo(() => {
+  }: PerformanceData = useMemo(() => {
     if (!data)
       return {
         metrics: null,
