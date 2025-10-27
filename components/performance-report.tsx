@@ -439,7 +439,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
           <h3 className="text-xl font-bold text-foreground mb-4">Top Province (Delivered)</h3>
           <div className="space-y-3">
             {topProvinces.map(([province, count]: [string, number], index: number) => {
-              const percentage = data ? ((count / data.all.data.length) * 100).toFixed(2) : "0.00"
+              const percentage = filteredData.length > 0 ? ((count / filteredData.length) * 100).toFixed(2) : "0.00"
               return (
                 <div key={province} className="flex items-center justify-between p-3 rounded-lg bg-green-900/30">
                   <div className="flex items-center gap-3">
@@ -461,7 +461,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
           <h3 className="text-xl font-bold text-foreground mb-4">Top Province (Returned)</h3>
           <div className="space-y-3">
             {topReturnedProvinces.map(([province, count]: [string, number], index: number) => {
-              const percentage = data ? ((count / data.all.data.length) * 100).toFixed(2) : "0.00"
+              const percentage = filteredData.length > 0 ? ((count / filteredData.length) * 100).toFixed(2) : "0.00"
               return (
                 <div key={province} className="flex items-center justify-between p-3 rounded-lg bg-red-900/30">
                   <div className="flex items-center gap-3">

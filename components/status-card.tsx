@@ -15,6 +15,7 @@ interface StatusCardProps {
 export function StatusCard({ status, count, locations, colorClass, total }: StatusCardProps) {
   const topLocations = useMemo(() => {
     return Object.entries(locations)
+      .filter(([location]) => location && location !== "unknown location" && location !== "Unknown" && location.trim() !== "")
       .sort(([, a], [, b]) => b - a)
       .slice(0, 5)
       .map(([location, count]) => ({ location, count }))
