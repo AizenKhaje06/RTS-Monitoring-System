@@ -75,14 +75,25 @@ export function StatusCard({ status, count, locations, colorClass, total }: Stat
               />
               <YAxis tick={{ fontSize: 11, fill: "oklch(0.65 0.01 0)" }} stroke="oklch(0.25 0.01 0 / 0.3)" />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: "oklch(0.12 0.01 0 / 0.95)",
-                  border: "1px solid oklch(0.25 0.01 0 / 0.5)",
-                  borderRadius: "0.75rem",
-                  color: "white",
-                  backdropFilter: "blur(12px)",
+                content={({ active, payload, label }) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div style={{
+                        backgroundColor: "rgba(0, 0, 0, 0.95)",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                        borderRadius: "0.75rem",
+                        color: "white",
+                        backdropFilter: "blur(12px)",
+                        padding: "8px",
+                        fontSize: "12px"
+                      }}>
+                        <p style={{ margin: 0, fontWeight: 'bold', color: 'white' }}>{label}</p>
+                        <p style={{ margin: 0, color: 'white' }}>{`Count: ${payload[0].value}`}</p>
+                      </div>
+                    );
+                  }
+                  return null;
                 }}
-                labelStyle={{ color: "white" }}
               />
               <Bar dataKey="count" radius={[8, 8, 0, 0]}>
                 {topLocations.map((entry, index) => (
