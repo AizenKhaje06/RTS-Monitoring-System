@@ -79,10 +79,10 @@ export function StatusCard({ status, count, locations, colorClass, total }: Stat
                   backgroundColor: "oklch(0.12 0.01 0 / 0.95)",
                   border: "1px solid oklch(0.25 0.01 0 / 0.5)",
                   borderRadius: "0.75rem",
-                  color: "oklch(0.98 0 0)",
+                  color: "white",
                   backdropFilter: "blur(12px)",
                 }}
-                labelStyle={{ color: "oklch(0.65 0.19 45)" }}
+                labelStyle={{ color: "white" }}
               />
               <Bar dataKey="count" radius={[8, 8, 0, 0]}>
                 {topLocations.map((entry, index) => (
