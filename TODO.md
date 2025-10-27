@@ -1,20 +1,49 @@
-# Implementation Plan for Parcel Page under All Regions
+# TODO: Add Google Sheets Integration with OAuth
 
-## Steps to Complete:
+## 1. Install Dependencies
+- [x] Install next-auth for authentication
+- [x] Install @auth/prisma-adapter if needed (optional for database sessions)
+- [x] Ensure googleapis is installed (already in progress)
 
-- [x] Create components/total-parcel-card.tsx: New KPI card component displaying total parcel count with styling similar to StatusCard (glassmorphism, gradient, Package icon), using props { total: number }. Show count prominently, 100% percentage, no bar chart.
+## 2. Set Up Google OAuth Credentials
+- [ ] Create Google Cloud Console project
+- [ ] Enable Google Sheets API
+- [ ] Create OAuth 2.0 credentials (Client ID and Secret)
+- [ ] Configure authorized redirect URIs
 
-- [x] Update components/dashboard-view.tsx: 
-  - Add import for TotalParcelCard.
-  - Conditionally render <TotalParcelCard total={displayData.total} /> in a full-width row (grid-cols-1) before the status cards grid, only when currentRegion === "all".
-  - Add a subtle subheader like "Parcel Overview" after region tabs for context.
+## 3. Configure Environment Variables
+- [x] Add NEXTAUTH_SECRET to .env.local
+- [x] Add GOOGLE_CLIENT_ID to .env.local
+- [x] Add GOOGLE_CLIENT_SECRET to .env.local
+- [x] Add NEXTAUTH_URL to .env.local
 
-- [ ] Test the changes:
-  - Run `pnpm dev` to start the development server.
-  - Upload sample data via the modal.
-  - Switch to "All regions" and verify the total parcel card displays correctly (e.g., count from data.total).
-  - Check responsiveness and styling matches the dashboard theme.
+## 4. Create NextAuth API Route
+- [x] Create app/api/auth/[...nextauth]/route.ts
+- [x] Configure Google provider
+- [x] Set up session handling
 
-- [x] Update TODO.md: Mark completed steps and note any issues.
+## 5. Create Google Sheets Processor
+- [x] Create lib/google-sheets-processor.ts
+- [x] Implement function to fetch sheet data using googleapis
+- [x] Adapt processData function from excel-processor.ts for Google Sheets data
 
-After completion, the "Parcel page" will be integrated as an enhanced view under "All regions" showing the total count as a prominent KPI.
+## 6. Update Types (if needed)
+- [ ] Add any new types to lib/types.ts for Google Sheets integration
+
+## 7. Create Google Sheets Selector Component
+- [x] Create components/google-sheets-selector.tsx
+- [x] Implement UI for selecting spreadsheets and sheets after authentication
+
+## 8. Update Upload Modal
+- [x] Modify components/upload-modal.tsx to include "Connect Google Sheets" option
+- [x] Handle authentication flow and sheet selection
+
+## 9. Integrate with Main App
+- [x] Update app/page.tsx or relevant components to handle Google Sheets data upload
+- [x] Ensure processed data from Google Sheets matches Excel processing
+
+## 10. Testing and Verification
+- [ ] Test OAuth authentication flow
+- [ ] Test sheet selection and data fetching
+- [ ] Verify processed data matches Excel output
+- [ ] Test error handling for invalid sheets or permissions

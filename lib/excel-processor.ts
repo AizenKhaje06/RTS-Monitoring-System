@@ -88,7 +88,7 @@ export async function processExcelFile(file: File): Promise<ProcessedData> {
   })
 }
 
-function processData(excelData: unknown[][]): ProcessedData {
+export function processData(excelData: unknown[][]): ProcessedData {
   const rows = excelData.slice(1)
 
   const processedData: ProcessedData = {
