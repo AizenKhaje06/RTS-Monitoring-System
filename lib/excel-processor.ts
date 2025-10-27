@@ -58,7 +58,7 @@ export async function processExcelFile(file: File): Promise<ProcessedData> {
               const header3 = (firstRow[2] || "").toString().toUpperCase().trim()
               const header4 = (firstRow[3] || "").toString().toUpperCase().trim()
 
-              if (header1 === "DATE" && header2 === "CUSTOMER NAME" && header3 === "WAYBILL NO." && header4 === "STATUS") {
+              if (header1.includes("DATE") && header2.includes("CUSTOMER") && header3.includes("WAYBILL") && header4.includes("STATUS")) {
                 return // Skip this sheet
               }
             }
