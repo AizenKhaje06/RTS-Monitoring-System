@@ -47,6 +47,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         topReturnedProvinces: [],
         regionSuccessRates: [],
         regionRTSRates: [],
+        filteredData: [],
       }
 
     const sourceData = currentRegion === "all" ? data.all : data[currentRegion]
