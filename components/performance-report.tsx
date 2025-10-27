@@ -75,19 +75,53 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     }
     // Helper function to parse date and extract month/year
     const parseDateForMonthYear = (dateStr: string): { month: number; year: number } | null => {
+      // Check if it's an Excel serial date (number)
+      const num = Number.parseFloat(dateStr)
+      if (!isNaN(num) && num > 0) {
+        // Convert Excel serial date to JavaScript date
+        // Excel dates start from 1900-01-01 as 1, Unix epoch is 1970-01-01
+        const jsDate = new Date((num - 25569) * 86400 * 1000)
+        if (!isNaN(jsDate.getTime())) {
+          return { month: jsDate.getMonth() + 1, year: jsDate.getFullYear() }
+        }
+      }
+
       // Try to parse as standard date first
       const d = new Date(dateStr)
       if (!isNaN(d.getTime())) {
         return { month: d.getMonth() + 1, year: d.getFullYear() }
       }
 
-      // Fallback for YYYY-MM-DD HH:MM:SS format
+      // Fallback for various date formats
       const datePart = dateStr.split(" ")[0]
-      const parts = datePart.split("-")
-      if (parts.length >= 3) {
-        const year = Number.parseInt(parts[0], 10)
-        const month = Number.parseInt(parts[1], 10)
-        if (!isNaN(year) && !isNaN(month)) {
+
+      // Try YYYY-MM-DD format
+      const dashParts = datePart.split("-")
+      if (dashParts.length >= 3) {
+        const year = Number.parseInt(dashParts[0], 10)
+        const month = Number.parseInt(dashParts[1], 10)
+        if (!isNaN(year) && !isNaN(month) && month >= 1 && month <= 12) {
+          return { month, year }
+        }
+      }
+
+      // Try MM/DD/YYYY or DD/MM/YYYY format
+      const slashParts = datePart.split("/")
+      if (slashParts.length === 3) {
+        const part1 = Number.parseInt(slashParts[0], 10)
+        const part2 = Number.parseInt(slashParts[1], 10)
+        const year = Number.parseInt(slashParts[2], 10)
+        let month, day
+        if (part1 > 12) {
+          // Likely DD/MM/YYYY
+          day = part1
+          month = part2
+        } else {
+          // Assume MM/DD/YYYY
+          month = part1
+          day = part2
+        }
+        if (!isNaN(month) && !isNaN(day) && !isNaN(year) && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
           return { month, year }
         }
       }
