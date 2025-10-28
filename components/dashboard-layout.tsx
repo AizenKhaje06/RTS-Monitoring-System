@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 
 interface DashboardLayoutProps {
   children: ReactNode
-  onUploadClick: () => void
+  onUploadClick: () => Promise<void>
   hasData: boolean
   currentView?: string
   onViewChange?: (view: string) => void

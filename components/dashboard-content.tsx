@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 
 interface DashboardContentProps {
   data: ProcessedData | null
-  onUploadClick: () => void
+  onUploadClick: () => Promise<void>
 }
 
 export function DashboardContent({ data, onUploadClick }: DashboardContentProps) {
@@ -65,9 +65,10 @@ export function DashboardContent({ data, onUploadClick }: DashboardContentProps)
                 onClick={onUploadClick}
                 size="lg"
                 className="gradient-orange text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/20 px-8"
+                disabled={false}
               >
                 <Upload className="w-5 h-5 mr-2" />
-                Upload & Process
+                Enter Dashboard
               </Button>
             </div>
           </div>
