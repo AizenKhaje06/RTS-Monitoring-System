@@ -2,14 +2,29 @@ import { google } from "googleapis"
 import type { ProcessedData, RegionData, StatusCount, ParcelData } from "./types"
 
 export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: string): Promise<unknown[][]> {
+  console.log("Environment variables check:")
+  console.log("GOOGLE_SHEETS_CLIENT_EMAIL:", process.env.GOOGLE_SHEETS_CLIENT_EMAIL ? "Set" : "Not set")
+  console.log("GOOGLE_SHEETS_PRIVATE_KEY:", process.env.GOOGLE_SHEETS_PRIVATE_KEY ? "Set" : "Not set")
+  console.log("GOOGLE_SHEET_ID:", process.env.GOOGLE_SHEET_ID ? "Set" : "Not set")
+
+  if (!process.env.GOOGLE_SHEETS_CLIENT_EMAIL || !process.env.GOOGLE_SHEETS_PRIVATE_KEY) {
+    throw new Error("Google Sheets service account credentials not configured")
+  }
+
   const auth = new google.auth.JWT({
     email: process.env.GOOGLE_SHEETS_CLIENT_EMAIL,
-    key: process.env.GOOGLE_SHEETS_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    key: process.env.GOOGLE_SHEETS_PRIVATE_KEY.replace(/\\n/g, '\n'),
     scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
   })
 
   const sheets = google.sheets({ version: "v4", auth })
   const targetSpreadsheetId = spreadsheetId || process.env.GOOGLE_SHEET_ID
+
+  if (!targetSpreadsheetId) {
+    throw new Error("No spreadsheet ID provided")
+  }
+
+  console.log("Fetching data from spreadsheet:", targetSpreadsheetId)
 
   try {
     // Get spreadsheet metadata to find all sheets

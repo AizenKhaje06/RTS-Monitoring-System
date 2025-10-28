@@ -14,11 +14,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No spreadsheet ID provided" }, { status: 400 })
     }
 
+    console.log("Processing Google Sheets data for spreadsheet:", targetSpreadsheetId)
     const data = await processGoogleSheetsData(targetSpreadsheetId, sheetName || undefined)
+    console.log("Successfully processed data, total records:", data.all.total)
 
     return NextResponse.json(data)
   } catch (error) {
     console.error("Error processing Google Sheets data:", error)
-    return NextResponse.json({ error: "Failed to process data" }, { status: 500 })
+    return NextResponse.json({
+      error: "Failed to process data",
+      details: error instanceof Error ? error.message : "Unknown error"
+    }, { status: 500 })
   }
 }
