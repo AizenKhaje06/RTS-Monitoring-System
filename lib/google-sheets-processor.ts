@@ -101,9 +101,9 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
   const normalizeStatus = (rawStatus: string): string => {
     const normalized = rawStatus.toUpperCase().trim()
 
-    // Use includes() for more flexible matching
-    if (normalized.includes("DELIVERED") || normalized.includes("DELIVER")) return "DELIVERED"
+    // Use includes() for more flexible matching - order matters for specificity
     if (normalized.includes("ON DELIVERY") || normalized.includes("ONDELIVERY") || normalized.includes("OUT FOR DELIVERY")) return "ONDELIVERY"
+    if (normalized.includes("DELIVERED") || normalized.includes("DELIVER")) return "DELIVERED"
     if (normalized.includes("PICK UP") || normalized.includes("PICKUP") || normalized.includes("PICKED UP") || normalized.includes("FOR PICKUP")) return "PICKUP"
     if (normalized.includes("IN TRANSIT") || normalized.includes("INTRANSIT") || normalized.includes("TRANSIT")) return "INTRANSIT"
     if (normalized.includes("CANCELLED") || normalized.includes("CANCEL")) return "CANCELLED"
