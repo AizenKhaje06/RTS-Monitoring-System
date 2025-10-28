@@ -25,7 +25,6 @@ export function GoogleSheetsSelector({ onDataUpload, onClose }: GoogleSheetsSele
   const [isProcessing, setIsProcessing] = useState(false)
 
   useEffect(() => {
-    // @ts-expect-error - accessToken is added to session
     if (session?.accessToken) {
       loadSpreadsheets()
     }
