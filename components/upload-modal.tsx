@@ -45,7 +45,7 @@ export function UploadModal({ open, onOpenChange, onDataUpload }: UploadModalPro
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-foreground flex items-center gap-2">
             <FileSpreadsheet className="w-6 h-6" />
-            Upload & Process Data
+            Enter Dashboard
           </DialogTitle>
           <DialogDescription>
             Automatically connect to your configured Google Sheets and process parcel data to enter the dashboard.
@@ -63,7 +63,7 @@ export function UploadModal({ open, onOpenChange, onDataUpload }: UploadModalPro
                 Processing...
               </>
             ) : (
-              "Upload & Process to Enter Dashboard"
+              "Enter Dashboard"
             )}
           </Button>
         </div>

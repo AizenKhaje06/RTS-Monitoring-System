@@ -17,6 +17,11 @@ export default function Home() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [currentView, setCurrentView] = useState<string>("dashboard")
 
+  const handleDataUpload = (processedData: ProcessedData) => {
+    setData(processedData)
+    setCurrentView("dashboard") // Ensure we're on the dashboard view
+  }
+
   const renderView = () => {
     switch (currentView) {
       case "performance":
@@ -41,7 +46,7 @@ export default function Home() {
         {renderView()}
       </DashboardLayout>
 
-      <UploadModal open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen} onDataUpload={setData} />
+      <UploadModal open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen} onDataUpload={handleDataUpload} />
     </AuthProvider>
   )
 }
