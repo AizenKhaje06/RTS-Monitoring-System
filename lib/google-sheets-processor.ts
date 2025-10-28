@@ -153,11 +153,9 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
   const dataRows = excelData.length > 0 && excelData[0][0]?.toString().toUpperCase().includes("DATE") ? excelData.slice(1) : excelData
 
   for (const row of dataRows) {
-    if (!row || row.length < 4) continue
+    if (!row || row.length < 6) continue
 
-    const [date, , , statusRaw, ...rest] = row.map(cell => cell?.toString() || "")
-    const shipper = rest[0] || ""
-    const province = rest[1] || ""
+    const [date, customer, waybill, shipper, statusRaw, province, ...rest] = row.map(cell => cell?.toString() || "")
 
     const status = normalizeStatus(statusRaw)
     const regionInfo = determineRegion(province)
