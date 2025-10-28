@@ -7,7 +7,14 @@ export async function POST(request: NextRequest) {
   try {
     const { spreadsheetId, sheetName } = await request.json()
 
-    const data = await processGoogleSheetsData(spreadsheetId, sheetName || undefined)
+    // Use the provided spreadsheetId or fall back to env variable
+    const targetSpreadsheetId = spreadsheetId || process.env.GOOGLE_SHEET_ID
+
+    if (!targetSpreadsheetId) {
+      return NextResponse.json({ error: "No spreadsheet ID provided" }, { status: 400 })
+    }
+
+    const data = await processGoogleSheetsData(targetSpreadsheetId, sheetName || undefined)
 
     return NextResponse.json(data)
   } catch (error) {
