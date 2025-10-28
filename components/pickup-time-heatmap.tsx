@@ -18,8 +18,7 @@ export function PickupTimeHeatmap({ data, xLabels, yLabels }: PickupTimeHeatmapP
         xLabels={xLabels}
         yLabels={yLabels}
         cellHeight="2rem"
-        cellWidth="3rem"
-        xLabelsStyle={(index) => ({
+        xLabelsStyle={() => ({
           color: "#777",
           fontSize: "0.75rem",
           writingMode: "vertical-rl",
@@ -29,10 +28,10 @@ export function PickupTimeHeatmap({ data, xLabels, yLabels }: PickupTimeHeatmapP
           color: "#777",
           fontSize: "0.75rem",
         })}
-        cellStyle={(background, value, min, max, data, x, y) => ({
-          background: `rgba(136, 132, 216, ${value / max})`,
+        cellStyle={(x: number, y: number, ratio: number) => ({
+          background: `rgba(136, 132, 216, ${ratio})`,
           fontSize: "0.75rem",
-          color: value > (max / 2) ? "#fff" : "#000",
+          color: ratio > 0.5 ? "#fff" : "#000",
         })}
         cellRender={(value) => value && <div>{value}</div>}
       />

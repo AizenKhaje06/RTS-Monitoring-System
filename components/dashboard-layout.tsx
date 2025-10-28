@@ -1,6 +1,6 @@
 "use client"
 
-import { BarChart3, Upload, Home, TrendingUp, ChevronLeft, ChevronRight, PieChart, DollarSign } from "lucide-react"
+import { BarChart3, Home, TrendingUp, ChevronLeft, ChevronRight, PieChart, DollarSign } from "lucide-react"
 import type { ReactNode } from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
