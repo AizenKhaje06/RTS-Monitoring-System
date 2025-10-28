@@ -9,3 +9,4 @@ Modify the `normalizeStatus` function in `lib/google-sheets-processor.ts` to use
 ## Steps
 - [x] Update normalizeStatus function to use includes() for better matching
 - [x] Test the changes to ensure all statuses are properly categorized
+- [x] Reorder conditions to prioritize more specific/problematic statuses first

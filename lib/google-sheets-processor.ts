@@ -102,14 +102,15 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
     const normalized = rawStatus.toUpperCase().trim()
 
     // Use includes() for more flexible matching - order matters for specificity
+    // More specific/problematic statuses first
+    if (normalized.includes("PROBLEMATIC") || normalized.includes("PROBLEM")) return "PROBLEMATIC"
+    if (normalized.includes("CANCELLED") || normalized.includes("CANCEL")) return "CANCELLED"
+    if (normalized.includes("DETAINED") || normalized.includes("DETENTION")) return "DETAINED"
+    if (normalized.includes("RETURNED") || normalized.includes("RETURN")) return "RETURNED"
     if (normalized.includes("ON DELIVERY") || normalized.includes("ONDELIVERY") || normalized.includes("OUT FOR DELIVERY")) return "ONDELIVERY"
     if (normalized.includes("DELIVERED") || normalized.includes("DELIVER")) return "DELIVERED"
     if (normalized.includes("PICK UP") || normalized.includes("PICKUP") || normalized.includes("PICKED UP") || normalized.includes("FOR PICKUP")) return "PICKUP"
     if (normalized.includes("IN TRANSIT") || normalized.includes("INTRANSIT") || normalized.includes("TRANSIT")) return "INTRANSIT"
-    if (normalized.includes("CANCELLED") || normalized.includes("CANCEL")) return "CANCELLED"
-    if (normalized.includes("DETAINED") || normalized.includes("DETENTION")) return "DETAINED"
-    if (normalized.includes("PROBLEMATIC") || normalized.includes("PROBLEM")) return "PROBLEMATIC"
-    if (normalized.includes("RETURNED") || normalized.includes("RETURN")) return "RETURNED"
 
     return "OTHER"
   }
