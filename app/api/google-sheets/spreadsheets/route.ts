@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/lib/auth"
-import { getUserSpreadsheets } from "@/lib/google-sheets-processor"
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
+    // For service account authentication, we don't need user session
+    // The spreadsheets are predefined or can be hardcoded
+    // Return a static list or fetch from env
+    const spreadsheets = [
+      {
+        id: process.env.GOOGLE_SHEET_ID || "",
+        name: "Default Spreadsheet"
+      }
+    ].filter(s => s.id) // Filter out empty IDs
 
-    if (!session?.accessToken) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const spreadsheets = await getUserSpreadsheets(session.accessToken as string)
     return NextResponse.json(spreadsheets)
   } catch (error) {
     console.error("Error fetching spreadsheets:", error)

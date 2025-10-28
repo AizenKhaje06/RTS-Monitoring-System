@@ -1,28 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/lib/auth"
 import { processGoogleSheetsData } from "@/lib/google-sheets-processor"
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
     const { spreadsheetId, sheetName } = await request.json()
 
-    if (!session?.accessToken) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    if (!spreadsheetId) {
-      return NextResponse.json({ error: "Spreadsheet ID required" }, { status: 400 })
-    }
-
-    const data = await processGoogleSheetsData(
-      session.accessToken as string,
-      spreadsheetId,
-      sheetName || undefined
-    )
+    const data = await processGoogleSheetsData(spreadsheetId, sheetName || undefined)
 
     return NextResponse.json(data)
   } catch (error) {

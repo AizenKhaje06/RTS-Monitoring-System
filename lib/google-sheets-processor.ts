@@ -1,16 +1,20 @@
 import { google } from "googleapis"
 import type { ProcessedData, RegionData, StatusCount, ParcelData } from "./types"
 
-export async function fetchGoogleSheetsData(accessToken: string, spreadsheetId: string, sheetName?: string): Promise<unknown[][]> {
-  const auth = new google.auth.OAuth2()
-  auth.setCredentials({ access_token: accessToken })
+export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: string): Promise<unknown[][]> {
+  const auth = new google.auth.JWT({
+    email: process.env.GOOGLE_SHEETS_CLIENT_EMAIL,
+    key: process.env.GOOGLE_SHEETS_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
+  })
 
   const sheets = google.sheets({ version: "v4", auth })
+  const targetSpreadsheetId = spreadsheetId || process.env.GOOGLE_SHEET_ID
 
   try {
     // Get spreadsheet metadata to find all sheets
     const spreadsheetResponse = await sheets.spreadsheets.get({
-      spreadsheetId,
+      spreadsheetId: targetSpreadsheetId,
     })
 
     const sheetsList = spreadsheetResponse.data.sheets || []
@@ -21,7 +25,7 @@ export async function fetchGoogleSheetsData(accessToken: string, spreadsheetId: 
       // Fetch specific sheet
       const range = `${sheetName}!A:Z` // Adjust range as needed
       const response = await sheets.spreadsheets.values.get({
-        spreadsheetId,
+        spreadsheetId: targetSpreadsheetId,
         range,
       })
       data = response.data.values || []
@@ -33,7 +37,7 @@ export async function fetchGoogleSheetsData(accessToken: string, spreadsheetId: 
         // Skip sheets that start with summary headers: DATE, CUSTOMER NAME, WAYBILL NO., STATUS
         const range = `${sheetTitle}!A:Z`
         const response = await sheets.spreadsheets.values.get({
-          spreadsheetId,
+          spreadsheetId: targetSpreadsheetId,
           range,
         })
 
@@ -70,8 +74,8 @@ export async function fetchGoogleSheetsData(accessToken: string, spreadsheetId: 
   }
 }
 
-export async function processGoogleSheetsData(accessToken: string, spreadsheetId: string, sheetName?: string): Promise<ProcessedData> {
-  const excelData = await fetchGoogleSheetsData(accessToken, spreadsheetId, sheetName)
+export async function processGoogleSheetsData(spreadsheetId?: string, sheetName?: string): Promise<ProcessedData> {
+  const excelData = await fetchGoogleSheetsData(spreadsheetId, sheetName)
   return processGoogleSheetsDataInternal(excelData)
 }
 

@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { signIn, signOut, useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -14,7 +13,6 @@ interface GoogleSheetsSelectorProps {
 }
 
 export function GoogleSheetsSelector({ onDataUpload, onClose }: GoogleSheetsSelectorProps) {
-  const { data: session, status } = useSession()
   const [spreadsheets, setSpreadsheets] = useState<{ id: string; name: string }[]>([])
   const [sheets, setSheets] = useState<{ name: string; index: number }[]>([])
   const [selectedSpreadsheet, setSelectedSpreadsheet] = useState<string>("")
@@ -24,16 +22,14 @@ export function GoogleSheetsSelector({ onDataUpload, onClose }: GoogleSheetsSele
   const [isProcessing, setIsProcessing] = useState(false)
 
   useEffect(() => {
-    if (session?.accessToken) {
-      loadSpreadsheets()
-    }
-  }, [session?.accessToken])
+    loadSpreadsheets()
+  }, [])
 
   useEffect(() => {
     if (selectedSpreadsheet) {
       loadSheets(selectedSpreadsheet)
     }
-  }, [selectedSpreadsheet, session?.accessToken])
+  }, [selectedSpreadsheet])
 
   const loadSpreadsheets = async () => {
     setIsLoadingSpreadsheets(true)
@@ -42,9 +38,13 @@ export function GoogleSheetsSelector({ onDataUpload, onClose }: GoogleSheetsSele
       if (!response.ok) throw new Error("Failed to fetch spreadsheets")
       const sheets = await response.json()
       setSpreadsheets(sheets)
+      // Auto-select the first spreadsheet if available
+      if (sheets.length > 0) {
+        setSelectedSpreadsheet(sheets[0].id)
+      }
     } catch (error) {
       console.error("Error loading spreadsheets:", error)
-      alert("Failed to load spreadsheets. Please check your permissions.")
+      alert("Failed to load spreadsheets. Please check your configuration.")
     } finally {
       setIsLoadingSpreadsheets(false)
     }
@@ -59,7 +59,7 @@ export function GoogleSheetsSelector({ onDataUpload, onClose }: GoogleSheetsSele
       setSheets(sheetList)
     } catch (error) {
       console.error("Error loading sheets:", error)
-      alert("Failed to load sheets. Please check your permissions.")
+      alert("Failed to load sheets. Please check your configuration.")
     } finally {
       setIsLoadingSheets(false)
     }
@@ -94,38 +94,6 @@ export function GoogleSheetsSelector({ onDataUpload, onClose }: GoogleSheetsSele
     }
   }
 
-  if (status === "loading") {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="w-8 h-8 animate-spin" />
-      </div>
-    )
-  }
-
-  if (!session) {
-    return (
-      <Card className="glass-strong border-border/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileSpreadsheet className="w-5 h-5" />
-            Connect Google Sheets
-          </CardTitle>
-          <CardDescription>
-            Sign in with Google to access your spreadsheets
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button
-            onClick={() => signIn("google")}
-            className="w-full gradient-orange hover:opacity-90"
-          >
-            Sign in with Google
-          </Button>
-        </CardContent>
-      </Card>
-    )
-  }
-
   return (
     <Card className="glass-strong border-border/50">
       <CardHeader>
@@ -140,7 +108,7 @@ export function GoogleSheetsSelector({ onDataUpload, onClose }: GoogleSheetsSele
       <CardContent className="space-y-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <CheckCircle2 className="w-4 h-4 text-green-500" />
-          Connected as {session.user?.email}
+          Connected via Service Account
         </div>
 
         <div className="space-y-2">
@@ -204,13 +172,6 @@ export function GoogleSheetsSelector({ onDataUpload, onClose }: GoogleSheetsSele
             ) : (
               "Import Data"
             )}
-          </Button>
-          <Button
-            onClick={() => signOut()}
-            variant="outline"
-            className="glass border-border/50"
-          >
-            Sign Out
           </Button>
         </div>
 
