@@ -1,6 +1,5 @@
 import { google } from "googleapis"
 import type { ProcessedData } from "./types"
-import { processData } from "./excel-processor"
 
 export async function fetchGoogleSheetsData(accessToken: string, spreadsheetId: string, sheetName?: string): Promise<unknown[][]> {
   const auth = new google.auth.OAuth2()
@@ -73,7 +72,155 @@ export async function fetchGoogleSheetsData(accessToken: string, spreadsheetId: 
 
 export async function processGoogleSheetsData(accessToken: string, spreadsheetId: string, sheetName?: string): Promise<ProcessedData> {
   const excelData = await fetchGoogleSheetsData(accessToken, spreadsheetId, sheetName)
-  return processData(excelData)
+  return processGoogleSheetsDataInternal(excelData)
+}
+
+function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData {
+  const STATUSES = ["DELIVERED", "ONDELIVERY", "PICKUP", "INTRANSIT", "CANCELLED", "DETAINED", "PROBLEMATIC", "RETURNED"]
+
+  const normalizeStatus = (rawStatus: string): string => {
+    const normalized = rawStatus.toUpperCase().trim()
+    if (normalized === "DELIVERED") return "DELIVERED"
+    if (normalized === "ON DELIVERY" || normalized === "ONDELIVERY") return "ONDELIVERY"
+    if (normalized === "PICK UP" || normalized === "PICKUP" || normalized === "PICKED UP") return "PICKUP"
+    if (normalized === "IN TRANSIT" || normalized === "INTRANSIT") return "INTRANSIT"
+    if (normalized === "CANCELLED") return "CANCELLED"
+    if (normalized === "DETAINED") return "DETAINED"
+    if (normalized === "PROBLEMATIC" || normalized === "PROBLEMATIC PROCESSING") return "PROBLEMATIC"
+    if (normalized === "RETURNED") return "RETURNED"
+    return "OTHER"
+  }
+
+  const initializeRegionData = (): any => {
+    const stats: { [status: string]: any } = {}
+    STATUSES.forEach((status) => {
+      stats[status] = { count: 0, locations: {} }
+    })
+
+    return {
+      data: [],
+      stats,
+      provinces: {},
+      regions: {},
+      total: 0,
+      winningShippers: {},
+      rtsShippers: {},
+    }
+  }
+
+  const determineRegion = (province: string): { province: string; region: string; island: string } => {
+    // Simplified region determination - you may need to expand this
+    const regionMap: { [key: string]: { region: string; island: string } } = {
+      "METRO MANILA": { region: "NCR", island: "Luzon" },
+      "CEBU": { region: "VII", island: "Visayas" },
+      "DAVAO": { region: "XI", island: "Mindanao" },
+      // Add more mappings as needed
+    }
+
+    const upperProvince = province.toUpperCase()
+    const mapping = regionMap[upperProvince] || { region: "Unknown", island: "unknown" }
+
+    return {
+      province: province || "Unknown",
+      region: mapping.region,
+      island: mapping.island,
+    }
+  }
+
+  const processedData = {
+    all: initializeRegionData(),
+    luzon: initializeRegionData(),
+    visayas: initializeRegionData(),
+    mindanao: initializeRegionData(),
+  }
+
+  // Skip header row if it exists
+  const dataRows = excelData.length > 0 && excelData[0][0]?.toString().toUpperCase().includes("DATE") ? excelData.slice(1) : excelData
+
+  for (const row of dataRows) {
+    if (!row || row.length < 4) continue
+
+    const [date, customer, waybill, statusRaw, ...rest] = row.map(cell => cell?.toString() || "")
+    const shipper = rest[0] || ""
+    const province = rest[1] || ""
+
+    const status = normalizeStatus(statusRaw)
+    const regionInfo = determineRegion(province)
+    const island = regionInfo.island
+
+    const parcelData = {
+      date,
+      customer,
+      waybill,
+      status,
+      shipper,
+      province: regionInfo.province,
+      region: regionInfo.region,
+      island,
+    }
+
+    // Add to all data
+    processedData.all.data.push(parcelData)
+    processedData.all.total++
+
+    // Add to specific island if known
+    if (island !== "unknown") {
+      if (processedData[island as keyof typeof processedData]) {
+        processedData[island as keyof typeof processedData].data.push(parcelData)
+        processedData[island as keyof typeof processedData].total++
+      }
+
+      // Update province and region counts
+      if (regionInfo.province !== "Unknown") {
+        processedData.all.provinces[regionInfo.province] = (processedData.all.provinces[regionInfo.province] || 0) + 1
+        processedData.all.regions[regionInfo.region] = (processedData.all.regions[regionInfo.region] || 0) + 1
+
+        if (processedData[island as keyof typeof processedData]) {
+          processedData[island as keyof typeof processedData].provinces[regionInfo.province] =
+            (processedData[island as keyof typeof processedData].provinces[regionInfo.province] || 0) + 1
+          processedData[island as keyof typeof processedData].regions[regionInfo.region] = (processedData[island as keyof typeof processedData].regions[regionInfo.region] || 0) + 1
+        }
+      }
+    }
+
+    // Update status counts
+    if (STATUSES.includes(status)) {
+      processedData.all.stats[status].count++
+
+      if (island !== "unknown" && processedData[island as keyof typeof processedData]) {
+        processedData[island as keyof typeof processedData].stats[status].count++
+      }
+
+      // Count by province for locations
+      const location = regionInfo.province
+      if (location !== "Unknown") {
+        processedData.all.stats[status].locations[location] =
+          (processedData.all.stats[status].locations[location] || 0) + 1
+        if (island !== "unknown" && processedData[island as keyof typeof processedData]) {
+          processedData[island as keyof typeof processedData].stats[status].locations[location] =
+            (processedData[island as keyof typeof processedData].stats[status].locations[location] || 0) + 1
+        }
+      }
+    }
+
+    // Update winning and RTS shippers
+    if (status === "DELIVERED") {
+      processedData.all.winningShippers[shipper] = (processedData.all.winningShippers[shipper] || 0) + 1
+      if (island !== "unknown" && processedData[island as keyof typeof processedData]) {
+        processedData[island as keyof typeof processedData].winningShippers[shipper] = (processedData[island as keyof typeof processedData].winningShippers[shipper] || 0) + 1
+      }
+    }
+
+    const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
+    if (rtsStatuses.includes(status)) {
+      processedData.all.rtsShippers[shipper] = (processedData.all.rtsShippers[shipper] || 0) + 1
+      if (island !== "unknown" && processedData[island as keyof typeof processedData]) {
+        processedData[island as keyof typeof processedData].rtsShippers[shipper] = (processedData[island as keyof typeof processedData].rtsShippers[shipper] || 0) + 1
+      }
+    }
+  }
+
+  return processedData
 }
 
 export async function getUserSpreadsheets(accessToken: string): Promise<{ id: string; name: string }[]> {
