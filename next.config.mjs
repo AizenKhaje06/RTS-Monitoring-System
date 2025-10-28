@@ -21,6 +21,7 @@ const nextConfig = {
         'node:buffer': false,
         'node:fs': false,
         'node:https': false,
+        'node:http': false,
       };
     }
     return config;
