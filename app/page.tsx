@@ -3,6 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useState } from "react"
+import { AuthProvider } from "@/components/session-provider"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { DashboardContent } from "@/components/dashboard-content"
 import { PerformanceReport } from "@/components/performance-report"
@@ -30,7 +31,7 @@ export default function Home() {
   }
 
   return (
-    <>
+    <AuthProvider>
       <DashboardLayout
         onUploadClick={() => setIsUploadModalOpen(true)}
         hasData={!!data}
@@ -41,6 +42,6 @@ export default function Home() {
       </DashboardLayout>
 
       <UploadModal open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen} onDataUpload={setData} />
-    </>
+    </AuthProvider>
   )
 }
