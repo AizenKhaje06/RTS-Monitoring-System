@@ -27,6 +27,7 @@ const nextConfig = {
         'node:net': false,
       };
     }
+
     return config;
   },
 }

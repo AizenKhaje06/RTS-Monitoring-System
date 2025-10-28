@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2, FileSpreadsheet, CheckCircle2 } from "lucide-react"
 import type { ProcessedData } from "@/lib/types"
-import { processGoogleSheetsData, getUserSpreadsheets, getSpreadsheetSheets } from "@/lib/google-sheets-processor"
 
 interface GoogleSheetsSelectorProps {
   onDataUpload: (data: ProcessedData) => void
@@ -37,13 +36,11 @@ export function GoogleSheetsSelector({ onDataUpload, onClose }: GoogleSheetsSele
   }, [selectedSpreadsheet, session?.accessToken])
 
   const loadSpreadsheets = async () => {
-    // @ts-expect-error - accessToken is added to session
-    if (!session?.accessToken) return
-
     setIsLoadingSpreadsheets(true)
     try {
-      // @ts-expect-error - accessToken is added to session
-      const sheets = await getUserSpreadsheets(session.accessToken)
+      const response = await fetch("/api/google-sheets/spreadsheets")
+      if (!response.ok) throw new Error("Failed to fetch spreadsheets")
+      const sheets = await response.json()
       setSpreadsheets(sheets)
     } catch (error) {
       console.error("Error loading spreadsheets:", error)
@@ -54,13 +51,11 @@ export function GoogleSheetsSelector({ onDataUpload, onClose }: GoogleSheetsSele
   }
 
   const loadSheets = async (spreadsheetId: string) => {
-    // @ts-expect-error - accessToken is added to session
-    if (!session?.accessToken) return
-
     setIsLoadingSheets(true)
     try {
-      // @ts-expect-error - accessToken is added to session
-      const sheetList = await getSpreadsheetSheets(session.accessToken, spreadsheetId)
+      const response = await fetch(`/api/google-sheets/sheets?spreadsheetId=${spreadsheetId}`)
+      if (!response.ok) throw new Error("Failed to fetch sheets")
+      const sheetList = await response.json()
       setSheets(sheetList)
     } catch (error) {
       console.error("Error loading sheets:", error)
@@ -71,17 +66,24 @@ export function GoogleSheetsSelector({ onDataUpload, onClose }: GoogleSheetsSele
   }
 
   const handleProcessData = async () => {
-    // @ts-expect-error - accessToken is added to session
-    if (!session?.accessToken || !selectedSpreadsheet) return
+    if (!selectedSpreadsheet) return
 
     setIsProcessing(true)
     try {
-      // @ts-expect-error - accessToken is added to session
-      const data = await processGoogleSheetsData(
-        session.accessToken,
-        selectedSpreadsheet,
-        selectedSheet || undefined
-      )
+      const response = await fetch("/api/google-sheets/process", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          spreadsheetId: selectedSpreadsheet,
+          sheetName: selectedSheet || undefined,
+        }),
+      })
+
+      if (!response.ok) throw new Error("Failed to process data")
+
+      const data = await response.json()
       onDataUpload(data)
       onClose()
     } catch (error) {
