@@ -19,6 +19,7 @@ const nextConfig = {
         child_process: false,
         http2: false,
         tls: false,
+        buffer: false,
         'node:buffer': false,
         'node:fs': false,
         'node:https': false,
