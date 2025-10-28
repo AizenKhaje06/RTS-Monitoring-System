@@ -1,5 +1,5 @@
 import { google } from "googleapis"
-import type { ProcessedData } from "./types"
+import type { ProcessedData, RegionData, StatusCount, ParcelData } from "./types"
 
 export async function fetchGoogleSheetsData(accessToken: string, spreadsheetId: string, sheetName?: string): Promise<unknown[][]> {
   const auth = new google.auth.OAuth2()
@@ -91,8 +91,8 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
     return "OTHER"
   }
 
-  const initializeRegionData = (): any => {
-    const stats: { [status: string]: any } = {}
+  const initializeRegionData = (): RegionData => {
+    const stats: { [status: string]: StatusCount } = {}
     STATUSES.forEach((status) => {
       stats[status] = { count: 0, locations: {} }
     })
@@ -140,7 +140,7 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
   for (const row of dataRows) {
     if (!row || row.length < 4) continue
 
-    const [date, customer, waybill, statusRaw, ...rest] = row.map(cell => cell?.toString() || "")
+    const [date, , , statusRaw, ...rest] = row.map(cell => cell?.toString() || "")
     const shipper = rest[0] || ""
     const province = rest[1] || ""
 
@@ -148,12 +148,12 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
     const regionInfo = determineRegion(province)
     const island = regionInfo.island
 
-    const parcelData = {
+    const parcelData: ParcelData = {
       date,
-      customer,
-      waybill,
       status,
+      normalizedStatus: status,
       shipper,
+      consigneeRegion: regionInfo.region,
       province: regionInfo.province,
       region: regionInfo.region,
       island,
