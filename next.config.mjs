@@ -11,6 +11,7 @@ const nextConfig = {
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
+      // Handle Node.js built-in modules for client-side
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
@@ -22,6 +23,7 @@ const nextConfig = {
         'node:fs': false,
         'node:https': false,
         'node:http': false,
+        'node:net': false,
       };
     }
     return config;
