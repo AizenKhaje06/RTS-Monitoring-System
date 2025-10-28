@@ -1,4 +1,5 @@
 import { google } from "googleapis"
+import type { sheets_v4, drive_v3 } from "googleapis"
 import type { ProcessedData, RegionData, StatusCount, ParcelData } from "./types"
 import { determineRegion as determineRegionFromLib } from "./philippine-regions"
 
@@ -156,7 +157,7 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
   for (const row of dataRows) {
     if (!row || row.length < 6) continue
 
-    const [date, customer, waybill, shipper, statusRaw, province, ...rest] = row.map(cell => cell?.toString() || "")
+    const [date, , , shipper, statusRaw, province] = row.map(cell => cell?.toString() || "")
 
     const status = normalizeStatus(statusRaw)
     const regionInfo = determineRegion(province)
@@ -250,7 +251,7 @@ export async function getUserSpreadsheets(accessToken: string): Promise<{ id: st
       orderBy: "modifiedTime desc",
     })
 
-    return response.data.files?.map((file: any) => ({
+    return response.data.files?.map((file: drive_v3.Schema$File) => ({
       id: file.id!,
       name: file.name!,
     })) || []
@@ -272,7 +273,7 @@ export async function getSpreadsheetSheets(accessToken: string, spreadsheetId: s
       fields: "sheets(properties(sheetId,title))",
     })
 
-    return response.data.sheets?.map((sheet: any) => ({
+    return response.data.sheets?.map((sheet: sheets_v4.Schema$Sheet) => ({
       name: sheet.properties?.title || "",
       index: sheet.properties?.sheetId || 0,
     })) || []
