@@ -9,6 +9,22 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        child_process: false,
+        http2: false,
+        tls: false,
+        'node:buffer': false,
+        'node:fs': false,
+        'node:https': false,
+      };
+    }
+    return config;
+  },
 }
 
 export default nextConfig
