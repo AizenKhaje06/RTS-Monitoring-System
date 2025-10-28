@@ -1,5 +1,6 @@
 import { google } from "googleapis"
 import type { ProcessedData, RegionData, StatusCount, ParcelData } from "./types"
+import { determineRegion as determineRegionFromLib } from "./philippine-regions"
 
 export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: string): Promise<unknown[][]> {
   console.log("Environment variables check:")
@@ -99,14 +100,17 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
 
   const normalizeStatus = (rawStatus: string): string => {
     const normalized = rawStatus.toUpperCase().trim()
-    if (normalized === "DELIVERED") return "DELIVERED"
-    if (normalized === "ON DELIVERY" || normalized === "ONDELIVERY") return "ONDELIVERY"
-    if (normalized === "PICK UP" || normalized === "PICKUP" || normalized === "PICKED UP") return "PICKUP"
-    if (normalized === "IN TRANSIT" || normalized === "INTRANSIT") return "INTRANSIT"
-    if (normalized === "CANCELLED") return "CANCELLED"
-    if (normalized === "DETAINED") return "DETAINED"
-    if (normalized === "PROBLEMATIC" || normalized === "PROBLEMATIC PROCESSING") return "PROBLEMATIC"
-    if (normalized === "RETURNED") return "RETURNED"
+
+    // Use includes() for more flexible matching
+    if (normalized.includes("DELIVERED") || normalized.includes("DELIVER")) return "DELIVERED"
+    if (normalized.includes("ON DELIVERY") || normalized.includes("ONDELIVERY") || normalized.includes("OUT FOR DELIVERY")) return "ONDELIVERY"
+    if (normalized.includes("PICK UP") || normalized.includes("PICKUP") || normalized.includes("PICKED UP") || normalized.includes("FOR PICKUP")) return "PICKUP"
+    if (normalized.includes("IN TRANSIT") || normalized.includes("INTRANSIT") || normalized.includes("TRANSIT")) return "INTRANSIT"
+    if (normalized.includes("CANCELLED") || normalized.includes("CANCEL")) return "CANCELLED"
+    if (normalized.includes("DETAINED") || normalized.includes("DETENTION")) return "DETAINED"
+    if (normalized.includes("PROBLEMATIC") || normalized.includes("PROBLEM")) return "PROBLEMATIC"
+    if (normalized.includes("RETURNED") || normalized.includes("RETURN")) return "RETURNED"
+
     return "OTHER"
   }
 
@@ -128,21 +132,13 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
   }
 
   const determineRegion = (province: string): { province: string; region: string; island: string } => {
-    // Simplified region determination - you may need to expand this
-    const regionMap: { [key: string]: { region: string; island: string } } = {
-      "METRO MANILA": { region: "NCR", island: "Luzon" },
-      "CEBU": { region: "VII", island: "Visayas" },
-      "DAVAO": { region: "XI", island: "Mindanao" },
-      // Add more mappings as needed
-    }
-
-    const upperProvince = province.toUpperCase()
-    const mapping = regionMap[upperProvince] || { region: "Unknown", island: "unknown" }
+    // Use the comprehensive region determination from philippine-regions.ts
+    const regionInfo = determineRegionFromLib(province)
 
     return {
-      province: province || "Unknown",
-      region: mapping.region,
-      island: mapping.island,
+      province: regionInfo.province,
+      region: regionInfo.region,
+      island: regionInfo.island,
     }
   }
 
@@ -255,7 +251,7 @@ export async function getUserSpreadsheets(accessToken: string): Promise<{ id: st
       orderBy: "modifiedTime desc",
     })
 
-    return response.data.files?.map((file) => ({
+    return response.data.files?.map((file: any) => ({
       id: file.id!,
       name: file.name!,
     })) || []
@@ -277,7 +273,7 @@ export async function getSpreadsheetSheets(accessToken: string, spreadsheetId: s
       fields: "sheets(properties(sheetId,title))",
     })
 
-    return response.data.sheets?.map((sheet) => ({
+    return response.data.sheets?.map((sheet: any) => ({
       name: sheet.properties?.title || "",
       index: sheet.properties?.sheetId || 0,
     })) || []
