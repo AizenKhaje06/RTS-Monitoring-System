@@ -23,9 +23,7 @@ export function UploadModal({ open, onOpenChange, onDataUpload }: UploadModalPro
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          spreadsheetId: process.env.NEXT_PUBLIC_GOOGLE_SHEET_ID,
-        }),
+        body: JSON.stringify({}),
       })
 
       if (!response.ok) throw new Error("Failed to process data")
