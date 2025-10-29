@@ -1,6 +1,6 @@
  "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { TrendingUp, Package, CheckCircle, XCircle, DollarSign } from "lucide-react"
 import type { ProcessedData, FilterState } from "@/lib/types"
 import { Button } from "@/components/ui/button"
@@ -9,6 +9,10 @@ import { Input } from "@/components/ui/input"
 
 interface PerformanceReportProps {
   data: ProcessedData | null
+  currentRegion?: "all" | "luzon" | "visayas" | "mindanao"
+  onRegionChange?: (region: "all" | "luzon" | "visayas" | "mindanao") => void
+  filter?: FilterState
+  onFilterChange?: (filter: FilterState) => void
 }
 
 interface PerformanceData {
@@ -27,26 +31,42 @@ interface PerformanceData {
   filteredData: unknown[]
 }
 
-export function PerformanceReport({ data }: PerformanceReportProps) {
-  const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
-  const [filterType, setFilterType] = useState<"all" | "province" | "month" | "year">("all")
-  const [filterValue, setFilterValue] = useState("")
+export function PerformanceReport({ data, currentRegion: propCurrentRegion, onRegionChange: propOnRegionChange, filter: propFilter, onFilterChange: propOnFilterChange }: PerformanceReportProps) {
+  const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">(propCurrentRegion || "all")
+  const [filterType, setFilterType] = useState<"all" | "province" | "month" | "year">(propFilter?.type || "all")
+  const [filterValue, setFilterValue] = useState(propFilter?.value || "")
 
   const handleApplyFilter = () => {
     if (filterType !== "all" && !filterValue) {
       alert("Please enter or select a value to filter.")
       return
     }
-    setFilter({ type: filterType, value: filterValue })
+    const newFilter = { type: filterType, value: filterValue }
+    setFilter(newFilter)
+    propOnFilterChange?.(newFilter)
   }
 
   const handleClearFilter = () => {
     setFilterType("all")
     setFilterValue("")
-    setFilter({ type: "all", value: "" })
+    const newFilter = { type: "all", value: "" }
+    setFilter(newFilter)
+    propOnFilterChange?.(newFilter)
   }
 
-  const [filter, setFilter] = useState<FilterState>({ type: "all", value: "" })
+  const [filter, setFilter] = useState<FilterState>(propFilter || { type: "all", value: "" })
+
+  // Sync with props
+  useEffect(() => {
+    if (propCurrentRegion && propCurrentRegion !== currentRegion) {
+      setCurrentRegion(propCurrentRegion)
+    }
+    if (propFilter && (propFilter.type !== filterType || propFilter.value !== filterValue)) {
+      setFilterType(propFilter.type)
+      setFilterValue(propFilter.value)
+      setFilter(propFilter)
+    }
+  }, [propCurrentRegion, propFilter, currentRegion, filterType, filterValue])
 
   const {
     metrics,
@@ -288,28 +308,40 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         <div className="flex gap-2">
           <Button
             variant={currentRegion === "all" ? "default" : "outline"}
-            onClick={() => setCurrentRegion("all")}
+            onClick={() => {
+              setCurrentRegion("all")
+              propOnRegionChange?.("all")
+            }}
             className="font-medium"
           >
             All Regions
           </Button>
           <Button
             variant={currentRegion === "luzon" ? "default" : "outline"}
-            onClick={() => setCurrentRegion("luzon")}
+            onClick={() => {
+              setCurrentRegion("luzon")
+              propOnRegionChange?.("luzon")
+            }}
             className="font-medium"
           >
             Luzon
           </Button>
           <Button
             variant={currentRegion === "visayas" ? "default" : "outline"}
-            onClick={() => setCurrentRegion("visayas")}
+            onClick={() => {
+              setCurrentRegion("visayas")
+              propOnRegionChange?.("visayas")
+            }}
             className="font-medium"
           >
             Visayas
           </Button>
           <Button
             variant={currentRegion === "mindanao" ? "default" : "outline"}
-            onClick={() => setCurrentRegion("mindanao")}
+            onClick={() => {
+              setCurrentRegion("mindanao")
+              propOnRegionChange?.("mindanao")
+            }}
             className="font-medium"
           >
             Mindanao
