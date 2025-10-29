@@ -70,6 +70,9 @@ export function UploadModal({ open, onOpenChange, onDataUpload }: UploadModalPro
         <p className="text-xs text-muted-foreground text-center mt-4">
           Expected columns: Date, Status, Shipper, Consignee Region, COD Amount, Service Charge, Total Cost
         </p>
+        <p className="text-xs text-muted-foreground text-center mt-2">
+          Note: Columns can be in any order if headers are present. Financial columns are optional.
+        </p>
       </DialogContent>
     </Dialog>
   )

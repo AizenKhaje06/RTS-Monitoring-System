@@ -1,12 +1,10 @@
-# Fix Parcel Status Data Issue
+# Google Sheets Mapping Fixes
 
-## Problem
-Parcel status in all pages has no data because the status normalization is too strict, causing many statuses to be classified as "OTHER" and not counted.
-
-## Solution
-Modify the `normalizeStatus` function in `lib/google-sheets-processor.ts` to use more inclusive matching with `includes()` instead of exact matches.
-
-## Steps
-- [x] Update normalizeStatus function to use includes() for better matching
-- [x] Test the changes to ensure all statuses are properly categorized
-- [x] Reorder conditions to prioritize more specific/problematic statuses first
+## Tasks
+- [x] Update column mapping in `lib/google-sheets-processor.ts` to match UI expectations (Date, Status, Shipper, Consignee Region, COD Amount, Service Charge, Total Cost)
+- [x] Add header validation to detect columns by name instead of fixed positions
+- [x] Extract financial columns (COD Amount, Service Charge, Total Cost) and calculate RTS Fee
+- [x] Clarify consignee region vs province handling
+- [x] Update UI text in `components/upload-modal.tsx` and `components/google-sheets-selector.tsx` to reflect correct expected columns
+- [ ] Test data processing with sample data to verify all columns are extracted correctly
+- [ ] Confirm region/province mapping works as expected

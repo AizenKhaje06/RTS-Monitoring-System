@@ -178,6 +178,9 @@ export function GoogleSheetsSelector({ onDataUpload, onClose }: GoogleSheetsSele
         <p className="text-xs text-muted-foreground">
           Expected columns: Date, Status, Shipper, Consignee Region, COD Amount, Service Charge, Total Cost
         </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Note: Columns can be in any order if headers are present. Financial columns are optional.
+        </p>
       </CardContent>
     </Card>
   )

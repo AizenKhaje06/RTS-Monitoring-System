@@ -144,6 +144,26 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
     }
   }
 
+  // Function to find column indices by header names
+  const findColumnIndices = (headers: string[]): { [key: string]: number } => {
+    const indices: { [key: string]: number } = {}
+    const expectedHeaders = [
+      'DATE', 'STATUS', 'SHIPPER', 'CONSIGNEE REGION',
+      'COD AMOUNT', 'SERVICE CHARGE', 'TOTAL COST'
+    ]
+
+    headers.forEach((header, index) => {
+      const normalizedHeader = header?.toString().toUpperCase().trim()
+      expectedHeaders.forEach(expected => {
+        if (normalizedHeader?.includes(expected) || expected.includes(normalizedHeader)) {
+          indices[expected.toLowerCase().replace(' ', '')] = index
+        }
+      })
+    })
+
+    return indices
+  }
+
   const processedData = {
     all: initializeRegionData(),
     luzon: initializeRegionData(),
@@ -151,16 +171,65 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
     mindanao: initializeRegionData(),
   }
 
-  // Skip header row if it exists
-  const dataRows = excelData.length > 0 && excelData[0][0]?.toString().toUpperCase().includes("DATE") ? excelData.slice(1) : excelData
+  if (excelData.length === 0) return processedData
+
+  // Check if first row contains headers
+  const firstRow = excelData[0].map(cell => cell?.toString() || "")
+  const hasHeaders = firstRow.some(header =>
+    header.toUpperCase().includes("DATE") ||
+    header.toUpperCase().includes("STATUS") ||
+    header.toUpperCase().includes("SHIPPER")
+  )
+
+  let dataRows = excelData
+  let columnIndices: { [key: string]: number } = {}
+
+  if (hasHeaders) {
+    columnIndices = findColumnIndices(firstRow)
+    dataRows = excelData.slice(1)
+  } else {
+    // Fallback to positional mapping if no headers found
+    columnIndices = {
+      date: 0,
+      status: 1,
+      shipper: 2,
+      consigneeregion: 3,
+      codamount: 4,
+      servicecharge: 5,
+      totalcost: 6
+    }
+  }
 
   for (const row of dataRows) {
-    if (!row || row.length < 6) continue
+    if (!row || row.length < Math.max(...Object.values(columnIndices)) + 1) continue
 
-    const [date, , , shipper, statusRaw, province] = row.map(cell => cell?.toString() || "")
+    const date = row[columnIndices.date]?.toString() || ""
+    const statusRaw = row[columnIndices.status]?.toString() || ""
+    const shipper = row[columnIndices.shipper]?.toString() || ""
+    const consigneeRegionRaw = row[columnIndices.consigneeregion]?.toString() || ""
+
+    // Extract financial data
+    const codAmount = parseFloat(row[columnIndices.codamount]?.toString() || "0") || 0
+    const serviceCharge = parseFloat(row[columnIndices.servicecharge]?.toString() || "0") || 0
+    const totalCost = parseFloat(row[columnIndices.totalcost]?.toString() || "0") || 0
+    const rtsFee = totalCost * 0.20 // 20% of total cost
 
     const status = normalizeStatus(statusRaw)
-    const regionInfo = determineRegion(province)
+
+    // Use consignee region if provided, otherwise determine from province (for backward compatibility)
+    let regionInfo: { province: string; region: string; island: string }
+    if (consigneeRegionRaw) {
+      // If consignee region is provided, use it directly
+      regionInfo = {
+        province: "Unknown", // Province not specified when region is given
+        region: consigneeRegionRaw,
+        island: determineRegionFromLib(consigneeRegionRaw).island
+      }
+    } else {
+      // Fallback to province-based determination
+      regionInfo = determineRegion(consigneeRegionRaw || "")
+    }
+
     const island = regionInfo.island
 
     const parcelData: ParcelData = {
@@ -172,6 +241,10 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
       province: regionInfo.province,
       region: regionInfo.region,
       island,
+      codAmount,
+      serviceCharge,
+      totalCost,
+      rtsFee,
     }
 
     // Add to all data
