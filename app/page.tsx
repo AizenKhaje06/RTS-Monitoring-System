@@ -9,16 +9,13 @@ import { DashboardContent } from "@/components/dashboard-content"
 import { PerformanceReport } from "@/components/performance-report"
 import { AnalyticalReport } from "@/components/analytical-report"
 import { FinancialReport } from "@/components/financial-report"
-import { UploadModal } from "@/components/upload-modal"
 import type { ProcessedData } from "@/lib/types"
 
 export default function Home() {
   const [data, setData] = useState<ProcessedData | null>(null)
-  const [isProcessing, setIsProcessing] = useState(false)
   const [currentView, setCurrentView] = useState<string>("dashboard")
 
   const handleEnterDashboard = async () => {
-    setIsProcessing(true)
     try {
       const response = await fetch("/api/google-sheets/process", {
         method: "POST",
@@ -36,8 +33,6 @@ export default function Home() {
     } catch (error) {
       console.error("Error processing Google Sheets data:", error)
       alert("Failed to process data from Google Sheets. Please check your configuration.")
-    } finally {
-      setIsProcessing(false)
     }
   }
 
@@ -57,7 +52,6 @@ export default function Home() {
   return (
     <AuthProvider>
       <DashboardLayout
-        onUploadClick={handleEnterDashboard}
         hasData={!!data}
         currentView={currentView}
         onViewChange={setCurrentView}
