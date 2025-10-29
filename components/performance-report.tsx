@@ -6,7 +6,6 @@ import type { ProcessedData, FilterState } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
-
 interface PerformanceReportProps {
   data: ProcessedData | null
   currentRegion?: "all" | "luzon" | "visayas" | "mindanao"
@@ -35,13 +34,14 @@ export function PerformanceReport({ data, currentRegion: propCurrentRegion, onRe
   const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">(propCurrentRegion || "all")
   const [filterType, setFilterType] = useState<"all" | "province" | "month" | "year">(propFilter?.type || "all")
   const [filterValue, setFilterValue] = useState(propFilter?.value || "")
+  const [filter, setFilter] = useState<FilterState>(propFilter || { type: "all", value: "" })
 
   const handleApplyFilter = () => {
     if (filterType !== "all" && !filterValue) {
       alert("Please enter or select a value to filter.")
       return
     }
-    const newFilter = { type: filterType, value: filterValue }
+    const newFilter: FilterState = { type: filterType, value: filterValue }
     setFilter(newFilter)
     propOnFilterChange?.(newFilter)
   }
@@ -49,24 +49,22 @@ export function PerformanceReport({ data, currentRegion: propCurrentRegion, onRe
   const handleClearFilter = () => {
     setFilterType("all")
     setFilterValue("")
-    const newFilter = { type: "all", value: "" }
+    const newFilter: FilterState = { type: "all", value: "" }
     setFilter(newFilter)
     propOnFilterChange?.(newFilter)
   }
-
-  const [filter, setFilter] = useState<FilterState>(propFilter || { type: "all", value: "" })
 
   // Sync with props
   useEffect(() => {
     if (propCurrentRegion && propCurrentRegion !== currentRegion) {
       setCurrentRegion(propCurrentRegion)
     }
-    if (propFilter && (propFilter.type !== filterType || propFilter.value !== filterValue)) {
+    if (propFilter && (propFilter.type !== filter.type || propFilter.value !== filter.value)) {
+      setFilter(propFilter)
       setFilterType(propFilter.type)
       setFilterValue(propFilter.value)
-      setFilter(propFilter)
     }
-  }, [propCurrentRegion, propFilter, currentRegion, filterType, filterValue])
+  }, [propCurrentRegion, propFilter, currentRegion, filter, filterType, filterValue])
 
   const {
     metrics,
