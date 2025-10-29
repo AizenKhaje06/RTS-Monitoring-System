@@ -222,19 +222,8 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
 
     const status = normalizeStatus(statusRaw)
 
-    // Use consignee region if provided, otherwise determine from province (for backward compatibility)
-    let regionInfo: { province: string; region: string; island: string }
-    if (consigneeRegionRaw) {
-      // If consignee region is provided, use it directly
-      regionInfo = {
-        province: "Unknown", // Province not specified when region is given
-        region: consigneeRegionRaw,
-        island: determineRegionFromLib(consigneeRegionRaw).island
-      }
-    } else {
-      // Fallback to province-based determination
-      regionInfo = determineRegion(consigneeRegionRaw || "")
-    }
+    // Determine region from province data (consigneeRegionRaw contains province information)
+    const regionInfo = determineRegion(consigneeRegionRaw || "")
 
     const island = regionInfo.island
 
