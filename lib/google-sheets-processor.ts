@@ -47,9 +47,14 @@ export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: 
       })
       data = response.data.values || []
     } else {
-      // Combine data from all sheets, excluding summary tabs
+      // Combine data from all sheets, excluding summary tabs and sheets starting with "Sheet"
       for (const sheet of sheetsList) {
         const sheetTitle = sheet.properties?.title || ""
+
+        // Skip sheets that start with "Sheet" (case-insensitive)
+        if (sheetTitle.toLowerCase().startsWith("sheet")) {
+          continue
+        }
 
         // Skip sheets that start with summary headers: DATE, CUSTOMER NAME, WAYBILL NO., STATUS
         const range = `${sheetTitle}!A:Z`
