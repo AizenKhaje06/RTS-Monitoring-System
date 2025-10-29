@@ -193,15 +193,16 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
     columnIndices = findColumnIndices(firstRow)
     dataRows = excelData.slice(1)
   } else {
-    // Fallback to positional mapping if no headers found
+    // Fallback to positional mapping based on actual spreadsheet structure
+    // Column A: date, Column D: shipper, Column E: status, Column F: province
     columnIndices = {
-      date: 0,
-      status: 1,
-      shipper: 2,
-      consigneeregion: 3,
-      codamount: 4,
-      servicecharge: 5,
-      totalcost: 6
+      date: 0,        // Column A
+      shipper: 3,     // Column D
+      status: 4,      // Column E
+      consigneeregion: 5, // Column F (province/consignee region)
+      codamount: 6,   // Column G
+      servicecharge: 7, // Column H
+      totalcost: 8    // Column I
     }
   }
 
