@@ -259,8 +259,8 @@ export function determineRegion(consigneeRegion: string): RegionInfo {
   // Enhanced matching for region names first, including common abbreviations and variations
   const regionMappings: Record<string, { island: Island; region: string; province?: string }> = {
     // Luzon regions
-    "NCR": { island: "luzon", region: "NCR" },
-    "METRO MANILA": { island: "luzon", region: "NCR" },
+    "NCR": { island: "luzon", region: "NCR", province: "Metro Manila" },
+    "METRO MANILA": { island: "luzon", region: "NCR", province: "Metro Manila" },
     "CAR": { island: "luzon", region: "CAR" },
     "REGION I": { island: "luzon", region: "Region I" },
     "REGION 1": { island: "luzon", region: "Region I" },
