@@ -210,6 +210,7 @@ export const philippineRegions = {
         "Cotabato",
         "Sarangani",
         "South Cotabato",
+        "North Cotabato",
         "Sultan Kudarat",
         "General Santos City",
         "Koronadal City",
