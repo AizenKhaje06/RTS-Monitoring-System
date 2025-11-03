@@ -10,13 +10,9 @@ import { Input } from "@/components/ui/input"
 
 interface AnalyticalReportProps {
   data: ProcessedData | null
-  currentRegion?: "all" | "luzon" | "visayas" | "mindanao"
-  onRegionChange?: (region: "all" | "luzon" | "visayas" | "mindanao") => void
-  filter?: FilterState
-  onFilterChange?: (filter: FilterState) => void
 }
 
-export function AnalyticalReport({ data, currentRegion: propCurrentRegion, onRegionChange: propOnRegionChange, filter: propFilter, onFilterChange: propOnFilterChange }: AnalyticalReportProps) {
+export function AnalyticalReport({ data }: AnalyticalReportProps) {
   const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
   const [filter, setFilter] = useState<FilterState>({ type: "all", value: "" })
 

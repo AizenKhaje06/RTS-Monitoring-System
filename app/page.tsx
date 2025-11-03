@@ -43,9 +43,9 @@ export default function Home() {
       case "performance":
         return <PerformanceReport data={data} currentRegion={currentRegion} onRegionChange={setCurrentRegion} filter={filter} onFilterChange={setFilter} />
       case "analytical":
-        return <AnalyticalReport data={data} currentRegion={currentRegion} onRegionChange={setCurrentRegion} filter={filter} onFilterChange={setFilter} />
+        return <AnalyticalReport data={data} />
       case "financial":
-        return <FinancialReport data={data} currentRegion={currentRegion} onRegionChange={setCurrentRegion} filter={filter} onFilterChange={setFilter} />
+        return <FinancialReport data={data} />
       default:
         return <DashboardContent data={data} onUploadClick={handleEnterDashboard} />
     }
