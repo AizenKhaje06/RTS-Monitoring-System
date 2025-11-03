@@ -6,7 +6,6 @@ import { useState } from "react"
 import { AuthProvider } from "@/components/session-provider"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { DashboardContent } from "@/components/dashboard-content"
-import { PerformanceReport } from "@/components/performance-report"
 import { AnalyticalReport } from "@/components/analytical-report"
 import { FinancialReport } from "@/components/financial-report"
 import type { ProcessedData } from "@/lib/types"
@@ -39,13 +38,11 @@ export default function Home() {
   const renderView = () => {
     switch (currentView) {
       case "performance":
-        return <PerformanceReport data={data} />
+        return <AnalyticalReport data={data} />
       case "analytical":
         return <AnalyticalReport data={data} />
       case "financial":
         return <FinancialReport data={data} />
-      case "performance-report":
-        return <PerformanceReport data={data} />
       default:
         return <DashboardContent data={data} onUploadClick={handleEnterDashboard} />
     }

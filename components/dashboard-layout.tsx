@@ -80,15 +80,7 @@ export function DashboardLayout({
                   <span>Profit And Loss</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={currentView === "performance-report"}
-                  onClick={() => onViewChange?.("performance-report")}
-                >
-                  <TrendingUp className="w-5 h-5" />
-                  <span>Performance Report</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+
             </SidebarMenu>
           </SidebarContent>
           <SidebarFooter>
