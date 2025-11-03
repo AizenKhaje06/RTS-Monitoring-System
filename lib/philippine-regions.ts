@@ -252,7 +252,9 @@ export interface RegionInfo {
 }
 
 export function determineRegion(consigneeRegion: string): RegionInfo {
-  const regionText = (consigneeRegion || "").toUpperCase().trim()
+  const input = (consigneeRegion || "").toUpperCase().trim()
+  const words = input.split(/\s+/).filter(w => w)
+  const regionText = words.slice(-3).join(' ')
 
   // Enhanced matching for region names first, including common abbreviations and variations
   const regionMappings: Record<string, { island: Island; region: string; province?: string }> = {
