@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { Slot } from '@radix-ui/react-slot'
 import { cva, VariantProps } from 'class-variance-authority'
-import { PanelLeftIcon, TrendingUp } from 'lucide-react'
+import { PanelLeftIcon } from 'lucide-react'
 
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
@@ -462,52 +462,7 @@ function SidebarMenu({ className, ...props }: React.ComponentProps<'ul'>) {
   )
 }
 
-// Add Performance Report menu item to sidebar
-function SidebarPerformanceMenuItem({ isActive }: { isActive: boolean }) {
-  return (
-    <SidebarMenuItem>
-      <SidebarMenuButton
-        isActive={isActive}
-        icon={TrendingUp}
-        aria-label="Performance Report"
-        onClick={() => {
-          window.location.href = '/performance-report'
-        }}
-      >
-        Performance
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  )
-}
 
-export {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupAction,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarInput,
-  SidebarInset,
-  SidebarMenu,
-  SidebarMenuAction,
-  SidebarMenuBadge,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSkeleton,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
-  SidebarProvider,
-  SidebarRail,
-  SidebarSeparator,
-  SidebarTrigger,
-  useSidebar,
-  TrendingUp,
-  SidebarPerformanceMenuItem,
-}
 
 function SidebarMenuItem({ className, ...props }: React.ComponentProps<'li'>) {
   return (
@@ -771,3 +726,5 @@ export {
   SidebarTrigger,
   useSidebar,
 }
+
+

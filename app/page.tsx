@@ -9,13 +9,11 @@ import { DashboardContent } from "@/components/dashboard-content"
 import { PerformanceReport } from "@/components/performance-report"
 import { AnalyticalReport } from "@/components/analytical-report"
 import { FinancialReport } from "@/components/financial-report"
-import type { ProcessedData, FilterState } from "@/lib/types"
+import type { ProcessedData } from "@/lib/types"
 
 export default function Home() {
   const [data, setData] = useState<ProcessedData | null>(null)
   const [currentView, setCurrentView] = useState<string>("dashboard")
-  const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
-  const [filter, setFilter] = useState<FilterState>({ type: "all", value: "" })
 
   const handleEnterDashboard = async () => {
     try {
@@ -41,11 +39,13 @@ export default function Home() {
   const renderView = () => {
     switch (currentView) {
       case "performance":
-        return <PerformanceReport data={data} currentRegion={currentRegion} onRegionChange={setCurrentRegion} filter={filter} onFilterChange={setFilter} />
+        return <PerformanceReport data={data} />
       case "analytical":
         return <AnalyticalReport data={data} />
       case "financial":
         return <FinancialReport data={data} />
+      case "performance-report":
+        return <PerformanceReport data={data} />
       default:
         return <DashboardContent data={data} onUploadClick={handleEnterDashboard} />
     }
