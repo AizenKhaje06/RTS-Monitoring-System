@@ -59,7 +59,7 @@ export function DashboardLayout({
                   onClick={() => onViewChange?.("performance")}
                 >
                   <TrendingUp className="w-5 h-5" />
-                  <span>Region</span>
+                  <span>Performance</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
