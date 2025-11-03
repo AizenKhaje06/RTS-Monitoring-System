@@ -274,8 +274,8 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
         processedData[island as keyof typeof processedData].stats[status].count++
       }
 
-      // Count by province for locations
-      const location = regionInfo.province
+      // Count by province for locations, fallback to region if province is unknown
+      const location = regionInfo.province !== "Unknown" ? regionInfo.province : regionInfo.region
       if (location !== "Unknown") {
         processedData.all.stats[status].locations[location] =
           (processedData.all.stats[status].locations[location] || 0) + 1
