@@ -60,6 +60,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       }
 
     const sourceData = currentRegion === "all" ? data.all : data[currentRegion]
+    const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
 
     if (filter.type === "all") {
       // No filtering
@@ -158,7 +159,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
 
     // Top provinces by RTS count
     const rtsProvinceCounts = sourceData.data
-      .filter((p) => p.status === "RTS")
+      .filter((p) => rtsStatuses.includes(p.normalizedStatus))
       .reduce((acc, parcel) => {
         const province = parcel.province || "Unknown"
         acc[province] = (acc[province] || 0) + 1
@@ -175,7 +176,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     const regionSuccessRates = regions.map((region) => {
       const regionData = data[region as keyof ProcessedData] as typeof sourceData
       const total = regionData.data.length
-      const delivered = regionData.data.filter((p) => p.status === "Delivered").length
+      const delivered = regionData.data.filter((p) => p.normalizedStatus === "DELIVERED").length
       const successRate = total > 0 ? (delivered / total) * 100 : 0
       return { region: region.charAt(0).toUpperCase() + region.slice(1), successRate, deliveredCount: delivered, totalCount: total }
     })
@@ -184,7 +185,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     const regionRTSRates = regions.map((region) => {
       const regionData = data[region as keyof ProcessedData] as typeof sourceData
       const total = regionData.data.length
-      const rts = regionData.data.filter((p) => p.status === "RTS").length
+      const rts = regionData.data.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
       const rtsRate = total > 0 ? (rts / total) * 100 : 0
       return { region: region.charAt(0).toUpperCase() + region.slice(1), rtsRate, rtsCount: rts, totalCount: total }
     })
@@ -202,7 +203,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
 
     // Top regions by RTS count
     const rtsRegionCounts = sourceData.data
-      .filter((p) => p.status === "RTS")
+      .filter((p) => rtsStatuses.includes(p.normalizedStatus))
       .reduce((acc, parcel) => {
         const region = parcel.region || "Unknown"
         acc[region] = (acc[region] || 0) + 1
