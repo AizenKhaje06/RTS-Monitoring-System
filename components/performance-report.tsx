@@ -322,7 +322,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       </div>
 
       {/* Region Success Rates */}
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {regionSuccessRates.map((item) => (
           <div key={item.region} className="glass rounded-xl p-6 border border-green-500/50">
             <div className="flex items-center gap-3 mb-4">
@@ -339,7 +339,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       </div>
 
       {/* Region RTS Rates */}
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {regionRTSRates.map((item) => (
           <div key={item.region} className="glass rounded-xl p-6 border border-red-500/50">
             <div className="flex items-center gap-3 mb-4">
