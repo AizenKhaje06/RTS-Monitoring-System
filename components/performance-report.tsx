@@ -338,23 +338,8 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         ))}
       </div>
 
-      {/* Top Provinces */}
+      {/* Top Lists */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="glass rounded-xl p-6 border border-red-500/50">
-          <h3 className="text-xl font-bold text-foreground mb-4">Top Provinces by RTS Count</h3>
-          <div className="space-y-3">
-            {topReturnedProvinces.map(([province, count], index) => (
-              <div key={province} className="flex items-center justify-between p-3 rounded-lg bg-red-500/10">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-red-500 w-6">#{index + 1}</span>
-                  <span className="text-sm font-medium text-foreground">{province}</span>
-                </div>
-                <span className="text-sm font-bold text-red-500">{count.toLocaleString()}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
         <div className="glass rounded-xl p-6 border border-blue-500/50">
           <h3 className="text-xl font-bold text-foreground mb-4">Top Provinces by Delivery Count</h3>
           <div className="space-y-3">
@@ -369,10 +354,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Top Regions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="glass rounded-xl p-6 border border-purple-500/50">
           <h3 className="text-xl font-bold text-foreground mb-4">Top Regions by Delivery Count</h3>
           <div className="space-y-3">
@@ -383,6 +365,21 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
                   <span className="text-sm font-medium text-foreground">{region}</span>
                 </div>
                 <span className="text-sm font-bold text-purple-500">{count.toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="glass rounded-xl p-6 border border-red-500/50">
+          <h3 className="text-xl font-bold text-foreground mb-4">Top Provinces by RTS Count</h3>
+          <div className="space-y-3">
+            {topReturnedProvinces.map(([province, count], index) => (
+              <div key={province} className="flex items-center justify-between p-3 rounded-lg bg-red-500/10">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-red-500 w-6">#{index + 1}</span>
+                  <span className="text-sm font-medium text-foreground">{province}</span>
+                </div>
+                <span className="text-sm font-bold text-red-500">{count.toLocaleString()}</span>
               </div>
             ))}
           </div>
