@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { TrendingUp, Package, CheckCircle, XCircle, DollarSign } from "lucide-react"
+import { CheckCircle, XCircle } from "lucide-react"
 import type { ProcessedData, FilterState } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,16 +11,10 @@ interface PerformanceReportProps {
 }
 
 interface PerformanceData {
-  metrics: {
-    deliverySuccessRate: number
-    rtsRate: number
-    totalCostOfReturns: number
-    deliveredAvgCost: number
-    rtsAvgCost: number
-    undeliveredRate: number
-  } | null
   topProvinces: [string, number][]
   topReturnedProvinces: [string, number][]
+  topRegions: [string, number][]
+  topReturnedRegions: [string, number][]
   regionSuccessRates: { region: string; successRate: number; deliveredCount: number; totalCount: number }[]
   regionRTSRates: { region: string; rtsRate: number; rtsCount: number; totalCount: number }[]
 }
@@ -48,20 +42,21 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
   }
 
   const {
-    metrics,
     topProvinces,
     topReturnedProvinces,
+    topRegions,
+    topReturnedRegions,
     regionSuccessRates,
     regionRTSRates,
   }: PerformanceData = useMemo(() => {
     if (!data)
       return {
-        metrics: null,
         topProvinces: [],
         topReturnedProvinces: [],
+        topRegions: [],
+        topReturnedRegions: [],
         regionSuccessRates: [],
         regionRTSRates: [],
-        filteredData: [],
       }
 
     const sourceData = currentRegion === "all" ? data.all : data[currentRegion]
@@ -150,33 +145,6 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       sourceData.data = filtered
     }
 
-    const totalParcels = sourceData.data.length
-    const deliveredParcels = sourceData.data.filter((p) => p.status === "Delivered").length
-    const rtsParcels = sourceData.data.filter((p) => p.status === "RTS").length
-    const undeliveredParcels = totalParcels - deliveredParcels - rtsParcels
-
-    const deliverySuccessRate = totalParcels > 0 ? (deliveredParcels / totalParcels) * 100 : 0
-    const rtsRate = totalParcels > 0 ? (rtsParcels / totalParcels) * 100 : 0
-    const undeliveredRate = totalParcels > 0 ? (undeliveredParcels / totalParcels) * 100 : 0
-
-    const totalCostOfReturns = sourceData.data
-      .filter((p) => p.status === "RTS")
-      .reduce((sum, p) => sum + (p.totalCost || 0), 0)
-
-    const deliveredAvgCost =
-      deliveredParcels > 0
-        ? sourceData.data
-            .filter((p) => p.status === "Delivered")
-            .reduce((sum, p) => sum + (p.totalCost || 0), 0) / deliveredParcels
-        : 0
-
-    const rtsAvgCost =
-      rtsParcels > 0
-        ? sourceData.data
-            .filter((p) => p.status === "RTS")
-            .reduce((sum, p) => sum + (p.totalCost || 0), 0) / rtsParcels
-        : 0
-
     // Top provinces by delivery count
     const provinceCounts = sourceData.data.reduce((acc, parcel) => {
       const province = parcel.province || "Unknown"
@@ -219,17 +187,35 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       return { region: region.charAt(0).toUpperCase() + region.slice(1), rtsRate, rtsCount: rts, totalCount: total }
     })
 
+    // Top regions by delivery count
+    const regionCounts = sourceData.data.reduce((acc, parcel) => {
+      const region = parcel.region || "Unknown"
+      acc[region] = (acc[region] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+
+    const topRegions = Object.entries(regionCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10) as [string, number][]
+
+    // Top regions by RTS count
+    const rtsRegionCounts = sourceData.data
+      .filter((p) => p.status === "RTS")
+      .reduce((acc, parcel) => {
+        const region = parcel.region || "Unknown"
+        acc[region] = (acc[region] || 0) + 1
+        return acc
+      }, {} as Record<string, number>)
+
+    const topReturnedRegions = Object.entries(rtsRegionCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10) as [string, number][]
+
     return {
-      metrics: {
-        deliverySuccessRate,
-        rtsRate,
-        totalCostOfReturns,
-        deliveredAvgCost,
-        rtsAvgCost,
-        undeliveredRate,
-      },
       topProvinces,
       topReturnedProvinces,
+      topRegions,
+      topReturnedRegions,
       regionSuccessRates,
       regionRTSRates,
     }
@@ -316,76 +302,38 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         )}
       </div>
 
-      {/* Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="glass rounded-xl p-6 border border-green-500/50">
-          <div className="flex items-center gap-3 mb-4">
-            <CheckCircle className="w-8 h-8 text-green-500" />
-            <div>
-              <h3 className="text-lg font-bold text-foreground">Delivery Success Rate</h3>
-              <p className="text-sm text-muted-foreground">Percentage of successful deliveries</p>
+      {/* Region Success Rates */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {regionSuccessRates.map((item) => (
+          <div key={item.region} className="glass rounded-xl p-6 border border-green-500/50">
+            <div className="flex items-center gap-3 mb-4">
+              <CheckCircle className="w-8 h-8 text-green-500" />
+              <div>
+                <h3 className="text-lg font-bold text-foreground">{item.region} Success Rate</h3>
+                <p className="text-sm text-muted-foreground">Percentage of successful deliveries</p>
+              </div>
             </div>
+            <p className="text-3xl font-bold text-green-500">{item.successRate.toFixed(1)}%</p>
+            <p className="text-sm text-muted-foreground mt-2">{item.deliveredCount.toLocaleString()} delivered out of {item.totalCount.toLocaleString()}</p>
           </div>
-          <p className="text-3xl font-bold text-green-500">{metrics?.deliverySuccessRate.toFixed(1)}%</p>
-        </div>
-
-        <div className="glass rounded-xl p-6 border border-red-500/50">
-          <div className="flex items-center gap-3 mb-4">
-            <XCircle className="w-8 h-8 text-red-500" />
-            <div>
-              <h3 className="text-lg font-bold text-foreground">RTS Rate</h3>
-              <p className="text-sm text-muted-foreground">Return to sender percentage</p>
-            </div>
-          </div>
-          <p className="text-3xl font-bold text-red-500">{metrics?.rtsRate.toFixed(1)}%</p>
-        </div>
-
-        <div className="glass rounded-xl p-6 border border-blue-500/50">
-          <div className="flex items-center gap-3 mb-4">
-            <DollarSign className="w-8 h-8 text-blue-500" />
-            <div>
-              <h3 className="text-lg font-bold text-foreground">Total Cost of Returns</h3>
-              <p className="text-sm text-muted-foreground">Total cost for RTS parcels</p>
-            </div>
-          </div>
-          <p className="text-3xl font-bold text-blue-500">₱{metrics?.totalCostOfReturns.toLocaleString()}</p>
-        </div>
+        ))}
       </div>
 
-      {/* Additional Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="glass rounded-xl p-6 border border-purple-500/50">
-          <div className="flex items-center gap-3 mb-4">
-            <Package className="w-8 h-8 text-purple-500" />
-            <div>
-              <h3 className="text-lg font-bold text-foreground">Delivered Avg Cost</h3>
-              <p className="text-sm text-muted-foreground">Average cost per delivered parcel</p>
+      {/* Region RTS Rates */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {regionRTSRates.map((item) => (
+          <div key={item.region} className="glass rounded-xl p-6 border border-red-500/50">
+            <div className="flex items-center gap-3 mb-4">
+              <XCircle className="w-8 h-8 text-red-500" />
+              <div>
+                <h3 className="text-lg font-bold text-foreground">{item.region} RTS Rate</h3>
+                <p className="text-sm text-muted-foreground">Return to sender percentage</p>
+              </div>
             </div>
+            <p className="text-3xl font-bold text-red-500">{item.rtsRate.toFixed(1)}%</p>
+            <p className="text-sm text-muted-foreground mt-2">{item.rtsCount.toLocaleString()} RTS out of {item.totalCount.toLocaleString()}</p>
           </div>
-          <p className="text-3xl font-bold text-purple-500">₱{metrics?.deliveredAvgCost.toFixed(2)}</p>
-        </div>
-
-        <div className="glass rounded-xl p-6 border border-orange-500/50">
-          <div className="flex items-center gap-3 mb-4">
-            <TrendingUp className="w-8 h-8 text-orange-500" />
-            <div>
-              <h3 className="text-lg font-bold text-foreground">RTS Avg Cost</h3>
-              <p className="text-sm text-muted-foreground">Average cost per RTS parcel</p>
-            </div>
-          </div>
-          <p className="text-3xl font-bold text-orange-500">₱{metrics?.rtsAvgCost.toFixed(2)}</p>
-        </div>
-
-        <div className="glass rounded-xl p-6 border border-gray-500/50">
-          <div className="flex items-center gap-3 mb-4">
-            <XCircle className="w-8 h-8 text-gray-500" />
-            <div>
-              <h3 className="text-lg font-bold text-foreground">Undelivered Rate</h3>
-              <p className="text-sm text-muted-foreground">Percentage of undelivered parcels</p>
-            </div>
-          </div>
-          <p className="text-3xl font-bold text-gray-500">{metrics?.undeliveredRate.toFixed(1)}%</p>
-        </div>
+        ))}
       </div>
 
       {/* Top Provinces */}
@@ -421,41 +369,33 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         </div>
       </div>
 
-      {/* Region Performance */}
+      {/* Top Regions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Region Success Rates */}
-        <div className="glass rounded-xl p-6 border border-green-500/50">
-          <h3 className="text-xl font-bold text-foreground mb-4">Region Success Rates</h3>
+        <div className="glass rounded-xl p-6 border border-purple-500/50">
+          <h3 className="text-xl font-bold text-foreground mb-4">Top Regions by Delivery Count</h3>
           <div className="space-y-3">
-            {regionSuccessRates.map((item, index) => (
-              <div key={item.region} className="flex items-center justify-between p-3 rounded-lg bg-green-500/10">
+            {topRegions.map(([region, count], index) => (
+              <div key={region} className="flex items-center justify-between p-3 rounded-lg bg-purple-500/10">
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-green-500 w-6">#{index + 1}</span>
-                  <span className="text-sm font-medium text-foreground">{item.region}</span>
+                  <span className="text-sm font-bold text-purple-500 w-6">#{index + 1}</span>
+                  <span className="text-sm font-medium text-foreground">{region}</span>
                 </div>
-                <div className="text-right">
-                  <span className="text-sm font-bold text-green-500">{item.successRate.toFixed(2)}%</span>
-                  <p className="text-xs text-muted-foreground">{item.deliveredCount.toLocaleString()} delivered</p>
-                </div>
+                <span className="text-sm font-bold text-purple-500">{count.toLocaleString()}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Region RTS Rates */}
-        <div className="glass rounded-xl p-6 border border-red-500/50">
-          <h3 className="text-xl font-bold text-foreground mb-4">Region RTS Rates</h3>
+        <div className="glass rounded-xl p-6 border border-orange-500/50">
+          <h3 className="text-xl font-bold text-foreground mb-4">Top Regions by RTS Count</h3>
           <div className="space-y-3">
-            {regionRTSRates.map((item, index) => (
-              <div key={item.region} className="flex items-center justify-between p-3 rounded-lg bg-red-500/10">
+            {topReturnedRegions.map(([region, count], index) => (
+              <div key={region} className="flex items-center justify-between p-3 rounded-lg bg-orange-500/10">
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-red-500 w-6">#{index + 1}</span>
-                  <span className="text-sm font-medium text-foreground">{item.region}</span>
+                  <span className="text-sm font-bold text-orange-500 w-6">#{index + 1}</span>
+                  <span className="text-sm font-medium text-foreground">{region}</span>
                 </div>
-                <div className="text-right">
-                  <span className="text-sm font-bold text-red-500">{item.rtsRate.toFixed(2)}%</span>
-                  <p className="text-xs text-muted-foreground">{item.rtsCount.toLocaleString()} RTS</p>
-                </div>
+                <span className="text-sm font-bold text-orange-500">{count.toLocaleString()}</span>
               </div>
             ))}
           </div>
