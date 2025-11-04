@@ -256,7 +256,7 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
 
       <h3 className="text-xl font-semibold mb-4 text-foreground">Parcel Overview</h3>
       <div className="grid grid-cols-1 gap-4 mb-6">
-        <TotalParcelCard total={data.all.total} />
+        <TotalParcelCard total={displayData.total} />
       </div>
 
       {/* Status Cards Grid */}
