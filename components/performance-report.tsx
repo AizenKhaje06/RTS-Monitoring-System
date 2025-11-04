@@ -173,21 +173,37 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
     const regions = currentRegion === "all" ? ["luzon", "visayas", "mindanao"] : [currentRegion]
 
     // Region success rates
-    const regionSuccessRates = regions.map((region) => {
+    const regionSuccessRates = []
+    if (currentRegion === "all") {
+      const allData = data.all
+      const total = allData.data.length
+      const delivered = allData.data.filter((p) => p.normalizedStatus === "DELIVERED").length
+      const successRate = total > 0 ? (delivered / total) * 100 : 0
+      regionSuccessRates.push({ region: "All Regions", successRate, deliveredCount: delivered, totalCount: total })
+    }
+    regions.forEach((region) => {
       const regionData = data[region as keyof ProcessedData] as typeof sourceData
       const total = regionData.data.length
       const delivered = regionData.data.filter((p) => p.normalizedStatus === "DELIVERED").length
       const successRate = total > 0 ? (delivered / total) * 100 : 0
-      return { region: region.charAt(0).toUpperCase() + region.slice(1), successRate, deliveredCount: delivered, totalCount: total }
+      regionSuccessRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), successRate, deliveredCount: delivered, totalCount: total })
     })
 
     // Region RTS rates
-    const regionRTSRates = regions.map((region) => {
+    const regionRTSRates = []
+    if (currentRegion === "all") {
+      const allData = data.all
+      const total = allData.data.length
+      const rts = allData.data.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
+      const rtsRate = total > 0 ? (rts / total) * 100 : 0
+      regionRTSRates.push({ region: "All Regions", rtsRate, rtsCount: rts, totalCount: total })
+    }
+    regions.forEach((region) => {
       const regionData = data[region as keyof ProcessedData] as typeof sourceData
       const total = regionData.data.length
       const rts = regionData.data.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
       const rtsRate = total > 0 ? (rts / total) * 100 : 0
-      return { region: region.charAt(0).toUpperCase() + region.slice(1), rtsRate, rtsCount: rts, totalCount: total }
+      regionRTSRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), rtsRate, rtsCount: rts, totalCount: total })
     })
 
     // Top regions by delivery count
