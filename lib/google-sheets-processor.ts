@@ -264,6 +264,17 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
           processedData[island as keyof typeof processedData].regions[regionInfo.region] = (processedData[island as keyof typeof processedData].regions[regionInfo.region] || 0) + 1
         }
       }
+    } else {
+      // Log parcels with unknown regions for debugging
+      console.log("Unknown region parcel:", {
+        consigneeRegionRaw,
+        shipper,
+        status,
+        date,
+        province: regionInfo.province,
+        region: regionInfo.region,
+        island
+      })
     }
 
     // Update status counts
