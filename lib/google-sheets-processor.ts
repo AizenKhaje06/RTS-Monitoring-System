@@ -227,6 +227,19 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
 
     const island = regionInfo.island
 
+    // Log parcels with unknown provinces for debugging
+    if (regionInfo.province === "Unknown") {
+      console.log("Unknown province parcel:", {
+        consigneeRegionRaw,
+        shipper,
+        status,
+        date,
+        province: regionInfo.province,
+        region: regionInfo.region,
+        island
+      })
+    }
+
     const parcelData: ParcelData = {
       date,
       status,
