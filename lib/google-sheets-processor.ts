@@ -298,14 +298,13 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
         processedData[island as keyof typeof processedData].stats[status].count++
       }
 
-      // Count by province for locations, fallback to region if province is unknown
-      const location = regionInfo.province !== "Unknown" ? regionInfo.province : regionInfo.region
-      if (location !== "Unknown") {
-        processedData.all.stats[status].locations[location] =
-          (processedData.all.stats[status].locations[location] || 0) + 1
+      // Count by province for locations only (no fallback to region)
+      if (regionInfo.province !== "Unknown") {
+        processedData.all.stats[status].locations[regionInfo.province] =
+          (processedData.all.stats[status].locations[regionInfo.province] || 0) + 1
         if (island !== "unknown" && processedData[island as keyof typeof processedData]) {
-          processedData[island as keyof typeof processedData].stats[status].locations[location] =
-            (processedData[island as keyof typeof processedData].stats[status].locations[location] || 0) + 1
+          processedData[island as keyof typeof processedData].stats[status].locations[regionInfo.province] =
+            (processedData[island as keyof typeof processedData].stats[status].locations[regionInfo.province] || 0) + 1
         }
       }
     }
