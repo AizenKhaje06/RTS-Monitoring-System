@@ -58,6 +58,15 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
           const parts = datePart.split("-")
           if (parts.length >= 2) {
             parcelMonth = Number.parseInt(parts[1], 10)
+            } else {
+            // Try MM/DD/YYYY format
+            const slashParts = dateStr.split("/").map(p => p.trim())
+            if (slashParts.length >= 2) {
+              parcelMonth = Number.parseInt(slashParts[0], 10)
+            }
+            if (slashParts.length >= 2) {
+              parcelMonth = Number.parseInt(slashParts[0], 10)
+            }
           }
         }
 

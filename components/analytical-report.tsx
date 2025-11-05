@@ -54,7 +54,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
             } else {
               // Try MM/DD/YYYY format
               const slashParts = dateStr.split("/").map(p => p.trim())
-              if (slashParts.length >= 3) {
+              if (slashParts.length >= 2) {
                 parcelMonth = Number.parseInt(slashParts[0], 10)
               }
             }
@@ -68,7 +68,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
           } else {
             // Try MM/DD/YYYY
             const slashParts = dateStr.split("/").map(p => p.trim())
-            if (slashParts.length >= 3) {
+            if (slashParts.length >= 2) {
               parcelMonth = Number.parseInt(slashParts[0], 10)
             }
           }
