@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input"
 
 interface PerformanceReportProps {
   data: ProcessedData | null
+  filter: FilterState
+  onFilterChange: (filter: FilterState) => void
 }
 
 interface PerformanceData {
@@ -19,11 +21,10 @@ interface PerformanceData {
   regionRTSRates: { region: string; rtsRate: number; rtsCount: number; totalCount: number }[]
 }
 
-export function PerformanceReport({ data }: PerformanceReportProps) {
+export function PerformanceReport({ data, filter, onFilterChange }: PerformanceReportProps) {
   const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
   const [filterType, setFilterType] = useState<"all" | "province" | "month" | "year">("all")
   const [filterValue, setFilterValue] = useState("")
-  const [filter, setFilter] = useState<FilterState>({ type: "all", value: "" })
 
   const handleApplyFilter = () => {
     if (filterType !== "all" && !filterValue) {
@@ -31,14 +32,14 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       return
     }
     const newFilter: FilterState = { type: filterType, value: filterValue }
-    setFilter(newFilter)
+    onFilterChange(newFilter)
   }
 
   const handleClearFilter = () => {
     setFilterType("all")
     setFilterValue("")
     const newFilter: FilterState = { type: "all", value: "" }
-    setFilter(newFilter)
+    onFilterChange(newFilter)
   }
 
   const {
@@ -59,22 +60,21 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
         regionRTSRates: [],
       }
 
-    const sourceData = currentRegion === "all" ? data.all : data[currentRegion]
     const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
 
-    if (filter.type === "all") {
-      // No filtering
-    } else {
-      let filtered = sourceData.data
+    // Start with all data
+    let filteredData = data.all.data
 
+    // Apply global filter
+    if (filter.type !== "all") {
       if (filter.type === "province" && filter.value) {
-        filtered = filtered.filter((parcel) =>
+        filteredData = filteredData.filter((parcel) =>
           parcel.province.toLowerCase().includes(filter.value.toLowerCase())
         )
       }
 
       if (filter.type === "month" && filter.value) {
-        filtered = filtered.filter((parcel) => {
+        filteredData = filteredData.filter((parcel) => {
           if (!parcel.date) return false
           const dateStr = parcel.date.toString().trim()
           let parcelMonth = 0
@@ -109,7 +109,7 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
       }
 
       if (filter.type === "year" && filter.value) {
-        filtered = filtered.filter((parcel) => {
+        filteredData = filteredData.filter((parcel) => {
           if (!parcel.date) return false
           const dateStr = parcel.date.toString().trim()
           let parcelYear = 0
@@ -142,9 +142,10 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
           }
         })
       }
-
-      sourceData.data = filtered
     }
+
+    // Now filter by region if not "all"
+    const sourceData = { data: currentRegion === "all" ? filteredData : filteredData.filter((parcel) => parcel.region === currentRegion), stats: {}, provinces: {}, regions: {}, total: 0, winningShippers: {}, rtsShippers: {} }
 
     // Top provinces by delivery count
     const provinceCounts = sourceData.data.reduce((acc, parcel) => {

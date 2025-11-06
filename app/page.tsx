@@ -9,11 +9,12 @@ import { DashboardContent } from "@/components/dashboard-content"
 import { PerformanceReport } from "@/components/performance-report"
 import { AnalyticalReport } from "@/components/analytical-report"
 import { FinancialReport } from "@/components/financial-report"
-import type { ProcessedData } from "@/lib/types"
+import type { ProcessedData, FilterState } from "@/lib/types"
 
 export default function Home() {
   const [data, setData] = useState<ProcessedData | null>(null)
   const [currentView, setCurrentView] = useState<string>("dashboard")
+  const [globalFilter, setGlobalFilter] = useState<FilterState>({ type: "all", value: "" })
 
   const handleEnterDashboard = async () => {
     try {
@@ -39,13 +40,13 @@ export default function Home() {
   const renderView = () => {
     switch (currentView) {
       case "performance":
-        return <PerformanceReport data={data} />
+        return <PerformanceReport data={data} filter={globalFilter} onFilterChange={setGlobalFilter} />
       case "analytical":
-        return <AnalyticalReport data={data} />
+        return <AnalyticalReport data={data} filter={globalFilter} onFilterChange={setGlobalFilter} />
       case "financial":
-        return <FinancialReport data={data} />
+        return <FinancialReport data={data} filter={globalFilter} onFilterChange={setGlobalFilter} />
       default:
-        return <DashboardContent data={data} onUploadClick={handleEnterDashboard} />
+        return <DashboardContent data={data} onUploadClick={handleEnterDashboard} filter={globalFilter} onFilterChange={setGlobalFilter} />
     }
   }
 

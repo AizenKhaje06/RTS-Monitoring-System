@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button"
 interface DashboardContentProps {
   data: ProcessedData | null
   onUploadClick: () => Promise<void>
+  filter: FilterState
+  onFilterChange: (filter: FilterState) => void
 }
 
 export function DashboardContent({ data, onUploadClick }: DashboardContentProps) {

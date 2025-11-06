@@ -10,11 +10,12 @@ import { Input } from "@/components/ui/input"
 
 interface AnalyticalReportProps {
   data: ProcessedData | null
+  filter: FilterState
+  onFilterChange: (filter: FilterState) => void
 }
 
-export function AnalyticalReport({ data }: AnalyticalReportProps) {
+export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalReportProps) {
   const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
-  const [filter, setFilter] = useState<FilterState>({ type: "all", value: "" })
 
   const filteredData = useMemo(() => {
     if (!data) return null
@@ -337,7 +338,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
           <select
             value={filter.type}
             onChange={(e) => {
-              setFilter({ type: e.target.value as "all" | "province" | "month" | "year", value: "" })
+              onFilterChange({ type: e.target.value as "all" | "province" | "month" | "year", value: "" })
             }}
             className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
           >
@@ -352,7 +353,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
               type="text"
               placeholder="Enter province name"
               value={filter.value}
-              onChange={(e) => setFilter({ ...filter, value: e.target.value })}
+              onChange={(e) => onFilterChange({ ...filter, value: e.target.value })}
               className="w-48 h-9 text-sm"
             />
           )}
@@ -360,7 +361,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
           {filter.type === "month" && (
             <select
               value={filter.value}
-              onChange={(e) => setFilter({ ...filter, value: e.target.value })}
+              onChange={(e) => onFilterChange({ ...filter, value: e.target.value })}
               className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
             >
               <option value="">Select month</option>
@@ -375,7 +376,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
           {filter.type === "year" && (
             <select
               value={filter.value}
-              onChange={(e) => setFilter({ ...filter, value: e.target.value })}
+              onChange={(e) => onFilterChange({ ...filter, value: e.target.value })}
               className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
             >
               <option value="">Select year</option>
@@ -396,7 +397,7 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
           }} className="h-9">
             Apply
           </Button>
-          <Button size="sm" variant="outline" onClick={() => setFilter({ type: "all", value: "" })} className="h-9 bg-transparent">
+          <Button size="sm" variant="outline" onClick={() => onFilterChange({ type: "all", value: "" })} className="h-9 bg-transparent">
             Clear
           </Button>
         </div>
@@ -411,10 +412,10 @@ export function AnalyticalReport({ data }: AnalyticalReportProps) {
               <CardTitle className="text-sm font-medium">Total Shipments</CardTitle>
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{metrics?.totalShipments.toLocaleString()}</div>
-          </CardContent>
-        </Card>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">{metrics?.totalShipments.toLocaleString()}</div>
+            </CardContent>
+          </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

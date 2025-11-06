@@ -8,13 +8,14 @@ import { Input } from "@/components/ui/input"
 
 interface FinancialReportProps {
   data: ProcessedData | null
+  filter: FilterState
+  onFilterChange: (filter: FilterState) => void
 }
 
 const rtsStatuses = ["RETURNED"]
 
-export function FinancialReport({ data }: FinancialReportProps) {
+export function FinancialReport({ data, filter, onFilterChange }: FinancialReportProps) {
   const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
-  const [filter, setFilter] = useState<FilterState>({ type: "all", value: "" })
 
   const financialData = useMemo(() => {
     if (!data) return null
@@ -231,7 +232,7 @@ export function FinancialReport({ data }: FinancialReportProps) {
           <select
             value={filter.type}
             onChange={(e) => {
-              setFilter({ type: e.target.value as "all" | "province" | "month" | "year", value: "" })
+              onFilterChange({ type: e.target.value as "all" | "province" | "month" | "year", value: "" })
             }}
             className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
           >
@@ -246,7 +247,7 @@ export function FinancialReport({ data }: FinancialReportProps) {
               type="text"
               placeholder="Enter province name"
               value={filter.value}
-              onChange={(e) => setFilter({ ...filter, value: e.target.value })}
+              onChange={(e) => onFilterChange({ ...filter, value: e.target.value })}
               className="w-48 h-9 text-sm"
             />
           )}
@@ -254,7 +255,7 @@ export function FinancialReport({ data }: FinancialReportProps) {
           {filter.type === "month" && (
             <select
               value={filter.value}
-              onChange={(e) => setFilter({ ...filter, value: e.target.value })}
+              onChange={(e) => onFilterChange({ ...filter, value: e.target.value })}
               className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
             >
               <option value="">Select month</option>
@@ -269,7 +270,7 @@ export function FinancialReport({ data }: FinancialReportProps) {
           {filter.type === "year" && (
             <select
               value={filter.value}
-              onChange={(e) => setFilter({ ...filter, value: e.target.value })}
+              onChange={(e) => onFilterChange({ ...filter, value: e.target.value })}
               className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
             >
               <option value="">Select year</option>
@@ -290,7 +291,7 @@ export function FinancialReport({ data }: FinancialReportProps) {
           }} className="h-9">
             Apply
           </Button>
-          <Button size="sm" variant="outline" onClick={() => setFilter({ type: "all", value: "" })} className="h-9 bg-transparent">
+          <Button size="sm" variant="outline" onClick={() => onFilterChange({ type: "all", value: "" })} className="h-9 bg-transparent">
             Clear
           </Button>
         </div>
