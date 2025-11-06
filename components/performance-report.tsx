@@ -250,75 +250,108 @@ export function PerformanceReport({ data }: PerformanceReportProps) {
 
   return (
     <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-foreground">Performance Report</h1>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Button
-              variant={currentRegion === "all" ? "default" : "outline"}
-              onClick={() => setCurrentRegion("all")}
-              className="font-medium"
-            >
-              All Regions
-            </Button>
-            <Button
-              variant={currentRegion === "luzon" ? "default" : "outline"}
-              onClick={() => setCurrentRegion("luzon")}
-              className="font-medium"
-            >
-              Luzon
-            </Button>
-            <Button
-              variant={currentRegion === "visayas" ? "default" : "outline"}
-              onClick={() => setCurrentRegion("visayas")}
-              className="font-medium"
-            >
-              Visayas
-            </Button>
-            <Button
-              variant={currentRegion === "mindanao" ? "default" : "outline"}
-              onClick={() => setCurrentRegion("mindanao")}
-              className="font-medium"
-            >
-              Mindanao
-            </Button>
-          </div>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold text-foreground mb-2">Performance Report</h1>
+        <p className="text-muted-foreground">Comprehensive performance analysis and RTS impact</p>
       </div>
 
-      {/* Filters */}
-      <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
+      {/* Region Tabs */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex gap-2">
+          <Button
+            variant={currentRegion === "all" ? "default" : "outline"}
+            onClick={() => setCurrentRegion("all")}
+            className="font-medium"
+          >
+            All Regions
+          </Button>
+          <Button
+            variant={currentRegion === "luzon" ? "default" : "outline"}
+            onClick={() => setCurrentRegion("luzon")}
+            className="font-medium"
+          >
+            Luzon
+          </Button>
+          <Button
+            variant={currentRegion === "visayas" ? "default" : "outline"}
+            onClick={() => setCurrentRegion("visayas")}
+            className="font-medium"
+          >
+            Visayas
+          </Button>
+          <Button
+            variant={currentRegion === "mindanao" ? "default" : "outline"}
+            onClick={() => setCurrentRegion("mindanao")}
+            className="font-medium"
+          >
+            Mindanao
+          </Button>
+        </div>
+
+        {/* Filter Controls */}
         <div className="flex items-center gap-2">
-          <label className="text-sm font-medium">Filter by:</label>
+          <label className="text-sm font-semibold text-foreground">Filter:</label>
           <select
             value={filterType}
-            onChange={(e) => setFilterType(e.target.value as typeof filterType)}
-            className="px-3 py-1 border border-border rounded-md bg-background"
+            onChange={(e) => {
+              setFilterType(e.target.value as "all" | "province" | "month" | "year")
+              setFilterValue("")
+            }}
+            className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
           >
             <option value="all">All</option>
             <option value="province">Province</option>
             <option value="month">Month</option>
             <option value="year">Year</option>
           </select>
-        </div>
-        {filterType !== "all" && (
-          <div className="flex items-center gap-2">
+
+          {filterType === "province" && (
             <Input
-              type={filterType === "month" || filterType === "year" ? "number" : "text"}
-              placeholder={`Enter ${filterType}`}
+              type="text"
+              placeholder="Enter province name"
               value={filterValue}
               onChange={(e) => setFilterValue(e.target.value)}
-              className="w-48"
+              className="w-48 h-9 text-sm"
             />
-            <Button onClick={handleApplyFilter} size="sm">
-              Apply
-            </Button>
-            <Button onClick={handleClearFilter} variant="outline" size="sm">
-              Clear
-            </Button>
-          </div>
-        )}
+          )}
+
+          {filterType === "month" && (
+            <select
+              value={filterValue}
+              onChange={(e) => setFilterValue(e.target.value)}
+              className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
+            >
+              <option value="">Select month</option>
+              {Array.from({ length: 12 }, (_, i) => (
+                <option key={i + 1} value={String(i + 1).padStart(2, "0")}>
+                  {new Date(2000, i).toLocaleString("default", { month: "long" })}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {filterType === "year" && (
+            <select
+              value={filterValue}
+              onChange={(e) => setFilterValue(e.target.value)}
+              className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
+            >
+              <option value="">Select year</option>
+              {Array.from({ length: new Date().getFullYear() - 1999 }, (_, i) => (
+                <option key={2000 + i} value={String(2000 + i)}>
+                  {2000 + i}
+                </option>
+              ))}
+            </select>
+          )}
+
+          <Button size="sm" onClick={handleApplyFilter} className="h-9">
+            Apply
+          </Button>
+          <Button size="sm" variant="outline" onClick={handleClearFilter} className="h-9 bg-transparent">
+            Clear
+          </Button>
+        </div>
       </div>
 
       {/* Region Success Rates */}
