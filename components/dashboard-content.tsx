@@ -13,9 +13,8 @@ interface DashboardContentProps {
   onFilterChange: (filter: FilterState) => void
 }
 
-export function DashboardContent({ data, onUploadClick }: DashboardContentProps) {
+export function DashboardContent({ data, onUploadClick, filter, onFilterChange }: DashboardContentProps) {
   const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
-  const [filter, setFilter] = useState<FilterState>({ type: "all", value: "" })
 
   return (
     <div className="p-8 space-y-8 min-h-screen flex flex-col">
@@ -35,7 +34,7 @@ export function DashboardContent({ data, onUploadClick }: DashboardContentProps)
           currentRegion={currentRegion}
           onRegionChange={setCurrentRegion}
           filter={filter}
-          onFilterChange={setFilter}
+          onFilterChange={onFilterChange}
         />
       )}
 
