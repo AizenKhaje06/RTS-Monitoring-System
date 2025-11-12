@@ -1,8 +1,7 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { StatusCard } from "@/components/status-card"
 import { TotalParcelCard } from "@/components/total-parcel-card"
 import type { ProcessedData, FilterState } from "@/lib/types"
@@ -12,7 +11,6 @@ interface DashboardViewProps {
   currentRegion: "all" | "luzon" | "visayas" | "mindanao"
   onRegionChange: (region: "all" | "luzon" | "visayas" | "mindanao") => void
   filter: FilterState
-  onFilterChange: (filter: FilterState) => void
 }
 
 const STATUSES = ["DELIVERED", "ONDELIVERY", "PICKUP", "INTRANSIT", "CANCELLED", "DETAINED", "PROBLEMATIC", "RETURNED"]
@@ -28,9 +26,7 @@ const STATUS_COLORS = {
   RETURNED: "from-cyan-500 to-cyan-600",
 }
 
-export function DashboardView({ data, currentRegion, onRegionChange, filter, onFilterChange }: DashboardViewProps) {
-  const [filterType, setFilterType] = useState<"all" | "province" | "month" | "year">("all")
-  const [filterValue, setFilterValue] = useState("")
+export function DashboardView({ data, currentRegion, onRegionChange, filter }: DashboardViewProps) {
 
   const regionData = useMemo(() => {
     return data[currentRegion]
@@ -148,20 +144,6 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
 
   const displayData = filter.type === "all" ? regionData : filteredData
 
-  const handleApplyFilter = () => {
-    if (filterType !== "all" && !filterValue) {
-      alert("Please enter or select a value to filter.")
-      return
-    }
-    onFilterChange({ type: filterType, value: filterValue })
-  }
-
-  const handleClearFilter = () => {
-    setFilterType("all")
-    setFilterValue("")
-    onFilterChange({ type: "all", value: "" })
-  }
-
   return (
     <div>
       {/* Region Tabs */}
@@ -197,75 +179,12 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
           </Button>
         </div>
 
-        {/* Filter Controls */}
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-semibold text-foreground">Filter:</label>
-          <select
-            value={filterType}
-            onChange={(e) => {
-              setFilterType(e.target.value as "all" | "province" | "month" | "year")
-              setFilterValue("")
-            }}
-            className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
-          >
-            <option value="all">All</option>
-            <option value="province">Province</option>
-            <option value="month">Month</option>
-            <option value="year">Year</option>
-          </select>
 
-          {filterType === "province" && (
-            <Input
-              type="text"
-              placeholder="Enter province name"
-              value={filterValue}
-              onChange={(e) => setFilterValue(e.target.value)}
-              className="w-48 h-9 text-sm"
-            />
-          )}
-
-          {filterType === "month" && (
-            <select
-              value={filterValue}
-              onChange={(e) => setFilterValue(e.target.value)}
-              className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
-            >
-              <option value="">Select month</option>
-              {Array.from({ length: 12 }, (_, i) => (
-                <option key={i + 1} value={String(i + 1).padStart(2, "0")}>
-                  {new Date(2000, i).toLocaleString("default", { month: "long" })}
-                </option>
-              ))}
-            </select>
-          )}
-
-          {filterType === "year" && (
-            <select
-              value={filterValue}
-              onChange={(e) => setFilterValue(e.target.value)}
-              className="px-3 py-1.5 text-sm bg-secondary border border-border rounded-md text-foreground"
-            >
-              <option value="">Select year</option>
-              {Array.from({ length: new Date().getFullYear() - 1999 }, (_, i) => (
-                <option key={2000 + i} value={String(2000 + i)}>
-                  {2000 + i}
-                </option>
-              ))}
-            </select>
-          )}
-
-          <Button size="sm" onClick={handleApplyFilter} className="h-9">
-            Apply
-          </Button>
-          <Button size="sm" variant="outline" onClick={handleClearFilter} className="h-9 bg-transparent">
-            Clear
-          </Button>
-        </div>
       </div>
 
       <h3 className="text-xl font-semibold mb-4 text-foreground">Parcel Overview</h3>
       <div className="grid grid-cols-1 gap-4 mb-6">
-        <TotalParcelCard total={displayData.total} />
+        <TotalParcelCard total={data.all.total} />
       </div>
 
       {/* Status Cards Grid */}
