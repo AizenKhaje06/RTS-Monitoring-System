@@ -47,30 +47,33 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
         if (!parcel.date) return false
         const dateStr = parcel.date.toString().trim()
         let parcelMonth = 0
-
-        // Try to parse as standard date first
-        const d = new Date(dateStr)
-        if (!isNaN(d.getTime())) {
-          parcelMonth = d.getMonth() + 1
-        } else {
-          // Fallback for YYYY-MM-DD HH:MM:SS format
-          const datePart = dateStr.split(" ")[0]
-          const parts = datePart.split("-")
-          if (parts.length >= 2) {
-            parcelMonth = Number.parseInt(parts[1], 10)
-            } else {
-            // Try MM/DD/YYYY format
-            const slashParts = dateStr.split("/").map(p => p.trim())
-            if (slashParts.length >= 2) {
-              parcelMonth = Number.parseInt(slashParts[0], 10)
-            }
-            if (slashParts.length >= 2) {
-              parcelMonth = Number.parseInt(slashParts[0], 10)
-            }
+        try {
+          let d: Date
+          const numDate = parseFloat(dateStr)
+          if (!isNaN(numDate) && numDate.toString() === dateStr) {
+            // Excel serial date
+            d = new Date(Date.UTC(1899, 11, 30) + numDate * 86400000)
+          } else {
+            d = new Date(dateStr)
           }
+          if (isNaN(d.getTime())) {
+            const parts = dateStr.split(" ")[0].split("-")
+            if (parts.length >= 2) {
+              parcelMonth = Number.parseInt(parts[1], 10)
+            } else {
+              // Try MM/DD/YYYY format
+              const slashParts = dateStr.split("/").map(p => p.trim())
+              if (slashParts.length >= 2) {
+                parcelMonth = Number.parseInt(slashParts[0], 10)
+              }
+            }
+          } else {
+            parcelMonth = d.getMonth() + 1
+          }
+          return parcelMonth === Number.parseInt(filter.value, 10)
+        } catch {
+          return false
         }
-
-        return parcelMonth === Number.parseInt(filter.value, 10)
       }
       if (filter.type === "year") {
         if (!parcel.date) return false
