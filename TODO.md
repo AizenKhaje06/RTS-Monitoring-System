@@ -6,5 +6,6 @@
 - [x] Extract financial columns (COD Amount, Service Charge, Total Cost) and calculate RTS Fee
 - [x] Clarify consignee region vs province handling
 - [x] Update UI text in `components/upload-modal.tsx` and `components/google-sheets-selector.tsx` to reflect correct expected columns
+- [x] Add filtering to only process spreadsheet tabs containing "2025" in their title, excluding tabs without this word
 - [ ] Test data processing with sample data to verify all columns are extracted correctly
 - [ ] Confirm region/province mapping works as expected

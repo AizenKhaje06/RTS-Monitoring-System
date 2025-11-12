@@ -56,6 +56,11 @@ export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: 
           continue
         }
 
+        // Skip sheets that do not contain "2025" in their title
+        if (!sheetTitle.includes("2025")) {
+          continue
+        }
+
         // Skip sheets that start with summary headers: DATE, CUSTOMER NAME, WAYBILL NO., STATUS
         const range = `${sheetTitle}!A:Z`
         const response = await sheets.spreadsheets.values.get({
