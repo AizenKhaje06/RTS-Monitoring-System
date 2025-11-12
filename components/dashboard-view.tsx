@@ -32,22 +32,6 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
   const [filterType, setFilterType] = useState<"all" | "province" | "month" | "year">("all")
   const [filterValue, setFilterValue] = useState("")
 
-  const handleApplyFilter = () => {
-    if (filterType !== "all" && !filterValue) {
-      alert("Please enter or select a value to filter.")
-      return
-    }
-    const newFilter: FilterState = { type: filterType, value: filterValue }
-    onFilterChange(newFilter)
-  }
-
-  const handleClearFilter = () => {
-    setFilterType("all")
-    setFilterValue("")
-    const newFilter: FilterState = { type: "all", value: "" }
-    onFilterChange(newFilter)
-  }
-
   const regionData = useMemo(() => {
     return data[currentRegion]
   }, [data, currentRegion])
@@ -164,6 +148,20 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
 
   const displayData = filter.type === "all" ? regionData : filteredData
 
+  const handleApplyFilter = () => {
+    if (filterType !== "all" && !filterValue) {
+      alert("Please enter or select a value to filter.")
+      return
+    }
+    onFilterChange({ type: filterType, value: filterValue })
+  }
+
+  const handleClearFilter = () => {
+    setFilterType("all")
+    setFilterValue("")
+    onFilterChange({ type: "all", value: "" })
+  }
+
   return (
     <div>
       {/* Region Tabs */}
@@ -267,7 +265,7 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
 
       <h3 className="text-xl font-semibold mb-4 text-foreground">Parcel Overview</h3>
       <div className="grid grid-cols-1 gap-4 mb-6">
-        <TotalParcelCard total={data.all.total} />
+        <TotalParcelCard total={displayData.total} />
       </div>
 
       {/* Status Cards Grid */}
