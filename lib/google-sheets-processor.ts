@@ -199,15 +199,15 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
     dataRows = excelData.slice(1)
   } else {
     // Fallback to positional mapping based on actual spreadsheet structure
-    // Column A: date, Column D: province, Column E: status, Column F: shipper
+    // Column A: date, Column D: province, Column E: status, Column F: shipper name, Column G: shipper phone, Column H: cod amount, Column I: service charge, Column J: total cost
     columnIndices = {
       date: 0,        // Column A
       consigneeregion: 3, // Column D (province/consignee region)
       status: 4,      // Column E
-      shipper: 5,     // Column F
-      codamount: 6,   // Column G
-      servicecharge: 7, // Column H
-      totalcost: 8    // Column I
+      shipper: 5,     // Column F (shipper name)
+      codamount: 7,   // Column H
+      servicecharge: 8, // Column I
+      totalcost: 9    // Column J
     }
   }
 
