@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { determineRegion } from "@/lib/philippine-regions"
 
 interface AnalyticalReportProps {
   data: ProcessedData | null
@@ -14,16 +15,7 @@ interface AnalyticalReportProps {
   onFilterChange: (filter: FilterState) => void
 }
 
-const getIslandFromRegion = (region: string): string => {
-  const luzonRegions = ["Region I", "Region II", "Region III", "Region IV-A", "Region IV-B", "Region V", "CAR", "NCR"]
-  const visayasRegions = ["Region VI", "Region VII", "Region VIII"]
-  const mindanaoRegions = ["Region IX", "Region X", "Region XI", "Region XII", "Region XIII", "BARMM"]
 
-  if (luzonRegions.some(r => region.includes(r))) return "luzon"
-  if (visayasRegions.some(r => region.includes(r))) return "visayas"
-  if (mindanaoRegions.some(r => region.includes(r))) return "mindanao"
-  return "unknown"
-}
 
 export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalReportProps) {
   const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
@@ -268,9 +260,9 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
 
     // Regional data - filter global filtered data by island determined from region
     const regions = [
-      { name: "Luzon", data: { data: globalFilteredData.filter(p => getIslandFromRegion(p.region) === "luzon") } },
-      { name: "Visayas", data: { data: globalFilteredData.filter(p => getIslandFromRegion(p.region) === "visayas") } },
-      { name: "Mindanao", data: { data: globalFilteredData.filter(p => getIslandFromRegion(p.region) === "mindanao") } }
+      { name: "Luzon", data: { data: globalFilteredData.filter(p => determineRegion(p.region).island === "luzon") } },
+      { name: "Visayas", data: { data: globalFilteredData.filter(p => determineRegion(p.region).island === "visayas") } },
+      { name: "Mindanao", data: { data: globalFilteredData.filter(p => determineRegion(p.region).island === "mindanao") } }
     ]
 
     const topPerformingRegions = regions.map(region => {
