@@ -148,11 +148,13 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
     const sourceData = { data: currentRegion === "all" ? filteredData : filteredData.filter((parcel) => parcel.region === currentRegion), stats: {}, provinces: {}, regions: {}, total: 0, winningShippers: {}, rtsShippers: {} }
 
     // Top provinces by delivery count
-    const provinceCounts = sourceData.data.reduce((acc, parcel) => {
-      const province = parcel.province || "Unknown"
-      acc[province] = (acc[province] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    const provinceCounts = sourceData.data
+      .filter((parcel) => parcel.normalizedStatus === "DELIVERED")
+      .reduce((acc, parcel) => {
+        const province = parcel.province || "Unknown"
+        acc[province] = (acc[province] || 0) + 1
+        return acc
+      }, {} as Record<string, number>)
 
     const topProvinces = Object.entries(provinceCounts)
       .sort(([, a], [, b]) => b - a)
@@ -224,11 +226,13 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
     }
 
     // Top regions by delivery count
-    const regionCounts = sourceData.data.reduce((acc, parcel) => {
-      const region = parcel.region || "Unknown"
-      acc[region] = (acc[region] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    const regionCounts = sourceData.data
+      .filter((parcel) => parcel.normalizedStatus === "DELIVERED")
+      .reduce((acc, parcel) => {
+        const region = parcel.region || "Unknown"
+        acc[region] = (acc[region] || 0) + 1
+        return acc
+      }, {} as Record<string, number>)
 
     const topRegions = Object.entries(regionCounts)
       .sort(([, a], [, b]) => b - a)
