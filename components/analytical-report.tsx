@@ -141,9 +141,91 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
 
   // Calculate metrics from filtered data
   const metrics = useMemo(() => {
-    if (!filteredData) return null
+    if (!data) return null
 
-    const parcelData = filteredData.data
+    // Get data filtered only by global filter (not by currentRegion for zone performance)
+    let globalFilteredData = data.all.data
+
+    // Apply global filter
+    if (filter.type !== "all") {
+      if (filter.type === "province" && filter.value) {
+        globalFilteredData = globalFilteredData.filter((parcel) =>
+          parcel.province.toLowerCase().includes(filter.value.toLowerCase())
+        )
+      }
+
+      if (filter.type === "month" && filter.value) {
+        globalFilteredData = globalFilteredData.filter((parcel) => {
+          if (!parcel.date) return false
+          const dateStr = parcel.date.toString().trim()
+          let parcelMonth = 0
+          try {
+            let d: Date
+            const numDate = parseFloat(dateStr)
+            if (!isNaN(numDate) && numDate.toString() === dateStr) {
+              // Excel serial date
+              d = new Date(Date.UTC(1899, 11, 30) + numDate * 86400000)
+            } else {
+              d = new Date(dateStr)
+            }
+            if (isNaN(d.getTime())) {
+              const parts = dateStr.split(" ")[0].split("-")
+              if (parts.length >= 2) {
+                parcelMonth = Number.parseInt(parts[1], 10)
+              } else {
+                // Try MM/DD/YYYY format
+                const slashParts = dateStr.split("/").map(p => p.trim())
+                if (slashParts.length >= 2) {
+                  parcelMonth = Number.parseInt(slashParts[0], 10)
+                }
+              }
+            } else {
+              parcelMonth = d.getMonth() + 1
+            }
+            return parcelMonth === Number.parseInt(filter.value, 10)
+          } catch {
+            return false
+          }
+        })
+      }
+
+      if (filter.type === "year" && filter.value) {
+        globalFilteredData = globalFilteredData.filter((parcel) => {
+          if (!parcel.date) return false
+          const dateStr = parcel.date.toString().trim()
+          let parcelYear = 0
+          try {
+            let d: Date
+            const numDate = parseFloat(dateStr)
+            if (!isNaN(numDate) && numDate.toString() === dateStr) {
+              // Excel serial date
+              d = new Date(Date.UTC(1899, 11, 30) + numDate * 86400000)
+            } else {
+              d = new Date(dateStr)
+            }
+            if (isNaN(d.getTime())) {
+              const parts = dateStr.split(" ")[0].split("-")
+              if (parts.length >= 1) {
+                parcelYear = Number.parseInt(parts[0], 10)
+              } else {
+                // Try MM/DD/YYYY format
+                const slashParts = dateStr.split("/").map(p => p.trim())
+                if (slashParts.length === 3) {
+                  parcelYear = Number.parseInt(slashParts[2], 10)
+                }
+              }
+            } else {
+              parcelYear = d.getFullYear()
+            }
+            return parcelYear === Number.parseInt(filter.value, 10)
+          } catch {
+            return false
+          }
+        })
+      }
+    }
+
+    const parcelData = filteredData!.data
     const rtsStatuses = ["RETURNED"]
 
     // Use all parcels for total shipments
@@ -173,12 +255,12 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
     const undeliveredCount = parcelData.filter((parcel) => undeliveredStatuses.includes(parcel.normalizedStatus)).length
     const undeliveredRate = totalShipments > 0 ? (undeliveredCount / totalShipments) * 100 : 0
 
-    // Regional data - since we're filtering all data, we need to filter each region's data accordingly
-    const filteredSet = new Set(filteredData.data)
+    // Regional data - filter each region's data by global filter only
+    const globalFilteredSet = new Set(globalFilteredData)
     const regions = [
-      { name: "Luzon", data: { ...data!.luzon, data: data!.luzon.data.filter(p => filteredSet.has(p)) } },
-      { name: "Visayas", data: { ...data!.visayas, data: data!.visayas.data.filter(p => filteredSet.has(p)) } },
-      { name: "Mindanao", data: { ...data!.mindanao, data: data!.mindanao.data.filter(p => filteredSet.has(p)) } }
+      { name: "Luzon", data: { ...data.luzon, data: data.luzon.data.filter(p => globalFilteredSet.has(p)) } },
+      { name: "Visayas", data: { ...data.visayas, data: data.visayas.data.filter(p => globalFilteredSet.has(p)) } },
+      { name: "Mindanao", data: { ...data.mindanao, data: data.mindanao.data.filter(p => globalFilteredSet.has(p)) } }
     ]
 
     const topPerformingRegions = regions.map(region => {
@@ -214,9 +296,9 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
       }
     }).sort((a, b) => b.netProfit - a.netProfit)
 
-    // Store performance (using shippers as stores)
-    const storePerformance = Object.keys(filteredData.winningShippers).map(shipper => {
-      const shipperParcels = parcelData.filter(p => p.shipper === shipper)
+    // Store performance (using shippers as stores) - based on global filter only
+    const storePerformance = Object.keys(data.all.winningShippers).map(shipper => {
+      const shipperParcels = globalFilteredData.filter(p => p.shipper === shipper)
       const total = shipperParcels.length
       const delivered = shipperParcels.filter(p => p.normalizedStatus === "DELIVERED").length
       const rts = shipperParcels.filter(p => p.normalizedStatus === "RETURNED").length
