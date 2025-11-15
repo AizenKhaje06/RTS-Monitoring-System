@@ -14,6 +14,17 @@ interface AnalyticalReportProps {
   onFilterChange: (filter: FilterState) => void
 }
 
+const getIslandFromRegion = (region: string): string => {
+  const luzonRegions = ["Region I", "Region II", "Region III", "Region IV-A", "Region IV-B", "Region V", "CAR", "NCR"]
+  const visayasRegions = ["Region VI", "Region VII", "Region VIII"]
+  const mindanaoRegions = ["Region IX", "Region X", "Region XI", "Region XII", "Region XIII", "BARMM"]
+
+  if (luzonRegions.some(r => region.includes(r))) return "luzon"
+  if (visayasRegions.some(r => region.includes(r))) return "visayas"
+  if (mindanaoRegions.some(r => region.includes(r))) return "mindanao"
+  return "unknown"
+}
+
 export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalReportProps) {
   const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
 
@@ -255,12 +266,11 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
     const undeliveredCount = parcelData.filter((parcel) => undeliveredStatuses.includes(parcel.normalizedStatus)).length
     const undeliveredRate = totalShipments > 0 ? (undeliveredCount / totalShipments) * 100 : 0
 
-    // Regional data - filter each region's data by global filter only
-    const globalFilteredSet = new Set(globalFilteredData)
+    // Regional data - filter global filtered data by island determined from region
     const regions = [
-      { name: "Luzon", data: { ...data.luzon, data: data.luzon.data.filter(p => globalFilteredSet.has(p)) } },
-      { name: "Visayas", data: { ...data.visayas, data: data.visayas.data.filter(p => globalFilteredSet.has(p)) } },
-      { name: "Mindanao", data: { ...data.mindanao, data: data.mindanao.data.filter(p => globalFilteredSet.has(p)) } }
+      { name: "Luzon", data: { data: globalFilteredData.filter(p => getIslandFromRegion(p.region) === "luzon") } },
+      { name: "Visayas", data: { data: globalFilteredData.filter(p => getIslandFromRegion(p.region) === "visayas") } },
+      { name: "Mindanao", data: { data: globalFilteredData.filter(p => getIslandFromRegion(p.region) === "mindanao") } }
     ]
 
     const topPerformingRegions = regions.map(region => {
@@ -354,7 +364,7 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
       worstRTSRegion,
       topPerformingStore
     }
-  }, [data, filteredData])
+  }, [data, filter.type, filter.value, filteredData])
 
   if (!data) {
     return (
