@@ -211,7 +211,8 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
     }
   }
 
-  for (const row of dataRows) {
+  for (let rowIndex = 0; rowIndex < dataRows.length; rowIndex++) {
+    const row = dataRows[rowIndex]
     if (!row || row.length < Math.max(...Object.values(columnIndices)) + 1) continue
 
     const date = row[columnIndices.date]?.toString() || ""
@@ -235,6 +236,8 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
     // Enhanced logging for unknown locations
     if (regionInfo.province === "Unknown" || island === "unknown") {
       console.log("UNKNOWN LOCATION PARCEL:", {
+        rowNumber: rowIndex + 1, // 1-based row number in data
+        fullRowData: row,
         rawInput: consigneeRegionRaw,
         shipper,
         status,
