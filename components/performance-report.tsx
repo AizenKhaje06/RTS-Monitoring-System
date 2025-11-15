@@ -180,56 +180,62 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10) as [string, number][]
 
-    // Region success rates
+    // Region delivery rates (based on resolved parcels: delivered + returned)
     const regionSuccessRates = []
     if (currentRegion === "all") {
       // All Regions using filtered data
-      const total = filteredData.length
       const delivered = filteredData.filter((p) => p.normalizedStatus === "DELIVERED").length
-      const successRate = total > 0 ? (delivered / total) * 100 : 0
-      regionSuccessRates.push({ region: "All Regions", successRate, deliveredCount: delivered, totalCount: total })
+      const rts = filteredData.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
+      const resolved = delivered + rts
+      const deliveryRate = resolved > 0 ? (delivered / resolved) * 100 : 0
+      regionSuccessRates.push({ region: "All Regions", successRate: deliveryRate, deliveredCount: delivered, totalCount: resolved })
 
       // Individual regions using filtered data
       const regionNames = ["luzon", "visayas", "mindanao"]
       regionNames.forEach((region) => {
         const regionFilteredData = filteredData.filter((parcel) => parcel.island === region)
-        const total = regionFilteredData.length
         const delivered = regionFilteredData.filter((p) => p.normalizedStatus === "DELIVERED").length
-        const successRate = total > 0 ? (delivered / total) * 100 : 0
-        regionSuccessRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), successRate, deliveredCount: delivered, totalCount: total })
+        const rts = regionFilteredData.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
+        const resolved = delivered + rts
+        const deliveryRate = resolved > 0 ? (delivered / resolved) * 100 : 0
+        regionSuccessRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), successRate: deliveryRate, deliveredCount: delivered, totalCount: resolved })
       })
     } else {
       // Only show the current region using filtered data
-      const total = sourceData.data.length
       const delivered = sourceData.data.filter((p) => p.normalizedStatus === "DELIVERED").length
-      const successRate = total > 0 ? (delivered / total) * 100 : 0
-      regionSuccessRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), successRate, deliveredCount: delivered, totalCount: total })
+      const rts = sourceData.data.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
+      const resolved = delivered + rts
+      const deliveryRate = resolved > 0 ? (delivered / resolved) * 100 : 0
+      regionSuccessRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), successRate: deliveryRate, deliveredCount: delivered, totalCount: resolved })
     }
 
-    // Region RTS rates
+    // Region RTS rates (based on resolved parcels: delivered + returned)
     const regionRTSRates = []
     if (currentRegion === "all") {
       // All Regions using filtered data
-      const total = filteredData.length
+      const delivered = filteredData.filter((p) => p.normalizedStatus === "DELIVERED").length
       const rts = filteredData.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
-      const rtsRate = total > 0 ? (rts / total) * 100 : 0
-      regionRTSRates.push({ region: "All Regions", rtsRate, rtsCount: rts, totalCount: total })
+      const resolved = delivered + rts
+      const rtsRate = resolved > 0 ? (rts / resolved) * 100 : 0
+      regionRTSRates.push({ region: "All Regions", rtsRate, rtsCount: rts, totalCount: resolved })
 
       // Individual regions using filtered data
       const regionNames = ["luzon", "visayas", "mindanao"]
       regionNames.forEach((region) => {
         const regionFilteredData = filteredData.filter((parcel) => parcel.island === region)
-        const total = regionFilteredData.length
+        const delivered = regionFilteredData.filter((p) => p.normalizedStatus === "DELIVERED").length
         const rts = regionFilteredData.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
-        const rtsRate = total > 0 ? (rts / total) * 100 : 0
-        regionRTSRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), rtsRate, rtsCount: rts, totalCount: total })
+        const resolved = delivered + rts
+        const rtsRate = resolved > 0 ? (rts / resolved) * 100 : 0
+        regionRTSRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), rtsRate, rtsCount: rts, totalCount: resolved })
       })
     } else {
       // Only show the current region using filtered data
-      const total = sourceData.data.length
+      const delivered = sourceData.data.filter((p) => p.normalizedStatus === "DELIVERED").length
       const rts = sourceData.data.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
-      const rtsRate = total > 0 ? (rts / total) * 100 : 0
-      regionRTSRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), rtsRate, rtsCount: rts, totalCount: total })
+      const resolved = delivered + rts
+      const rtsRate = resolved > 0 ? (rts / resolved) * 100 : 0
+      regionRTSRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), rtsRate, rtsCount: rts, totalCount: resolved })
     }
 
     // Top regions by delivery count
@@ -389,8 +395,8 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
             <div className="flex items-center gap-3 mb-4">
               <CheckCircle className="w-8 h-8 text-green-500" />
               <div>
-                <h3 className="text-lg font-bold text-foreground">{item.region} Success Rate</h3>
-                <p className="text-sm text-muted-foreground">Percentage of successful deliveries</p>
+                <h3 className="text-lg font-bold text-foreground">{item.region} Delivery Rate</h3>
+                <p className="text-sm text-muted-foreground">Percentage of successful deliveries out of resolved parcels</p>
               </div>
             </div>
             <p className="text-3xl font-bold text-green-500">{item.successRate.toFixed(1)}%</p>

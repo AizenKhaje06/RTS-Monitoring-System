@@ -249,9 +249,10 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
     const netProfit = grossProfit - totalRTSFee
     const avgProfitPerShipment = totalShipments > 0 ? netProfit / totalShipments : 0
 
-    // Rates based on all parcels
-    const deliveryRate = totalShipments > 0 ? (deliveredCount / totalShipments) * 100 : 0
-    const rtsRate = totalShipments > 0 ? (rtsCount / totalShipments) * 100 : 0
+    // Rates based on resolved parcels (delivered + returned)
+    const resolved = deliveredCount + rtsCount
+    const deliveryRate = resolved > 0 ? (deliveredCount / resolved) * 100 : 0
+    const rtsRate = resolved > 0 ? (rtsCount / resolved) * 100 : 0
 
     // Calculate Undelivered Parcel Rate (On Delivery, Pickup, In Transit, Detained, Problematic)
     const undeliveredStatuses = ["ONDELIVERY", "PICKUP", "INTRANSIT", "DETAINED", "PROBLEMATIC"]
@@ -305,8 +306,9 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
       const delivered = shipperParcels.filter(p => p.normalizedStatus === "DELIVERED").length
       const rts = shipperParcels.filter(p => p.normalizedStatus === "RETURNED").length
       const undelivered = shipperParcels.filter(p => undeliveredStatuses.includes(p.normalizedStatus)).length
-      const storeDeliveryRate = total > 0 ? (delivered / total) * 100 : 0
-      const storeRTSRate = total > 0 ? (rts / total) * 100 : 0
+      const resolved = delivered + rts
+      const storeDeliveryRate = resolved > 0 ? (delivered / resolved) * 100 : 0
+      const storeRTSRate = resolved > 0 ? (rts / resolved) * 100 : 0
       const storeUndeliveredRate = total > 0 ? (undelivered / total) * 100 : 0
 
       // Calculate financials for this shipper
