@@ -275,13 +275,13 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
 
     const topPerformingRegions = regions.map(region => {
       const regionData = region.data.data
-      const regionTotal = regionData.length
       const regionDelivered = regionData.filter(p => p.normalizedStatus === "DELIVERED").length
       const regionRTS = regionData.filter(p => p.normalizedStatus === "RETURNED").length
       const regionUndelivered = regionData.filter(p => undeliveredStatuses.includes(p.normalizedStatus)).length
-      const regionDeliveryRate = regionTotal > 0 ? (regionDelivered / regionTotal) * 100 : 0
-      const regionRTSRate = regionTotal > 0 ? (regionRTS / regionTotal) * 100 : 0
-      const regionUndeliveredRate = regionTotal > 0 ? (regionUndelivered / regionTotal) * 100 : 0
+      const regionTotalResolved = regionDelivered + regionRTS
+      const regionDeliveryRate = regionTotalResolved > 0 ? (regionDelivered / regionTotalResolved) * 100 : 0
+      const regionRTSRate = regionTotalResolved > 0 ? (regionRTS / regionTotalResolved) * 100 : 0
+      const regionUndeliveredRate = (regionDelivered + regionRTS + regionUndelivered) > 0 ? (regionUndelivered / (regionDelivered + regionRTS + regionUndelivered)) * 100 : 0
 
       const regionDeliveredParcels = regionData.filter(p => p.normalizedStatus === "DELIVERED")
       const regionReturnedParcels = regionData.filter(p => p.normalizedStatus === "RETURNED")
