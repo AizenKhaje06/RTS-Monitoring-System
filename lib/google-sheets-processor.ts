@@ -233,9 +233,9 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
 
     const island = regionInfo.island
 
-    // Enhanced logging for unknown locations
-    if (regionInfo.province === "Unknown" || island === "unknown") {
-      console.log("UNKNOWN LOCATION PARCEL:", {
+    // Enhanced logging for unknown locations - catch all cases where province is unknown
+    if (regionInfo.province === "Unknown") {
+      console.log("UNKNOWN PROVINCE PARCEL:", {
         rowNumber: rowIndex + 1, // 1-based row number in data
         fullRowData: row,
         rawInput: consigneeRegionRaw,
