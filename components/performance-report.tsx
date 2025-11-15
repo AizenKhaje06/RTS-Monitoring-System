@@ -162,6 +162,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       }, {} as Record<string, number>)
 
     const topProvinces = Object.entries(provinceCounts)
+      .filter(([province]) => province !== "Unknown")
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10) as [string, number][]
 
@@ -175,6 +176,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       }, {} as Record<string, number>)
 
     const topReturnedProvinces = Object.entries(rtsProvinceCounts)
+      .filter(([province]) => province !== "Unknown")
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10) as [string, number][]
 
