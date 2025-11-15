@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { CheckCircle, XCircle } from "lucide-react"
 import type { ProcessedData, FilterState } from "@/lib/types"
 import { Button } from "@/components/ui/button"
@@ -23,8 +23,13 @@ interface PerformanceData {
 
 export function PerformanceReport({ data, filter, onFilterChange }: PerformanceReportProps) {
   const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
-  const [filterType, setFilterType] = useState<"all" | "province" | "month" | "year">("all")
-  const [filterValue, setFilterValue] = useState("")
+  const [filterType, setFilterType] = useState<"all" | "province" | "month" | "year">(filter.type)
+  const [filterValue, setFilterValue] = useState(filter.value)
+
+  useEffect(() => {
+    setFilterType(filter.type)
+    setFilterValue(filter.value)
+  }, [filter])
 
   const handleApplyFilter = () => {
     if (filterType !== "all" && !filterValue) {

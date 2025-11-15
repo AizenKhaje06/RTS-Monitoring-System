@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { StatusCard } from "@/components/status-card"
@@ -29,8 +29,13 @@ const STATUS_COLORS = {
 }
 
 export function DashboardView({ data, currentRegion, onRegionChange, filter, onFilterChange }: DashboardViewProps) {
-  const [filterType, setFilterType] = useState<"all" | "province" | "month" | "year">("all")
-  const [filterValue, setFilterValue] = useState("")
+  const [filterType, setFilterType] = useState<"all" | "province" | "month" | "year">(filter.type)
+  const [filterValue, setFilterValue] = useState(filter.value)
+
+  useEffect(() => {
+    setFilterType(filter.type)
+    setFilterValue(filter.value)
+  }, [filter])
 
   const regionData = useMemo(() => {
     return data[currentRegion]
