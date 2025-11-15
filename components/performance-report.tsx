@@ -60,7 +60,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
         regionRTSRates: [],
       }
 
-    const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
+    const rtsStatuses = ["RETURNED"]
 
     // Start with all data
     let filteredData = data.all.data

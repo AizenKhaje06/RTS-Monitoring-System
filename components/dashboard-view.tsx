@@ -132,7 +132,7 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
         winningShippers[parcel.shipper] = (winningShippers[parcel.shipper] || 0) + 1
       }
 
-      const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
+      const rtsStatuses = ["RETURNED"]
       if (rtsStatuses.includes(status)) {
         rtsShippers[parcel.shipper] = (rtsShippers[parcel.shipper] || 0) + 1
       }
