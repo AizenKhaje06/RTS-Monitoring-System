@@ -158,7 +158,7 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
   const findColumnIndices = (headers: string[]): { [key: string]: number } => {
     const indices: { [key: string]: number } = {}
     const expectedHeaders = [
-      'DATE', 'STATUS', 'SHIPPER', 'CONSIGNEE REGION',
+      'DATE', 'STATUS', 'STORE', 'SHIPPER', 'CONSIGNEE REGION',
       'COD AMOUNT', 'SERVICE CHARGE', 'TOTAL COST'
     ]
 
@@ -170,6 +170,11 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
         }
       })
     })
+
+    // If STORE is found, use it for shipper; otherwise use SHIPPER if found
+    if (indices['store'] !== undefined) {
+      indices['shipper'] = indices['store']
+    }
 
     return indices
   }
