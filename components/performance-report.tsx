@@ -145,7 +145,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
     }
 
     // Now filter by region if not "all"
-    const sourceData = { data: currentRegion === "all" ? filteredData : filteredData.filter((parcel) => parcel.region === currentRegion), stats: {}, provinces: {}, regions: {}, total: 0, winningShippers: {}, rtsShippers: {} }
+    const sourceData = { data: currentRegion === "all" ? filteredData : filteredData.filter((parcel) => parcel.island === currentRegion), stats: {}, provinces: {}, regions: {}, total: 0, winningShippers: {}, rtsShippers: {} }
 
     // Top provinces by delivery count
     const provinceCounts = sourceData.data
@@ -185,7 +185,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       // Individual regions using filtered data
       const regionNames = ["luzon", "visayas", "mindanao"]
       regionNames.forEach((region) => {
-        const regionFilteredData = filteredData.filter((parcel) => parcel.region === region)
+        const regionFilteredData = filteredData.filter((parcel) => parcel.island === region)
         const total = regionFilteredData.length
         const delivered = regionFilteredData.filter((p) => p.normalizedStatus === "DELIVERED").length
         const successRate = total > 0 ? (delivered / total) * 100 : 0
@@ -211,7 +211,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       // Individual regions using filtered data
       const regionNames = ["luzon", "visayas", "mindanao"]
       regionNames.forEach((region) => {
-        const regionFilteredData = filteredData.filter((parcel) => parcel.region === region)
+        const regionFilteredData = filteredData.filter((parcel) => parcel.island === region)
         const total = regionFilteredData.length
         const rts = regionFilteredData.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
         const rtsRate = total > 0 ? (rts / total) * 100 : 0
