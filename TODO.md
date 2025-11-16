@@ -1,11 +1,16 @@
-# Google Sheets Mapping Fixes
+# TODO: Fix Total Parcel Data Discrepancy and Add Status Rate Cards
+
+## Current Issue
+- Parcel Page (dashboard-view.tsx): Shows total parcels as 31,817 for All Regions
+- Performance Page (performance-report.tsx): Shows delivery rates based on resolved parcels (delivered + returned = 29,798), causing discrepancy
 
 ## Tasks
-- [x] Update column mapping in `lib/google-sheets-processor.ts` to match UI expectations (Date, Status, Shipper, Consignee Region, COD Amount, Service Charge, Total Cost)
-- [x] Add header validation to detect columns by name instead of fixed positions
-- [x] Extract financial columns (COD Amount, Service Charge, Total Cost) and calculate RTS Fee
-- [x] Clarify consignee region vs province handling
-- [x] Update UI text in `components/upload-modal.tsx` and `components/google-sheets-selector.tsx` to reflect correct expected columns
-- [x] Add filtering to only process spreadsheet tabs containing "2025" in their title, excluding tabs without this word
-- [ ] Test data processing with sample data to verify all columns are extracted correctly
-- [ ] Confirm region/province mapping works as expected
+- [ ] Modify performance-report.tsx to calculate delivery and RTS rates based on total parcels instead of resolved parcels
+- [ ] Add new rate cards for ONDELIVERY status (All Regions, Luzon, Visayas, Mindanao)
+- [ ] Add new rate cards for PICKUP status (All Regions, Luzon, Visayas, Mindanao)
+- [ ] Add new rate cards for INTRANSIT status (All Regions, Luzon, Visayas, Mindanao)
+- [ ] Add new rate cards for CANCELLED status (All Regions, Luzon, Visayas, Mindanao)
+- [ ] Add new rate cards for DETAINED status (All Regions, Luzon, Visayas, Mindanao)
+- [ ] Add new rate cards for PROBLEMATIC status (All Regions, Luzon, Visayas, Mindanao)
+- [ ] Verify that total parcel counts match between pages
+- [ ] Test filtering and region switching functionality

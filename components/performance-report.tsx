@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState, useEffect } from "react"
-import { CheckCircle, XCircle } from "lucide-react"
+import { CheckCircle, XCircle, Truck, Package, MapPin, X, Lock, AlertTriangle } from "lucide-react"
 import type { ProcessedData, FilterState } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,10 +19,16 @@ interface PerformanceData {
   topReturnedRegions: [string, number][]
   regionSuccessRates: { region: string; successRate: number; deliveredCount: number; totalCount: number }[]
   regionRTSRates: { region: string; rtsRate: number; rtsCount: number; totalCount: number }[]
+  regionOnDeliveryRates: { region: string; onDeliveryRate: number; onDeliveryCount: number; totalCount: number }[]
+  regionPickupRates: { region: string; pickupRate: number; pickupCount: number; totalCount: number }[]
+  regionInTransitRates: { region: string; inTransitRate: number; inTransitCount: number; totalCount: number }[]
+  regionCancelledRates: { region: string; cancelledRate: number; cancelledCount: number; totalCount: number }[]
+  regionDetainedRates: { region: string; detainedRate: number; detainedCount: number; totalCount: number }[]
+  regionProblematicRates: { region: string; problematicRate: number; problematicCount: number; totalCount: number }[]
 }
 
 export function PerformanceReport({ data, filter, onFilterChange }: PerformanceReportProps) {
-  const [currentRegion, setCurrentRegion] = useState<"all" | "luzon" | "visayas" | "mindanao">("all")
+  const [currentRegion, setCurrentRegion] = useState<string>("all")
   const [filterType, setFilterType] = useState<"all" | "province" | "month" | "year">(filter.type)
   const [filterValue, setFilterValue] = useState(filter.value)
 
@@ -54,6 +60,12 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
     topReturnedRegions,
     regionSuccessRates,
     regionRTSRates,
+    regionOnDeliveryRates,
+    regionPickupRates,
+    regionInTransitRates,
+    regionCancelledRates,
+    regionDetainedRates,
+    regionProblematicRates,
   }: PerformanceData = useMemo(() => {
     if (!data)
       return {
@@ -63,6 +75,12 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
         topReturnedRegions: [],
         regionSuccessRates: [],
         regionRTSRates: [],
+        regionOnDeliveryRates: [],
+        regionPickupRates: [],
+        regionInTransitRates: [],
+        regionCancelledRates: [],
+        regionDetainedRates: [],
+        regionProblematicRates: [],
       }
 
     const rtsStatuses = ["RETURNED"]
@@ -180,62 +198,56 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10) as [string, number][]
 
-    // Region delivery rates (based on resolved parcels: delivered + returned)
-    const regionSuccessRates = []
+    // Region delivery rates (based on total parcels)
+    const regionSuccessRates: { region: string; successRate: number; deliveredCount: number; totalCount: number }[] = []
     if (currentRegion === "all") {
       // All Regions using filtered data
       const delivered = filteredData.filter((p) => p.normalizedStatus === "DELIVERED").length
-      const rts = filteredData.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
-      const resolved = delivered + rts
-      const deliveryRate = resolved > 0 ? (delivered / resolved) * 100 : 0
-      regionSuccessRates.push({ region: "All Regions", successRate: deliveryRate, deliveredCount: delivered, totalCount: resolved })
+      const total = filteredData.length
+      const deliveryRate = total > 0 ? (delivered / total) * 100 : 0
+      regionSuccessRates.push({ region: "All Regions", successRate: deliveryRate, deliveredCount: delivered, totalCount: total })
 
       // Individual regions using filtered data
       const regionNames = ["luzon", "visayas", "mindanao"]
       regionNames.forEach((region) => {
         const regionFilteredData = filteredData.filter((parcel) => parcel.island === region)
         const delivered = regionFilteredData.filter((p) => p.normalizedStatus === "DELIVERED").length
-        const rts = regionFilteredData.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
-        const resolved = delivered + rts
-        const deliveryRate = resolved > 0 ? (delivered / resolved) * 100 : 0
-        regionSuccessRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), successRate: deliveryRate, deliveredCount: delivered, totalCount: resolved })
+        const total = regionFilteredData.length
+        const deliveryRate = total > 0 ? (delivered / total) * 100 : 0
+        regionSuccessRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), successRate: deliveryRate, deliveredCount: delivered, totalCount: total })
       })
     } else {
       // Only show the current region using filtered data
       const delivered = sourceData.data.filter((p) => p.normalizedStatus === "DELIVERED").length
-      const rts = sourceData.data.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
-      const resolved = delivered + rts
-      const deliveryRate = resolved > 0 ? (delivered / resolved) * 100 : 0
-      regionSuccessRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), successRate: deliveryRate, deliveredCount: delivered, totalCount: resolved })
+      const total = sourceData.data.length
+      const deliveryRate = total > 0 ? (delivered / total) * 100 : 0
+      regionSuccessRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), successRate: deliveryRate, deliveredCount: delivered, totalCount: total })
     }
 
-    // Region RTS rates (based on resolved parcels: delivered + returned)
-    const regionRTSRates = []
+    // Region RTS rates (based on total parcels)
+    const regionRTSRates: { region: string; rtsRate: number; rtsCount: number; totalCount: number }[] = []
     if (currentRegion === "all") {
       // All Regions using filtered data
-      const delivered = filteredData.filter((p) => p.normalizedStatus === "DELIVERED").length
       const rts = filteredData.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
-      const resolved = delivered + rts
-      const rtsRate = resolved > 0 ? (rts / resolved) * 100 : 0
-      regionRTSRates.push({ region: "All Regions", rtsRate, rtsCount: rts, totalCount: resolved })
+      const total = filteredData.length
+      const rtsRate = total > 0 ? (rts / total) * 100 : 0
+      regionRTSRates.push({ region: "All Regions", rtsRate, rtsCount: rts, totalCount: total })
 
       // Individual regions using filtered data
       const regionNames = ["luzon", "visayas", "mindanao"]
       regionNames.forEach((region) => {
         const regionFilteredData = filteredData.filter((parcel) => parcel.island === region)
-        const delivered = regionFilteredData.filter((p) => p.normalizedStatus === "DELIVERED").length
         const rts = regionFilteredData.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
-        const resolved = delivered + rts
-        const rtsRate = resolved > 0 ? (rts / resolved) * 100 : 0
-        regionRTSRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), rtsRate, rtsCount: rts, totalCount: resolved })
+        const total = regionFilteredData.length
+        const rtsRate = total > 0 ? (rts / total) * 100 : 0
+        regionRTSRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), rtsRate, rtsCount: rts, totalCount: total })
       })
     } else {
       // Only show the current region using filtered data
-      const delivered = sourceData.data.filter((p) => p.normalizedStatus === "DELIVERED").length
       const rts = sourceData.data.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
-      const resolved = delivered + rts
-      const rtsRate = resolved > 0 ? (rts / resolved) * 100 : 0
-      regionRTSRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), rtsRate, rtsCount: rts, totalCount: resolved })
+      const total = sourceData.data.length
+      const rtsRate = total > 0 ? (rts / total) * 100 : 0
+      regionRTSRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), rtsRate, rtsCount: rts, totalCount: total })
     }
 
     // Top regions by delivery count
@@ -264,6 +276,144 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10) as [string, number][]
 
+    // Region On Delivery rates
+    const regionOnDeliveryRates: { region: string; onDeliveryRate: number; onDeliveryCount: number; totalCount: number }[] = []
+    if (currentRegion === "all") {
+      const onDelivery = filteredData.filter((p) => p.normalizedStatus === "ON_DELIVERY").length
+      const total = filteredData.length
+      const onDeliveryRate = total > 0 ? (onDelivery / total) * 100 : 0
+      regionOnDeliveryRates.push({ region: "All Regions", onDeliveryRate, onDeliveryCount: onDelivery, totalCount: total })
+
+      const regionNames = ["luzon", "visayas", "mindanao"]
+      regionNames.forEach((region) => {
+        const regionFilteredData = filteredData.filter((parcel) => parcel.island === region)
+        const onDelivery = regionFilteredData.filter((p) => p.normalizedStatus === "ON_DELIVERY").length
+        const total = regionFilteredData.length
+        const onDeliveryRate = total > 0 ? (onDelivery / total) * 100 : 0
+        regionOnDeliveryRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), onDeliveryRate, onDeliveryCount: onDelivery, totalCount: total })
+      })
+    } else {
+      const onDelivery = sourceData.data.filter((p) => p.normalizedStatus === "ON_DELIVERY").length
+      const total = sourceData.data.length
+      const onDeliveryRate = total > 0 ? (onDelivery / total) * 100 : 0
+      regionOnDeliveryRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), onDeliveryRate, onDeliveryCount: onDelivery, totalCount: total })
+    }
+
+    // Region Pickup rates
+    const regionPickupRates: { region: string; pickupRate: number; pickupCount: number; totalCount: number }[] = []
+    if (currentRegion === "all") {
+      const pickup = filteredData.filter((p) => p.normalizedStatus === "PICKUP").length
+      const total = filteredData.length
+      const pickupRate = total > 0 ? (pickup / total) * 100 : 0
+      regionPickupRates.push({ region: "All Regions", pickupRate, pickupCount: pickup, totalCount: total })
+
+      const regionNames = ["luzon", "visayas", "mindanao"]
+      regionNames.forEach((region) => {
+        const regionFilteredData = filteredData.filter((parcel) => parcel.island === region)
+        const pickup = regionFilteredData.filter((p) => p.normalizedStatus === "PICKUP").length
+        const total = regionFilteredData.length
+        const pickupRate = total > 0 ? (pickup / total) * 100 : 0
+        regionPickupRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), pickupRate, pickupCount: pickup, totalCount: total })
+      })
+    } else {
+      const pickup = sourceData.data.filter((p) => p.normalizedStatus === "PICKUP").length
+      const total = sourceData.data.length
+      const pickupRate = total > 0 ? (pickup / total) * 100 : 0
+      regionPickupRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), pickupRate, pickupCount: pickup, totalCount: total })
+    }
+
+    // Region In Transit rates
+    const regionInTransitRates: { region: string; inTransitRate: number; inTransitCount: number; totalCount: number }[] = []
+    if (currentRegion === "all") {
+      const inTransit = filteredData.filter((p) => p.normalizedStatus === "IN_TRANSIT").length
+      const total = filteredData.length
+      const inTransitRate = total > 0 ? (inTransit / total) * 100 : 0
+      regionInTransitRates.push({ region: "All Regions", inTransitRate, inTransitCount: inTransit, totalCount: total })
+
+      const regionNames = ["luzon", "visayas", "mindanao"]
+      regionNames.forEach((region) => {
+        const regionFilteredData = filteredData.filter((parcel) => parcel.island === region)
+        const inTransit = regionFilteredData.filter((p) => p.normalizedStatus === "IN_TRANSIT").length
+        const total = regionFilteredData.length
+        const inTransitRate = total > 0 ? (inTransit / total) * 100 : 0
+        regionInTransitRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), inTransitRate, inTransitCount: inTransit, totalCount: total })
+      })
+    } else {
+      const inTransit = sourceData.data.filter((p) => p.normalizedStatus === "IN_TRANSIT").length
+      const total = sourceData.data.length
+      const inTransitRate = total > 0 ? (inTransit / total) * 100 : 0
+      regionInTransitRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), inTransitRate, inTransitCount: inTransit, totalCount: total })
+    }
+
+    // Region Cancelled rates
+    const regionCancelledRates: { region: string; cancelledRate: number; cancelledCount: number; totalCount: number }[] = []
+    if (currentRegion === "all") {
+      const cancelled = filteredData.filter((p) => p.normalizedStatus === "CANCELLED").length
+      const total = filteredData.length
+      const cancelledRate = total > 0 ? (cancelled / total) * 100 : 0
+      regionCancelledRates.push({ region: "All Regions", cancelledRate, cancelledCount: cancelled, totalCount: total })
+
+      const regionNames = ["luzon", "visayas", "mindanao"]
+      regionNames.forEach((region) => {
+        const regionFilteredData = filteredData.filter((parcel) => parcel.island === region)
+        const cancelled = regionFilteredData.filter((p) => p.normalizedStatus === "CANCELLED").length
+        const total = regionFilteredData.length
+        const cancelledRate = total > 0 ? (cancelled / total) * 100 : 0
+        regionCancelledRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), cancelledRate, cancelledCount: cancelled, totalCount: total })
+      })
+    } else {
+      const cancelled = sourceData.data.filter((p) => p.normalizedStatus === "CANCELLED").length
+      const total = sourceData.data.length
+      const cancelledRate = total > 0 ? (cancelled / total) * 100 : 0
+      regionCancelledRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), cancelledRate, cancelledCount: cancelled, totalCount: total })
+    }
+
+    // Region Detained rates
+    const regionDetainedRates: { region: string; detainedRate: number; detainedCount: number; totalCount: number }[] = []
+    if (currentRegion === "all") {
+      const detained = filteredData.filter((p) => p.normalizedStatus === "DETAINED").length
+      const total = filteredData.length
+      const detainedRate = total > 0 ? (detained / total) * 100 : 0
+      regionDetainedRates.push({ region: "All Regions", detainedRate, detainedCount: detained, totalCount: total })
+
+      const regionNames = ["luzon", "visayas", "mindanao"]
+      regionNames.forEach((region) => {
+        const regionFilteredData = filteredData.filter((parcel) => parcel.island === region)
+        const detained = regionFilteredData.filter((p) => p.normalizedStatus === "DETAINED").length
+        const total = regionFilteredData.length
+        const detainedRate = total > 0 ? (detained / total) * 100 : 0
+        regionDetainedRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), detainedRate, detainedCount: detained, totalCount: total })
+      })
+    } else {
+      const detained = sourceData.data.filter((p) => p.normalizedStatus === "DETAINED").length
+      const total = sourceData.data.length
+      const detainedRate = total > 0 ? (detained / total) * 100 : 0
+      regionDetainedRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), detainedRate, detainedCount: detained, totalCount: total })
+    }
+
+    // Region Problematic rates
+    const regionProblematicRates: { region: string; problematicRate: number; problematicCount: number; totalCount: number }[] = []
+    if (currentRegion === "all") {
+      const problematic = filteredData.filter((p) => p.normalizedStatus === "PROBLEMATIC").length
+      const total = filteredData.length
+      const problematicRate = total > 0 ? (problematic / total) * 100 : 0
+      regionProblematicRates.push({ region: "All Regions", problematicRate, problematicCount: problematic, totalCount: total })
+
+      const regionNames = ["luzon", "visayas", "mindanao"]
+      regionNames.forEach((region) => {
+        const regionFilteredData = filteredData.filter((parcel) => parcel.island === region)
+        const problematic = regionFilteredData.filter((p) => p.normalizedStatus === "PROBLEMATIC").length
+        const total = regionFilteredData.length
+        const problematicRate = total > 0 ? (problematic / total) * 100 : 0
+        regionProblematicRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), problematicRate, problematicCount: problematic, totalCount: total })
+      })
+    } else {
+      const problematic = sourceData.data.filter((p) => p.normalizedStatus === "PROBLEMATIC").length
+      const total = sourceData.data.length
+      const problematicRate = total > 0 ? (problematic / total) * 100 : 0
+      regionProblematicRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), problematicRate, problematicCount: problematic, totalCount: total })
+    }
+
     return {
       topProvinces,
       topReturnedProvinces,
@@ -271,6 +421,12 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       topReturnedRegions,
       regionSuccessRates,
       regionRTSRates,
+      regionOnDeliveryRates,
+      regionPickupRates,
+      regionInTransitRates,
+      regionCancelledRates,
+      regionDetainedRates,
+      regionProblematicRates,
     }
   }, [data, currentRegion, filter])
 
@@ -396,7 +552,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
               <CheckCircle className="w-8 h-8 text-green-500" />
               <div>
                 <h3 className="text-lg font-bold text-foreground">{item.region} Delivery Rate</h3>
-                <p className="text-sm text-muted-foreground">Percentage of successful deliveries out of resolved parcels</p>
+                <p className="text-sm text-muted-foreground">Percentage of successful deliveries out of total parcels</p>
               </div>
             </div>
             <p className="text-3xl font-bold text-green-500">{item.successRate.toFixed(1)}%</p>
@@ -418,6 +574,108 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
             </div>
             <p className="text-3xl font-bold text-red-500">{item.rtsRate.toFixed(1)}%</p>
             <p className="text-sm text-muted-foreground mt-2">{item.rtsCount.toLocaleString()} RTS out of {item.totalCount.toLocaleString()}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Region On Delivery Rates */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {regionOnDeliveryRates.map((item) => (
+          <div key={item.region} className="glass rounded-xl p-6 border border-yellow-500/50">
+            <div className="flex items-center gap-3 mb-4">
+              <Truck className="w-8 h-8 text-yellow-500" />
+              <div>
+                <h3 className="text-lg font-bold text-foreground">{item.region} On Delivery Rate</h3>
+                <p className="text-sm text-muted-foreground">Parcels currently on delivery</p>
+              </div>
+            </div>
+            <p className="text-3xl font-bold text-yellow-500">{item.onDeliveryRate.toFixed(1)}%</p>
+            <p className="text-sm text-muted-foreground mt-2">{item.onDeliveryCount.toLocaleString()} on delivery out of {item.totalCount.toLocaleString()}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Region Pickup Rates */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {regionPickupRates.map((item) => (
+          <div key={item.region} className="glass rounded-xl p-6 border border-blue-500/50">
+            <div className="flex items-center gap-3 mb-4">
+              <Package className="w-8 h-8 text-blue-500" />
+              <div>
+                <h3 className="text-lg font-bold text-foreground">{item.region} Pickup Rate</h3>
+                <p className="text-sm text-muted-foreground">Parcels ready for pickup</p>
+              </div>
+            </div>
+            <p className="text-3xl font-bold text-blue-500">{item.pickupRate.toFixed(1)}%</p>
+            <p className="text-sm text-muted-foreground mt-2">{item.pickupCount.toLocaleString()} pickup out of {item.totalCount.toLocaleString()}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Region In Transit Rates */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {regionInTransitRates.map((item) => (
+          <div key={item.region} className="glass rounded-xl p-6 border border-purple-500/50">
+            <div className="flex items-center gap-3 mb-4">
+              <MapPin className="w-8 h-8 text-purple-500" />
+              <div>
+                <h3 className="text-lg font-bold text-foreground">{item.region} In Transit Rate</h3>
+                <p className="text-sm text-muted-foreground">Parcels currently in transit</p>
+              </div>
+            </div>
+            <p className="text-3xl font-bold text-purple-500">{item.inTransitRate.toFixed(1)}%</p>
+            <p className="text-sm text-muted-foreground mt-2">{item.inTransitCount.toLocaleString()} in transit out of {item.totalCount.toLocaleString()}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Region Cancelled Rates */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {regionCancelledRates.map((item) => (
+          <div key={item.region} className="glass rounded-xl p-6 border border-gray-500/50">
+            <div className="flex items-center gap-3 mb-4">
+              <X className="w-8 h-8 text-gray-500" />
+              <div>
+                <h3 className="text-lg font-bold text-foreground">{item.region} Cancelled Rate</h3>
+                <p className="text-sm text-muted-foreground">Cancelled parcels percentage</p>
+              </div>
+            </div>
+            <p className="text-3xl font-bold text-gray-500">{item.cancelledRate.toFixed(1)}%</p>
+            <p className="text-sm text-muted-foreground mt-2">{item.cancelledCount.toLocaleString()} cancelled out of {item.totalCount.toLocaleString()}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Region Detained Rates */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {regionDetainedRates.map((item) => (
+          <div key={item.region} className="glass rounded-xl p-6 border border-orange-500/50">
+            <div className="flex items-center gap-3 mb-4">
+              <Lock className="w-8 h-8 text-orange-500" />
+              <div>
+                <h3 className="text-lg font-bold text-foreground">{item.region} Detained Rate</h3>
+                <p className="text-sm text-muted-foreground">Detained parcels percentage</p>
+              </div>
+            </div>
+            <p className="text-3xl font-bold text-orange-500">{item.detainedRate.toFixed(1)}%</p>
+            <p className="text-sm text-muted-foreground mt-2">{item.detainedCount.toLocaleString()} detained out of {item.totalCount.toLocaleString()}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Region Problematic Rates */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {regionProblematicRates.map((item) => (
+          <div key={item.region} className="glass rounded-xl p-6 border border-red-600/50">
+            <div className="flex items-center gap-3 mb-4">
+              <AlertTriangle className="w-8 h-8 text-red-600" />
+              <div>
+                <h3 className="text-lg font-bold text-foreground">{item.region} Problematic Rate</h3>
+                <p className="text-sm text-muted-foreground">Problematic parcels percentage</p>
+              </div>
+            </div>
+            <p className="text-3xl font-bold text-red-600">{item.problematicRate.toFixed(1)}%</p>
+            <p className="text-sm text-muted-foreground mt-2">{item.problematicCount.toLocaleString()} problematic out of {item.totalCount.toLocaleString()}</p>
           </div>
         ))}
       </div>
