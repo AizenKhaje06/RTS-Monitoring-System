@@ -5,6 +5,7 @@ import { CheckCircle, XCircle, Truck, Package, MapPin, X, Lock, AlertTriangle } 
 import type { ProcessedData, FilterState } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 interface PerformanceReportProps {
   data: ProcessedData | null
@@ -544,140 +545,147 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
         </div>
       </div>
 
-      {/* Region Success Rates */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {regionSuccessRates.map((item) => (
-          <div key={item.region} className="glass rounded-xl p-6 border border-green-500/50">
-            <div className="flex items-center gap-3 mb-4">
-              <CheckCircle className="w-8 h-8 text-green-500" />
-              <div>
-                <h3 className="text-lg font-bold text-foreground">{item.region} Delivery Rate</h3>
-                <p className="text-sm text-muted-foreground">Percentage of successful deliveries out of total parcels</p>
-              </div>
-            </div>
-            <p className="text-3xl font-bold text-green-500">{item.successRate.toFixed(1)}%</p>
-            <p className="text-sm text-muted-foreground mt-2">{item.deliveredCount.toLocaleString()} delivered out of {item.totalCount.toLocaleString()}</p>
-          </div>
-        ))}
-      </div>
+      {/* Performance Metrics Table */}
+      <div className="glass rounded-xl p-6 border border-border">
+        <h2 className="text-2xl font-bold text-foreground mb-6">Performance Metrics by Region</h2>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-left font-semibold">Region</TableHead>
+                <TableHead className="text-center font-semibold text-green-600">
+                  <div className="flex items-center justify-center gap-2">
+                    <CheckCircle className="w-4 h-4" />
+                    Delivery Rate
+                  </div>
+                </TableHead>
+                <TableHead className="text-center font-semibold text-red-600">
+                  <div className="flex items-center justify-center gap-2">
+                    <XCircle className="w-4 h-4" />
+                    RTS Rate
+                  </div>
+                </TableHead>
+                <TableHead className="text-center font-semibold text-yellow-600">
+                  <div className="flex items-center justify-center gap-2">
+                    <Truck className="w-4 h-4" />
+                    On Delivery
+                  </div>
+                </TableHead>
+                <TableHead className="text-center font-semibold text-blue-600">
+                  <div className="flex items-center justify-center gap-2">
+                    <Package className="w-4 h-4" />
+                    Pickup
+                  </div>
+                </TableHead>
+                <TableHead className="text-center font-semibold text-purple-600">
+                  <div className="flex items-center justify-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    In Transit
+                  </div>
+                </TableHead>
+                <TableHead className="text-center font-semibold text-gray-600">
+                  <div className="flex items-center justify-center gap-2">
+                    <X className="w-4 h-4" />
+                    Cancelled
+                  </div>
+                </TableHead>
+                <TableHead className="text-center font-semibold text-orange-600">
+                  <div className="flex items-center justify-center gap-2">
+                    <Lock className="w-4 h-4" />
+                    Detained
+                  </div>
+                </TableHead>
+                <TableHead className="text-center font-semibold text-red-700">
+                  <div className="flex items-center justify-center gap-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    Problematic
+                  </div>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {regionSuccessRates.map((successItem, index) => {
+                const rtsItem = regionRTSRates[index]
+                const onDeliveryItem = regionOnDeliveryRates[index]
+                const pickupItem = regionPickupRates[index]
+                const inTransitItem = regionInTransitRates[index]
+                const cancelledItem = regionCancelledRates[index]
+                const detainedItem = regionDetainedRates[index]
+                const problematicItem = regionProblematicRates[index]
 
-      {/* Region RTS Rates */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {regionRTSRates.map((item) => (
-          <div key={item.region} className="glass rounded-xl p-6 border border-red-500/50">
-            <div className="flex items-center gap-3 mb-4">
-              <XCircle className="w-8 h-8 text-red-500" />
-              <div>
-                <h3 className="text-lg font-bold text-foreground">{item.region} RTS Rate</h3>
-                <p className="text-sm text-muted-foreground">Return to sender percentage</p>
-              </div>
-            </div>
-            <p className="text-3xl font-bold text-red-500">{item.rtsRate.toFixed(1)}%</p>
-            <p className="text-sm text-muted-foreground mt-2">{item.rtsCount.toLocaleString()} RTS out of {item.totalCount.toLocaleString()}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Region On Delivery Rates */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {regionOnDeliveryRates.map((item) => (
-          <div key={item.region} className="glass rounded-xl p-6 border border-yellow-500/50">
-            <div className="flex items-center gap-3 mb-4">
-              <Truck className="w-8 h-8 text-yellow-500" />
-              <div>
-                <h3 className="text-lg font-bold text-foreground">{item.region} On Delivery Rate</h3>
-                <p className="text-sm text-muted-foreground">Parcels currently on delivery</p>
-              </div>
-            </div>
-            <p className="text-3xl font-bold text-yellow-500">{item.onDeliveryRate.toFixed(1)}%</p>
-            <p className="text-sm text-muted-foreground mt-2">{item.onDeliveryCount.toLocaleString()} on delivery out of {item.totalCount.toLocaleString()}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Region Pickup Rates */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {regionPickupRates.map((item) => (
-          <div key={item.region} className="glass rounded-xl p-6 border border-blue-500/50">
-            <div className="flex items-center gap-3 mb-4">
-              <Package className="w-8 h-8 text-blue-500" />
-              <div>
-                <h3 className="text-lg font-bold text-foreground">{item.region} Pickup Rate</h3>
-                <p className="text-sm text-muted-foreground">Parcels ready for pickup</p>
-              </div>
-            </div>
-            <p className="text-3xl font-bold text-blue-500">{item.pickupRate.toFixed(1)}%</p>
-            <p className="text-sm text-muted-foreground mt-2">{item.pickupCount.toLocaleString()} pickup out of {item.totalCount.toLocaleString()}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Region In Transit Rates */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {regionInTransitRates.map((item) => (
-          <div key={item.region} className="glass rounded-xl p-6 border border-purple-500/50">
-            <div className="flex items-center gap-3 mb-4">
-              <MapPin className="w-8 h-8 text-purple-500" />
-              <div>
-                <h3 className="text-lg font-bold text-foreground">{item.region} In Transit Rate</h3>
-                <p className="text-sm text-muted-foreground">Parcels currently in transit</p>
-              </div>
-            </div>
-            <p className="text-3xl font-bold text-purple-500">{item.inTransitRate.toFixed(1)}%</p>
-            <p className="text-sm text-muted-foreground mt-2">{item.inTransitCount.toLocaleString()} in transit out of {item.totalCount.toLocaleString()}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Region Cancelled Rates */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {regionCancelledRates.map((item) => (
-          <div key={item.region} className="glass rounded-xl p-6 border border-gray-500/50">
-            <div className="flex items-center gap-3 mb-4">
-              <X className="w-8 h-8 text-gray-500" />
-              <div>
-                <h3 className="text-lg font-bold text-foreground">{item.region} Cancelled Rate</h3>
-                <p className="text-sm text-muted-foreground">Cancelled parcels percentage</p>
-              </div>
-            </div>
-            <p className="text-3xl font-bold text-gray-500">{item.cancelledRate.toFixed(1)}%</p>
-            <p className="text-sm text-muted-foreground mt-2">{item.cancelledCount.toLocaleString()} cancelled out of {item.totalCount.toLocaleString()}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Region Detained Rates */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {regionDetainedRates.map((item) => (
-          <div key={item.region} className="glass rounded-xl p-6 border border-orange-500/50">
-            <div className="flex items-center gap-3 mb-4">
-              <Lock className="w-8 h-8 text-orange-500" />
-              <div>
-                <h3 className="text-lg font-bold text-foreground">{item.region} Detained Rate</h3>
-                <p className="text-sm text-muted-foreground">Detained parcels percentage</p>
-              </div>
-            </div>
-            <p className="text-3xl font-bold text-orange-500">{item.detainedRate.toFixed(1)}%</p>
-            <p className="text-sm text-muted-foreground mt-2">{item.detainedCount.toLocaleString()} detained out of {item.totalCount.toLocaleString()}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Region Problematic Rates */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {regionProblematicRates.map((item) => (
-          <div key={item.region} className="glass rounded-xl p-6 border border-red-600/50">
-            <div className="flex items-center gap-3 mb-4">
-              <AlertTriangle className="w-8 h-8 text-red-600" />
-              <div>
-                <h3 className="text-lg font-bold text-foreground">{item.region} Problematic Rate</h3>
-                <p className="text-sm text-muted-foreground">Problematic parcels percentage</p>
-              </div>
-            </div>
-            <p className="text-3xl font-bold text-red-600">{item.problematicRate.toFixed(1)}%</p>
-            <p className="text-sm text-muted-foreground mt-2">{item.problematicCount.toLocaleString()} problematic out of {item.totalCount.toLocaleString()}</p>
-          </div>
-        ))}
+                return (
+                  <TableRow key={successItem.region}>
+                    <TableCell className="font-medium">{successItem.region}</TableCell>
+                    <TableCell className="text-center">
+                      <div className="space-y-1">
+                        <div className="text-lg font-bold text-green-600">{successItem.successRate.toFixed(1)}%</div>
+                        <div className="text-xs text-muted-foreground">
+                          {successItem.deliveredCount.toLocaleString()} / {successItem.totalCount.toLocaleString()}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="space-y-1">
+                        <div className="text-lg font-bold text-red-600">{rtsItem?.rtsRate.toFixed(1)}%</div>
+                        <div className="text-xs text-muted-foreground">
+                          {rtsItem?.rtsCount.toLocaleString()} / {rtsItem?.totalCount.toLocaleString()}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="space-y-1">
+                        <div className="text-lg font-bold text-yellow-600">{onDeliveryItem?.onDeliveryRate.toFixed(1)}%</div>
+                        <div className="text-xs text-muted-foreground">
+                          {onDeliveryItem?.onDeliveryCount.toLocaleString()} / {onDeliveryItem?.totalCount.toLocaleString()}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="space-y-1">
+                        <div className="text-lg font-bold text-blue-600">{pickupItem?.pickupRate.toFixed(1)}%</div>
+                        <div className="text-xs text-muted-foreground">
+                          {pickupItem?.pickupCount.toLocaleString()} / {pickupItem?.totalCount.toLocaleString()}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="space-y-1">
+                        <div className="text-lg font-bold text-purple-600">{inTransitItem?.inTransitRate.toFixed(1)}%</div>
+                        <div className="text-xs text-muted-foreground">
+                          {inTransitItem?.inTransitCount.toLocaleString()} / {inTransitItem?.totalCount.toLocaleString()}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="space-y-1">
+                        <div className="text-lg font-bold text-gray-600">{cancelledItem?.cancelledRate.toFixed(1)}%</div>
+                        <div className="text-xs text-muted-foreground">
+                          {cancelledItem?.cancelledCount.toLocaleString()} / {cancelledItem?.totalCount.toLocaleString()}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="space-y-1">
+                        <div className="text-lg font-bold text-orange-600">{detainedItem?.detainedRate.toFixed(1)}%</div>
+                        <div className="text-xs text-muted-foreground">
+                          {detainedItem?.detainedCount.toLocaleString()} / {detainedItem?.totalCount.toLocaleString()}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="space-y-1">
+                        <div className="text-lg font-bold text-red-700">{problematicItem?.problematicRate.toFixed(1)}%</div>
+                        <div className="text-xs text-muted-foreground">
+                          {problematicItem?.problematicCount.toLocaleString()} / {problematicItem?.totalCount.toLocaleString()}
+                        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       {/* Delivered Results */}
