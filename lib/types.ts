@@ -1,5 +1,6 @@
 export interface ParcelData {
   date: string
+  month: string // Month extracted from sheet name (e.g., "JULY 2025")
   status: string
   normalizedStatus: string
   shipper: string

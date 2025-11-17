@@ -3,7 +3,7 @@ import type { sheets_v4, drive_v3 } from "googleapis"
 import type { ProcessedData, RegionData, StatusCount, ParcelData } from "./types"
 import { determineRegion as determineRegionFromLib } from "./philippine-regions"
 
-export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: string): Promise<unknown[][]> {
+export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: string): Promise<{ data: unknown[][], sheetNames: string[] }> {
   console.log("Environment variables check:")
   console.log("GOOGLE_SHEETS_CLIENT_EMAIL:", process.env.GOOGLE_SHEETS_CLIENT_EMAIL ? "Set" : "Not set")
   console.log("GOOGLE_SHEETS_PRIVATE_KEY:", process.env.GOOGLE_SHEETS_PRIVATE_KEY ? "Set" : "Not set")
@@ -37,6 +37,7 @@ export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: 
     const sheetsList = spreadsheetResponse.data.sheets || []
 
     let data: unknown[][] = []
+    let sheetNames: string[] = []
 
     if (sheetName) {
       // Fetch specific sheet
@@ -46,6 +47,7 @@ export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: 
         range,
       })
       data = response.data.values || []
+      sheetNames = [sheetName]
     } else {
       // Combine data from all sheets, excluding summary tabs and sheets starting with "Sheet"
       for (const sheet of sheetsList) {
@@ -85,16 +87,19 @@ export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: 
         }
 
         if (sheetData.length > 1) {
+          // Add sheet name to each row for month categorization
+          const sheetDataWithMonth = sheetData.slice(1).map(row => [...row, sheetTitle])
           if (data.length === 0) {
-            data = sheetData
+            data = sheetDataWithMonth
           } else {
-            data = data.concat(sheetData.slice(1))
+            data = data.concat(sheetDataWithMonth)
           }
+          sheetNames.push(sheetTitle)
         }
       }
     }
 
-    return data
+    return { data, sheetNames }
   } catch (error) {
     console.error("Error fetching Google Sheets data:", error)
     throw new Error("Failed to fetch data from Google Sheets")
@@ -102,7 +107,7 @@ export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: 
 }
 
 export async function processGoogleSheetsData(spreadsheetId?: string, sheetName?: string): Promise<ProcessedData> {
-  const excelData = await fetchGoogleSheetsData(spreadsheetId, sheetName)
+  const { data: excelData } = await fetchGoogleSheetsData(spreadsheetId, sheetName)
   return processGoogleSheetsDataInternal(excelData)
 }
 
@@ -240,6 +245,9 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
 
     const island = regionInfo.island
 
+    // Extract month from sheet name (last element in row)
+    const month = row[row.length - 1]?.toString() || ""
+
     // Enhanced logging for unknown locations - catch all cases where province is unknown
     if (regionInfo.province === "Unknown") {
       console.log("UNKNOWN PROVINCE PARCEL:", {
@@ -249,6 +257,7 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
         shipper,
         status,
         date,
+        month,
         determinedProvince: regionInfo.province,
         determinedRegion: regionInfo.region,
         determinedIsland: island,
@@ -260,6 +269,7 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
 
     const parcelData: ParcelData = {
       date,
+      month,
       status,
       normalizedStatus: status,
       shipper,
