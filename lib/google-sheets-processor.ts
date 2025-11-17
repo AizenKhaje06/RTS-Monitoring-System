@@ -46,7 +46,10 @@ export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: 
         spreadsheetId: targetSpreadsheetId,
         range,
       })
-      data = response.data.values || []
+      const sheetData = response.data.values || []
+      if (sheetData.length > 1) {
+        data = sheetData.slice(1).map(row => [...row, sheetName])
+      }
       sheetNames = [sheetName]
     } else {
       // Combine data from all sheets, excluding summary tabs and sheets starting with "Sheet"
@@ -223,19 +226,27 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
     }
   }
 
+  // Count all rows from all sheets, using sheet name as the authoritative month
   for (let rowIndex = 0; rowIndex < dataRows.length; rowIndex++) {
     const row = dataRows[rowIndex]
-    if (!row || row.length < Math.max(...Object.values(columnIndices)) + 1) continue
+    if (!row || row.length === 0) continue
 
-    const date = row[columnIndices.date]?.toString() || ""
-    const statusRaw = row[columnIndices.status]?.toString() || ""
-    const shipper = row[columnIndices.shipper]?.toString() || ""
-    const consigneeRegionRaw = row[columnIndices.consigneeregion]?.toString() || ""
+    // Extract month from sheet name (last element in row) - this is the authoritative month
+    const month = row[row.length - 1]?.toString() || ""
 
-    // Extract financial data
-    const codAmount = parseFloat(row[columnIndices.codamount]?.toString() || "0") || 0
-    const serviceCharge = parseFloat(row[columnIndices.servicecharge]?.toString() || "0") || 0
-    const totalCost = parseFloat(row[columnIndices.totalcost]?.toString() || "0") || 0
+    // Skip rows without month (shouldn't happen with our data structure)
+    if (!month.trim()) continue
+
+    // Extract data with safe access - use defaults for missing columns
+    const date = (columnIndices.date !== undefined && columnIndices.date < row.length) ? row[columnIndices.date]?.toString() || "" : ""
+    const statusRaw = (columnIndices.status !== undefined && columnIndices.status < row.length) ? row[columnIndices.status]?.toString() || "" : ""
+    const shipper = (columnIndices.shipper !== undefined && columnIndices.shipper < row.length) ? row[columnIndices.shipper]?.toString() || "" : ""
+    const consigneeRegionRaw = (columnIndices.consigneeregion !== undefined && columnIndices.consigneeregion < row.length) ? row[columnIndices.consigneeregion]?.toString() || "" : ""
+
+    // Extract financial data with safe access
+    const codAmount = (columnIndices.codamount !== undefined && columnIndices.codamount < row.length) ? parseFloat(row[columnIndices.codamount]?.toString() || "0") || 0 : 0
+    const serviceCharge = (columnIndices.servicecharge !== undefined && columnIndices.servicecharge < row.length) ? parseFloat(row[columnIndices.servicecharge]?.toString() || "0") || 0 : 0
+    const totalCost = (columnIndices.totalcost !== undefined && columnIndices.totalcost < row.length) ? parseFloat(row[columnIndices.totalcost]?.toString() || "0") || 0 : 0
     const rtsFee = totalCost * 0.20 // 20% of total cost
 
     const status = normalizeStatus(statusRaw)
@@ -244,9 +255,6 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
     const regionInfo = determineRegion(consigneeRegionRaw || "")
 
     const island = regionInfo.island
-
-    // Extract month from sheet name (last element in row)
-    const month = row[row.length - 1]?.toString() || ""
 
     // Enhanced logging for unknown locations - catch all cases where province is unknown
     if (regionInfo.province === "Unknown") {
@@ -283,7 +291,7 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
       rtsFee,
     }
 
-    // Add to all data
+    // Add to all data - count every row from any sheet
     processedData.all.data.push(parcelData)
     processedData.all.total++
 
