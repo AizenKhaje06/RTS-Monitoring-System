@@ -3,7 +3,7 @@ import type { sheets_v4, drive_v3 } from "googleapis"
 import type { ProcessedData, RegionData, StatusCount, ParcelData } from "./types"
 import { determineRegion as determineRegionFromLib } from "./philippine-regions"
 
-export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: string): Promise<{ data: unknown[][], sheetNames: string[] }> {
+export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: string): Promise<{ sheetsData: { data: unknown[][], name: string }[], sheetNames: string[] }> {
   console.log("Environment variables check:")
   console.log("GOOGLE_SHEETS_CLIENT_EMAIL:", process.env.GOOGLE_SHEETS_CLIENT_EMAIL ? "Set" : "Not set")
   console.log("GOOGLE_SHEETS_PRIVATE_KEY:", process.env.GOOGLE_SHEETS_PRIVATE_KEY ? "Set" : "Not set")
@@ -36,8 +36,8 @@ export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: 
 
     const sheetsList = spreadsheetResponse.data.sheets || []
 
-    let data: unknown[][] = []
-    let sheetNames: string[] = []
+    const sheetsData: { data: unknown[][], name: string }[] = []
+    const sheetNames: string[] = []
 
     if (sheetName) {
       // Fetch specific sheet
@@ -48,11 +48,11 @@ export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: 
       })
       const sheetData = response.data.values || []
       if (sheetData.length > 1) {
-        data = sheetData.slice(1).map(row => [...row, sheetName])
+        sheetsData.push({ data: sheetData.slice(1), name: sheetName })
+        sheetNames.push(sheetName)
       }
-      sheetNames = [sheetName]
     } else {
-      // Combine data from all sheets, excluding summary tabs and sheets starting with "Sheet"
+      // Process each sheet separately to maintain accurate per-sheet counts
       for (const sheet of sheetsList) {
         const sheetTitle = sheet.properties?.title || ""
 
@@ -90,19 +90,14 @@ export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: 
         }
 
         if (sheetData.length > 1) {
-          // Add sheet name to each row for month categorization
-          const sheetDataWithMonth = sheetData.slice(1).map(row => [...row, sheetTitle])
-          if (data.length === 0) {
-            data = sheetDataWithMonth
-          } else {
-            data = data.concat(sheetDataWithMonth)
-          }
+          // Store each sheet's data separately with its name
+          sheetsData.push({ data: sheetData.slice(1), name: sheetTitle })
           sheetNames.push(sheetTitle)
         }
       }
     }
 
-    return { data, sheetNames }
+    return { sheetsData, sheetNames }
   } catch (error) {
     console.error("Error fetching Google Sheets data:", error)
     throw new Error("Failed to fetch data from Google Sheets")
@@ -110,11 +105,11 @@ export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: 
 }
 
 export async function processGoogleSheetsData(spreadsheetId?: string, sheetName?: string): Promise<ProcessedData> {
-  const { data: excelData } = await fetchGoogleSheetsData(spreadsheetId, sheetName)
-  return processGoogleSheetsDataInternal(excelData)
+  const { sheetsData } = await fetchGoogleSheetsData(spreadsheetId, sheetName)
+  return processGoogleSheetsDataInternal(sheetsData)
 }
 
-function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData {
+function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: string }[]): ProcessedData {
   const STATUSES = ["DELIVERED", "ONDELIVERY", "PICKUP", "INTRANSIT", "CANCELLED", "DETAINED", "PROBLEMATIC", "RETURNED"]
 
   const normalizeStatus = (rawStatus: string): string => {
@@ -196,157 +191,163 @@ function processGoogleSheetsDataInternal(excelData: unknown[][]): ProcessedData 
     mindanao: initializeRegionData(),
   }
 
-  if (excelData.length === 0) return processedData
+  if (sheetsData.length === 0) return processedData
 
-  // Check if first row contains headers
-  const firstRow = excelData[0].map(cell => cell?.toString() || "")
-  const hasHeaders = firstRow.some(header =>
-    header.toUpperCase().includes("DATE") ||
-    header.toUpperCase().includes("STATUS") ||
-    header.toUpperCase().includes("SHIPPER")
-  )
+  // Process each sheet separately
+  for (const sheet of sheetsData) {
+    const sheetData = sheet.data
+    const sheetName = sheet.name
 
-  let dataRows = excelData
-  let columnIndices: { [key: string]: number } = {}
+    if (sheetData.length === 0) continue
 
-  if (hasHeaders) {
-    columnIndices = findColumnIndices(firstRow)
-    dataRows = excelData.slice(1)
-  } else {
-    // Fallback to positional mapping based on actual spreadsheet structure
-    // Column A: date, Column D: province, Column E: status, Column F: shipper name, Column G: shipper phone, Column H: cod amount, Column I: service charge, Column J: total cost
-    columnIndices = {
-      date: 0,        // Column A
-      consigneeregion: 3, // Column D (province/consignee region)
-      status: 4,      // Column E
-      shipper: 5,     // Column F (shipper name)
-      codamount: 7,   // Column H
-      servicecharge: 8, // Column I
-      totalcost: 9    // Column J
+    // Check if first row contains headers
+    const firstRow = sheetData[0].map((cell: unknown) => cell?.toString() || "")
+    const hasHeaders = firstRow.some((header: string) =>
+      header.toUpperCase().includes("DATE") ||
+      header.toUpperCase().includes("STATUS") ||
+      header.toUpperCase().includes("SHIPPER")
+    )
+
+    let dataRows = sheetData
+    let columnIndices: { [key: string]: number } = {}
+
+    if (hasHeaders) {
+      columnIndices = findColumnIndices(firstRow)
+      dataRows = sheetData.slice(1)
+    } else {
+      // Fallback to positional mapping based on actual spreadsheet structure
+      // Column A: date, Column D: province, Column E: status, Column F: shipper name, Column G: shipper phone, Column H: cod amount, Column I: service charge, Column J: total cost
+      columnIndices = {
+        date: 0,        // Column A
+        consigneeregion: 3, // Column D (province/consignee region)
+        status: 4,      // Column E
+        shipper: 5,     // Column F (shipper name)
+        codamount: 7,   // Column H
+        servicecharge: 8, // Column I
+        totalcost: 9    // Column J
+      }
     }
-  }
 
-  // Count all rows from all sheets, using sheet name as the authoritative month
-  for (let rowIndex = 0; rowIndex < dataRows.length; rowIndex++) {
-    const row = dataRows[rowIndex]
-    if (!row || row.length === 0) continue
+    // Process each row in this sheet, using sheet name as month
+    for (let rowIndex = 0; rowIndex < dataRows.length; rowIndex++) {
+      const row = dataRows[rowIndex]
+      if (!row || row.length === 0) continue
 
-    // Extract month from sheet name (last element in row) - this is the authoritative month
-    const month = row[row.length - 1]?.toString() || ""
+      // Use sheet name as the authoritative month for all rows in this sheet
+      const month = sheetName
 
-    // Skip rows without month (shouldn't happen with our data structure)
-    if (!month.trim()) continue
+      // Extract data with safe access - use defaults for missing columns
+      const date = (columnIndices.date !== undefined && columnIndices.date < row.length) ? row[columnIndices.date]?.toString() || "" : ""
+      const statusRaw = (columnIndices.status !== undefined && columnIndices.status < row.length) ? row[columnIndices.status]?.toString() || "" : ""
+      const shipper = (columnIndices.shipper !== undefined && columnIndices.shipper < row.length) ? row[columnIndices.shipper]?.toString() || "" : ""
+      const consigneeRegionRaw = (columnIndices.consigneeregion !== undefined && columnIndices.consigneeregion < row.length) ? row[columnIndices.consigneeregion]?.toString() || "" : ""
 
-    // Extract data with safe access - use defaults for missing columns
-    const date = (columnIndices.date !== undefined && columnIndices.date < row.length) ? row[columnIndices.date]?.toString() || "" : ""
-    const statusRaw = (columnIndices.status !== undefined && columnIndices.status < row.length) ? row[columnIndices.status]?.toString() || "" : ""
-    const shipper = (columnIndices.shipper !== undefined && columnIndices.shipper < row.length) ? row[columnIndices.shipper]?.toString() || "" : ""
-    const consigneeRegionRaw = (columnIndices.consigneeregion !== undefined && columnIndices.consigneeregion < row.length) ? row[columnIndices.consigneeregion]?.toString() || "" : ""
+      // Extract financial data with safe access
+      const codAmount = (columnIndices.codamount !== undefined && columnIndices.codamount < row.length) ? parseFloat(row[columnIndices.codamount]?.toString() || "0") || 0 : 0
+      const serviceCharge = (columnIndices.servicecharge !== undefined && columnIndices.servicecharge < row.length) ? parseFloat(row[columnIndices.servicecharge]?.toString() || "0") || 0 : 0
+      const totalCost = (columnIndices.totalcost !== undefined && columnIndices.totalcost < row.length) ? parseFloat(row[columnIndices.totalcost]?.toString() || "0") || 0 : 0
+      const rtsFee = totalCost * 0.20 // 20% of total cost
 
-    // Extract financial data with safe access
-    const codAmount = (columnIndices.codamount !== undefined && columnIndices.codamount < row.length) ? parseFloat(row[columnIndices.codamount]?.toString() || "0") || 0 : 0
-    const serviceCharge = (columnIndices.servicecharge !== undefined && columnIndices.servicecharge < row.length) ? parseFloat(row[columnIndices.servicecharge]?.toString() || "0") || 0 : 0
-    const totalCost = (columnIndices.totalcost !== undefined && columnIndices.totalcost < row.length) ? parseFloat(row[columnIndices.totalcost]?.toString() || "0") || 0 : 0
-    const rtsFee = totalCost * 0.20 // 20% of total cost
+      const status = normalizeStatus(statusRaw)
 
-    const status = normalizeStatus(statusRaw)
+      // Determine region from province data (consigneeRegionRaw contains province information)
+      const regionInfo = determineRegion(consigneeRegionRaw || "")
 
-    // Determine region from province data (consigneeRegionRaw contains province information)
-    const regionInfo = determineRegion(consigneeRegionRaw || "")
+      const island = regionInfo.island
 
-    const island = regionInfo.island
+      // Enhanced logging for unknown locations - catch all cases where province is unknown
+      if (regionInfo.province === "Unknown") {
+        console.log("UNKNOWN PROVINCE PARCEL:", {
+          sheetName,
+          rowNumber: rowIndex + 1, // 1-based row number in sheet
+          fullRowData: row,
+          rawInput: consigneeRegionRaw,
+          shipper,
+          status,
+          date,
+          month,
+          determinedProvince: regionInfo.province,
+          determinedRegion: regionInfo.region,
+          determinedIsland: island,
+          codAmount,
+          serviceCharge,
+          totalCost
+        })
+      }
 
-    // Enhanced logging for unknown locations - catch all cases where province is unknown
-    if (regionInfo.province === "Unknown") {
-      console.log("UNKNOWN PROVINCE PARCEL:", {
-        rowNumber: rowIndex + 1, // 1-based row number in data
-        fullRowData: row,
-        rawInput: consigneeRegionRaw,
-        shipper,
-        status,
+      const parcelData: ParcelData = {
         date,
         month,
-        determinedProvince: regionInfo.province,
-        determinedRegion: regionInfo.region,
-        determinedIsland: island,
+        status,
+        normalizedStatus: status,
+        shipper,
+        consigneeRegion: regionInfo.region,
+        province: regionInfo.province,
+        region: regionInfo.region,
+        island,
         codAmount,
         serviceCharge,
-        totalCost
-      })
-    }
-
-    const parcelData: ParcelData = {
-      date,
-      month,
-      status,
-      normalizedStatus: status,
-      shipper,
-      consigneeRegion: regionInfo.region,
-      province: regionInfo.province,
-      region: regionInfo.region,
-      island,
-      codAmount,
-      serviceCharge,
-      totalCost,
-      rtsFee,
-    }
-
-    // Add to all data - count every row from any sheet
-    processedData.all.data.push(parcelData)
-    processedData.all.total++
-
-    // Add to specific island if known
-    if (island !== "unknown") {
-      if (processedData[island as keyof typeof processedData]) {
-        processedData[island as keyof typeof processedData].data.push(parcelData)
-        processedData[island as keyof typeof processedData].total++
+        totalCost,
+        rtsFee,
       }
 
-      // Update province and region counts
-      if (regionInfo.province !== "Unknown") {
-        processedData.all.provinces[regionInfo.province] = (processedData.all.provinces[regionInfo.province] || 0) + 1
-        processedData.all.regions[regionInfo.region] = (processedData.all.regions[regionInfo.region] || 0) + 1
+      // Add to all data - count every row from any sheet
+      processedData.all.data.push(parcelData)
+      processedData.all.total++
 
+      // Add to specific island if known
+      if (island !== "unknown") {
         if (processedData[island as keyof typeof processedData]) {
-          processedData[island as keyof typeof processedData].provinces[regionInfo.province] =
-            (processedData[island as keyof typeof processedData].provinces[regionInfo.province] || 0) + 1
-          processedData[island as keyof typeof processedData].regions[regionInfo.region] = (processedData[island as keyof typeof processedData].regions[regionInfo.region] || 0) + 1
+          processedData[island as keyof typeof processedData].data.push(parcelData)
+          processedData[island as keyof typeof processedData].total++
+        }
+
+        // Update province and region counts
+        if (regionInfo.province !== "Unknown") {
+          processedData.all.provinces[regionInfo.province] = (processedData.all.provinces[regionInfo.province] || 0) + 1
+          processedData.all.regions[regionInfo.region] = (processedData.all.regions[regionInfo.region] || 0) + 1
+
+          if (processedData[island as keyof typeof processedData]) {
+            processedData[island as keyof typeof processedData].provinces[regionInfo.province] =
+              (processedData[island as keyof typeof processedData].provinces[regionInfo.province] || 0) + 1
+            processedData[island as keyof typeof processedData].regions[regionInfo.region] = (processedData[island as keyof typeof processedData].regions[regionInfo.region] || 0) + 1
+          }
         }
       }
-    }
 
-    // Update status counts
-    if (STATUSES.includes(status)) {
-      processedData.all.stats[status].count++
+      // Update status counts
+      if (STATUSES.includes(status)) {
+        processedData.all.stats[status].count++
 
-      if (island !== "unknown" && processedData[island as keyof typeof processedData]) {
-        processedData[island as keyof typeof processedData].stats[status].count++
-      }
-
-      // Count by province for locations only (no fallback to region)
-      if (regionInfo.province !== "Unknown") {
-        processedData.all.stats[status].locations[regionInfo.province] =
-          (processedData.all.stats[status].locations[regionInfo.province] || 0) + 1
         if (island !== "unknown" && processedData[island as keyof typeof processedData]) {
-          processedData[island as keyof typeof processedData].stats[status].locations[regionInfo.province] =
-            (processedData[island as keyof typeof processedData].stats[status].locations[regionInfo.province] || 0) + 1
+          processedData[island as keyof typeof processedData].stats[status].count++
+        }
+
+        // Count by province for locations only (no fallback to region)
+        if (regionInfo.province !== "Unknown") {
+          processedData.all.stats[status].locations[regionInfo.province] =
+            (processedData.all.stats[status].locations[regionInfo.province] || 0) + 1
+          if (island !== "unknown" && processedData[island as keyof typeof processedData]) {
+            processedData[island as keyof typeof processedData].stats[status].locations[regionInfo.province] =
+              (processedData[island as keyof typeof processedData].stats[status].locations[regionInfo.province] || 0) + 1
+          }
         }
       }
-    }
 
-    // Update winning and RTS shippers
-    if (status === "DELIVERED") {
-      processedData.all.winningShippers[shipper] = (processedData.all.winningShippers[shipper] || 0) + 1
-      if (island !== "unknown" && processedData[island as keyof typeof processedData]) {
-        processedData[island as keyof typeof processedData].winningShippers[shipper] = (processedData[island as keyof typeof processedData].winningShippers[shipper] || 0) + 1
+      // Update winning and RTS shippers
+      if (status === "DELIVERED") {
+        processedData.all.winningShippers[shipper] = (processedData.all.winningShippers[shipper] || 0) + 1
+        if (island !== "unknown" && processedData[island as keyof typeof processedData]) {
+          processedData[island as keyof typeof processedData].winningShippers[shipper] = (processedData[island as keyof typeof processedData].winningShippers[shipper] || 0) + 1
+        }
       }
-    }
 
-    const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
-    if (rtsStatuses.includes(status)) {
-      processedData.all.rtsShippers[shipper] = (processedData.all.rtsShippers[shipper] || 0) + 1
-      if (island !== "unknown" && processedData[island as keyof typeof processedData]) {
-        processedData[island as keyof typeof processedData].rtsShippers[shipper] = (processedData[island as keyof typeof processedData].rtsShippers[shipper] || 0) + 1
+      const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
+      if (rtsStatuses.includes(status)) {
+        processedData.all.rtsShippers[shipper] = (processedData.all.rtsShippers[shipper] || 0) + 1
+        if (island !== "unknown" && processedData[island as keyof typeof processedData]) {
+          processedData[island as keyof typeof processedData].rtsShippers[shipper] = (processedData[island as keyof typeof processedData].rtsShippers[shipper] || 0) + 1
+        }
       }
     }
   }
