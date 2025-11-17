@@ -238,7 +238,8 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
       // Determine region from province data (consigneeRegionRaw contains province information)
       const regionInfo = determineRegion(consigneeRegionRaw || "")
 
-      const island = regionInfo.island
+      // Assign unknown islands to Luzon as default to ensure all parcels are counted
+      const island = regionInfo.island === "unknown" ? "luzon" : regionInfo.island
 
       // Enhanced logging for unknown locations - catch all cases where province is unknown
       if (regionInfo.province === "Unknown") {
