@@ -47,8 +47,8 @@ export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: 
         range,
       })
       const sheetData = response.data.values || []
-      if (sheetData.length > 1) {
-        sheetsData.push({ data: sheetData.slice(1), name: sheetName })
+      if (sheetData.length > 0) {
+        sheetsData.push({ data: sheetData, name: sheetName })
         sheetNames.push(sheetName)
       }
     } else {
@@ -66,7 +66,6 @@ export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: 
           continue
         }
 
-        // Skip sheets that start with summary headers: DATE, CUSTOMER NAME, WAYBILL NO., STATUS
         const range = `${sheetTitle}!A:Z`
         const response = await sheets.spreadsheets.values.get({
           spreadsheetId: targetSpreadsheetId,
@@ -76,22 +75,8 @@ export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: 
         const sheetData = response.data.values || []
 
         if (sheetData.length > 0) {
-          const firstRow = sheetData[0] as unknown[]
-          if (firstRow.length >= 4) {
-            const header1 = (firstRow[0] || "").toString().toUpperCase().trim()
-            const header2 = (firstRow[1] || "").toString().toUpperCase().trim()
-            const header3 = (firstRow[2] || "").toString().toUpperCase().trim()
-            const header4 = (firstRow[3] || "").toString().toUpperCase().trim()
-
-            if (header1.includes("DATE") && header2.includes("CUSTOMER") && header3.includes("WAYBILL") && header4.includes("STATUS")) {
-              continue // Skip this sheet
-            }
-          }
-        }
-
-        if (sheetData.length > 1) {
           // Store each sheet's data separately with its name
-          sheetsData.push({ data: sheetData.slice(1), name: sheetTitle })
+          sheetsData.push({ data: sheetData, name: sheetTitle })
           sheetNames.push(sheetTitle)
         }
       }
