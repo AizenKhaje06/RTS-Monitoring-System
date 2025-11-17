@@ -49,36 +49,13 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
         return parcel.province.toLowerCase().includes(filter.value.toLowerCase())
       }
       if (filter.type === "month") {
-        if (!parcel.date) return false
-        const dateStr = parcel.date.toString().trim()
-        let parcelMonth = 0
-        try {
-          let d: Date
-          const numDate = parseFloat(dateStr)
-          if (!isNaN(numDate) && numDate.toString() === dateStr) {
-            // Excel serial date
-            d = new Date(Date.UTC(1899, 11, 30) + numDate * 86400000)
-          } else {
-            d = new Date(dateStr)
-          }
-          if (isNaN(d.getTime())) {
-            const parts = dateStr.split(" ")[0].split("-")
-            if (parts.length >= 2) {
-              parcelMonth = Number.parseInt(parts[1], 10)
-            } else {
-              // Try MM/DD/YYYY format
-              const slashParts = dateStr.split("/").map(p => p.trim())
-              if (slashParts.length >= 2) {
-                parcelMonth = Number.parseInt(slashParts[0], 10)
-              }
-            }
-          } else {
-            parcelMonth = d.getMonth() + 1
-          }
-          return parcelMonth === Number.parseInt(filter.value, 10)
-        } catch {
-          return false
-        }
+        // Use the month from sheet name instead of date parsing
+        if (!parcel.month) return false
+        const monthStr = parcel.month.toLowerCase().trim()
+        const filterMonth = Number.parseInt(filter.value, 10)
+        const monthNames = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]
+        const monthIndex = monthNames.findIndex(name => monthStr.includes(name))
+        return monthIndex + 1 === filterMonth
       }
       if (filter.type === "year") {
         if (!parcel.date) return false
