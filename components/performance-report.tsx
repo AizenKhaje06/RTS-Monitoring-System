@@ -18,6 +18,10 @@ interface PerformanceData {
   topReturnedProvinces: [string, number][]
   topRegions: [string, number][]
   topReturnedRegions: [string, number][]
+  topMunicipalities: [string, number][]
+  topReturnedMunicipalities: [string, number][]
+  topBarangays: [string, number][]
+  topReturnedBarangays: [string, number][]
   regionSuccessRates: { region: string; successRate: number; deliveredCount: number; totalCount: number }[]
   regionRTSRates: { region: string; rtsRate: number; rtsCount: number; totalCount: number }[]
   regionOnDeliveryRates: { region: string; onDeliveryRate: number; onDeliveryCount: number; totalCount: number }[]
@@ -59,6 +63,10 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
     topReturnedProvinces,
     topRegions,
     topReturnedRegions,
+    topMunicipalities,
+    topReturnedMunicipalities,
+    topBarangays,
+    topReturnedBarangays,
     regionSuccessRates,
     regionRTSRates,
     regionOnDeliveryRates,
@@ -74,6 +82,10 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
         topReturnedProvinces: [],
         topRegions: [],
         topReturnedRegions: [],
+        topMunicipalities: [],
+        topReturnedMunicipalities: [],
+        topBarangays: [],
+        topReturnedBarangays: [],
         regionSuccessRates: [],
         regionRTSRates: [],
         regionOnDeliveryRates: [],
@@ -254,6 +266,62 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10) as [string, number][]
 
+    // Top municipalities by delivery count
+    const municipalityCounts = sourceData.data
+      .filter((parcel) => parcel.normalizedStatus === "DELIVERED")
+      .reduce((acc, parcel) => {
+        const municipality = parcel.municipality || "Unknown"
+        acc[municipality] = (acc[municipality] || 0) + 1
+        return acc
+      }, {} as Record<string, number>)
+
+    const topMunicipalities = Object.entries(municipalityCounts)
+      .filter(([municipality]) => municipality !== "Unknown")
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10) as [string, number][]
+
+    // Top municipalities by RTS count
+    const rtsMunicipalityCounts = sourceData.data
+      .filter((p) => rtsStatuses.includes(p.normalizedStatus))
+      .reduce((acc, parcel) => {
+        const municipality = parcel.municipality || "Unknown"
+        acc[municipality] = (acc[municipality] || 0) + 1
+        return acc
+      }, {} as Record<string, number>)
+
+    const topReturnedMunicipalities = Object.entries(rtsMunicipalityCounts)
+      .filter(([municipality]) => municipality !== "Unknown")
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10) as [string, number][]
+
+    // Top barangays by delivery count
+    const barangayCounts = sourceData.data
+      .filter((parcel) => parcel.normalizedStatus === "DELIVERED")
+      .reduce((acc, parcel) => {
+        const barangay = parcel.barangay || "Unknown"
+        acc[barangay] = (acc[barangay] || 0) + 1
+        return acc
+      }, {} as Record<string, number>)
+
+    const topBarangays = Object.entries(barangayCounts)
+      .filter(([barangay]) => barangay !== "Unknown")
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10) as [string, number][]
+
+    // Top barangays by RTS count
+    const rtsBarangayCounts = sourceData.data
+      .filter((p) => rtsStatuses.includes(p.normalizedStatus))
+      .reduce((acc, parcel) => {
+        const barangay = parcel.barangay || "Unknown"
+        acc[barangay] = (acc[barangay] || 0) + 1
+        return acc
+      }, {} as Record<string, number>)
+
+    const topReturnedBarangays = Object.entries(rtsBarangayCounts)
+      .filter(([barangay]) => barangay !== "Unknown")
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10) as [string, number][]
+
     // Region On Delivery rates
     const regionOnDeliveryRates: { region: string; onDeliveryRate: number; onDeliveryCount: number; totalCount: number }[] = []
     if (currentRegion === "all") {
@@ -397,6 +465,10 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       topReturnedProvinces,
       topRegions,
       topReturnedRegions,
+      topMunicipalities,
+      topReturnedMunicipalities,
+      topBarangays,
+      topReturnedBarangays,
       regionSuccessRates,
       regionRTSRates,
       regionOnDeliveryRates,
@@ -699,6 +771,37 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
             </div>
           </div>
         </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+          <div className="glass rounded-xl p-6 border border-green-500/50">
+            <h3 className="text-xl font-bold text-foreground mb-4">Top Municipalities by Delivery Count</h3>
+            <div className="space-y-3">
+              {topMunicipalities.map(([municipality, count], index) => (
+                <div key={municipality} className="flex items-center justify-between p-3 rounded-lg bg-green-500/10">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold text-green-500 w-6">#{index + 1}</span>
+                    <span className="text-sm font-medium text-foreground">{municipality}</span>
+                  </div>
+                  <span className="text-sm font-bold text-green-500">{count.toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="glass rounded-xl p-6 border border-teal-500/50">
+            <h3 className="text-xl font-bold text-foreground mb-4">Top Barangays by Delivery Count</h3>
+            <div className="space-y-3">
+              {topBarangays.map(([barangay, count], index) => (
+                <div key={barangay} className="flex items-center justify-between p-3 rounded-lg bg-teal-500/10">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold text-teal-500 w-6">#{index + 1}</span>
+                    <span className="text-sm font-medium text-foreground">{barangay}</span>
+                  </div>
+                  <span className="text-sm font-bold text-teal-500">{count.toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Returned Results */}
@@ -730,6 +833,37 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
                     <span className="text-sm font-medium text-foreground">{region}</span>
                   </div>
                   <span className="text-sm font-bold text-orange-500">{count.toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+          <div className="glass rounded-xl p-6 border border-pink-500/50">
+            <h3 className="text-xl font-bold text-foreground mb-4">Top Municipalities by RTS Count</h3>
+            <div className="space-y-3">
+              {topReturnedMunicipalities.map(([municipality, count], index) => (
+                <div key={municipality} className="flex items-center justify-between p-3 rounded-lg bg-pink-500/10">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold text-pink-500 w-6">#{index + 1}</span>
+                    <span className="text-sm font-medium text-foreground">{municipality}</span>
+                  </div>
+                  <span className="text-sm font-bold text-pink-500">{count.toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="glass rounded-xl p-6 border border-rose-500/50">
+            <h3 className="text-xl font-bold text-foreground mb-4">Top Barangays by RTS Count</h3>
+            <div className="space-y-3">
+              {topReturnedBarangays.map(([barangay, count], index) => (
+                <div key={barangay} className="flex items-center justify-between p-3 rounded-lg bg-rose-500/10">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold text-rose-500 w-6">#{index + 1}</span>
+                    <span className="text-sm font-medium text-foreground">{barangay}</span>
+                  </div>
+                  <span className="text-sm font-bold text-rose-500">{count.toLocaleString()}</span>
                 </div>
               ))}
             </div>

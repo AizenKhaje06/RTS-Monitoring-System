@@ -6,6 +6,8 @@ export interface ParcelData {
   shipper: string
   consigneeRegion: string
   province: string
+  municipality: string
+  barangay: string
   region: string
   island: string
   codAmount?: number // Column R

@@ -147,7 +147,7 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
     const indices: { [key: string]: number } = {}
     const expectedHeaders = [
       'DATE', 'STATUS', 'STORE', 'SHIPPER', 'SHIPPER NAME', 'CONSIGNEE REGION',
-      'COD AMOUNT', 'SERVICE CHARGE', 'TOTAL COST'
+      'MUNICIPALITY', 'BARANGAY', 'COD AMOUNT', 'SERVICE CHARGE', 'TOTAL COST'
     ]
 
     headers.forEach((header, index) => {
@@ -226,6 +226,8 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
       const statusRaw = (columnIndices.status !== undefined && columnIndices.status < row.length) ? row[columnIndices.status]?.toString() || "" : ""
       const shipper = (columnIndices.shipper !== undefined && columnIndices.shipper < row.length) ? row[columnIndices.shipper]?.toString() || "" : ""
       const consigneeRegionRaw = (columnIndices.consigneeregion !== undefined && columnIndices.consigneeregion < row.length) ? row[columnIndices.consigneeregion]?.toString() || "" : ""
+      const municipality = (columnIndices.municipality !== undefined && columnIndices.municipality < row.length) ? row[columnIndices.municipality]?.toString() || "" : ""
+      const barangay = (columnIndices.barangay !== undefined && columnIndices.barangay < row.length) ? row[columnIndices.barangay]?.toString() || "" : ""
 
       // Extract financial data with safe access
       const codAmount = (columnIndices.codamount !== undefined && columnIndices.codamount < row.length) ? parseFloat(row[columnIndices.codamount]?.toString() || "0") || 0 : 0
@@ -269,6 +271,8 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
         shipper,
         consigneeRegion: regionInfo.region,
         province: regionInfo.province,
+        municipality,
+        barangay,
         region: regionInfo.region,
         island,
         codAmount,

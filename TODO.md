@@ -1,16 +1,8 @@
-# TODO: Fix Total Parcel Data Discrepancy and Add Status Rate Cards
-
-## Current Issue
-- Parcel Page (dashboard-view.tsx): Shows total parcels as 31,817 for All Regions
-- Performance Page (performance-report.tsx): Shows delivery rates based on resolved parcels (delivered + returned = 29,798), causing discrepancy
+# TODO: Add Municipality and Barangay to Performance Report
 
 ## Tasks
-- [ ] Modify performance-report.tsx to calculate delivery and RTS rates based on total parcels instead of resolved parcels
-- [ ] Add new rate cards for ONDELIVERY status (All Regions, Luzon, Visayas, Mindanao)
-- [ ] Add new rate cards for PICKUP status (All Regions, Luzon, Visayas, Mindanao)
-- [ ] Add new rate cards for INTRANSIT status (All Regions, Luzon, Visayas, Mindanao)
-- [ ] Add new rate cards for CANCELLED status (All Regions, Luzon, Visayas, Mindanao)
-- [ ] Add new rate cards for DETAINED status (All Regions, Luzon, Visayas, Mindanao)
-- [ ] Add new rate cards for PROBLEMATIC status (All Regions, Luzon, Visayas, Mindanao)
-- [ ] Verify that total parcel counts match between pages
-- [ ] Test filtering and region switching functionality
+- [ ] Update ParcelData interface in lib/types.ts to include municipality and barangay fields
+- [ ] Modify lib/google-sheets-processor.ts to extract municipality and barangay from Google Sheets data
+- [ ] Update components/performance-report.tsx to add new sections for top municipalities and barangays by delivery/RTS counts
+- [ ] Test the implementation with sample data to ensure correct processing and display
+- [ ] Verify compatibility with 2025 data sheets
