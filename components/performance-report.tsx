@@ -838,37 +838,6 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-          <div className="glass rounded-xl p-6 border border-pink-500/50">
-            <h3 className="text-xl font-bold text-foreground mb-4">Top Municipalities by RTS Count</h3>
-            <div className="space-y-3">
-              {topReturnedMunicipalities.map(([municipality, count], index) => (
-                <div key={municipality} className="flex items-center justify-between p-3 rounded-lg bg-pink-500/10">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-pink-500 w-6">#{index + 1}</span>
-                    <span className="text-sm font-medium text-foreground">{municipality}</span>
-                  </div>
-                  <span className="text-sm font-bold text-pink-500">{count.toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="glass rounded-xl p-6 border border-rose-500/50">
-            <h3 className="text-xl font-bold text-foreground mb-4">Top Barangays by RTS Count</h3>
-            <div className="space-y-3">
-              {topReturnedBarangays.map(([barangay, count], index) => (
-                <div key={barangay} className="flex items-center justify-between p-3 rounded-lg bg-rose-500/10">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-rose-500 w-6">#{index + 1}</span>
-                    <span className="text-sm font-medium text-foreground">{barangay}</span>
-                  </div>
-                  <span className="text-sm font-bold text-rose-500">{count.toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )
