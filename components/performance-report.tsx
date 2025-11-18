@@ -58,24 +58,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
     onFilterChange(newFilter)
   }
 
-  const {
-    topProvinces,
-    topReturnedProvinces,
-    topRegions,
-    topReturnedRegions,
-    topMunicipalities,
-    topReturnedMunicipalities,
-    topBarangays,
-    topReturnedBarangays,
-    regionSuccessRates,
-    regionRTSRates,
-    regionOnDeliveryRates,
-    regionPickupRates,
-    regionInTransitRates,
-    regionCancelledRates,
-    regionDetainedRates,
-    regionProblematicRates,
-  }: PerformanceData = useMemo(() => {
+  const performanceData = useMemo<PerformanceData>(() => {
     if (!data)
       return {
         topProvinces: [],
@@ -266,20 +249,6 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10) as [string, number][]
 
-    // Top municipalities by delivery count
-    const municipalityCounts = sourceData.data
-      .filter((parcel) => parcel.normalizedStatus === "DELIVERED")
-      .reduce((acc, parcel) => {
-        const municipality = parcel.municipality || "Unknown"
-        acc[municipality] = (acc[municipality] || 0) + 1
-        return acc
-      }, {} as Record<string, number>)
-
-    const topMunicipalities = Object.entries(municipalityCounts)
-      .filter(([municipality]) => municipality !== "Unknown")
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 10) as [string, number][]
-
     // Top municipalities by RTS count
     const rtsMunicipalityCounts = sourceData.data
       .filter((p) => rtsStatuses.includes(p.normalizedStatus))
@@ -294,20 +263,6 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10) as [string, number][]
 
-    // Top barangays by delivery count
-    const barangayCounts = sourceData.data
-      .filter((parcel) => parcel.normalizedStatus === "DELIVERED")
-      .reduce((acc, parcel) => {
-        const barangay = parcel.barangay || "Unknown"
-        acc[barangay] = (acc[barangay] || 0) + 1
-        return acc
-      }, {} as Record<string, number>)
-
-    const topBarangays = Object.entries(barangayCounts)
-      .filter(([barangay]) => barangay !== "Unknown")
-      .sort(([, a], [, b]) => b - a)
-      .slice(0, 10) as [string, number][]
-
     // Top barangays by RTS count
     const rtsBarangayCounts = sourceData.data
       .filter((p) => rtsStatuses.includes(p.normalizedStatus))
@@ -318,6 +273,34 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       }, {} as Record<string, number>)
 
     const topReturnedBarangays = Object.entries(rtsBarangayCounts)
+      .filter(([barangay]) => barangay !== "Unknown")
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10) as [string, number][]
+
+    // Top municipalities by delivery count
+    const municipalityCounts = sourceData.data
+      .filter((parcel) => parcel.normalizedStatus === "DELIVERED")
+      .reduce((acc, parcel) => {
+        const municipality = parcel.municipality || "Unknown"
+        acc[municipality] = (acc[municipality] || 0) + 1
+        return acc
+      }, {} as Record<string, number>)
+
+    const topMunicipalities = Object.entries(municipalityCounts)
+      .filter(([municipality]) => municipality !== "Unknown")
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10) as [string, number][]
+
+    // Top barangays by delivery count
+    const barangayCounts = sourceData.data
+      .filter((parcel) => parcel.normalizedStatus === "DELIVERED")
+      .reduce((acc, parcel) => {
+        const barangay = parcel.barangay || "Unknown"
+        acc[barangay] = (acc[barangay] || 0) + 1
+        return acc
+      }, {} as Record<string, number>)
+
+    const topBarangays = Object.entries(barangayCounts)
       .filter(([barangay]) => barangay !== "Unknown")
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10) as [string, number][]
@@ -479,6 +462,8 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       regionProblematicRates,
     }
   }, [data, currentRegion, filter])
+
+  const { topProvinces, topReturnedProvinces, topRegions, topReturnedRegions, topMunicipalities, topReturnedMunicipalities, topBarangays, topReturnedBarangays, regionSuccessRates, regionRTSRates, regionOnDeliveryRates, regionPickupRates, regionInTransitRates, regionCancelledRates, regionDetainedRates, regionProblematicRates } = performanceData
 
   if (!data) {
     return (
