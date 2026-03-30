@@ -1,11 +1,12 @@
 "use client"
 
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useState } from "react"
 import { CheckCircle, XCircle, Truck, Package, MapPin, X, Lock, AlertTriangle } from "lucide-react"
 import type { ProcessedData, FilterState } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { ExportMenu } from "@/components/export-menu"
 
 interface PerformanceReportProps {
   data: ProcessedData | null
@@ -36,11 +37,6 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
   const [currentRegion, setCurrentRegion] = useState<string>("all")
   const [filterType, setFilterType] = useState<"all" | "province" | "month" | "year">(filter.type)
   const [filterValue, setFilterValue] = useState(filter.value)
-
-  useEffect(() => {
-    setFilterType(filter.type)
-    setFilterValue(filter.value)
-  }, [filter])
 
   const handleApplyFilter = () => {
     if (filterType !== "all" && !filterValue) {
@@ -463,7 +459,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
     }
   }, [data, currentRegion, filter])
 
-  const { topProvinces, topReturnedProvinces, topRegions, topReturnedRegions, topMunicipalities, topReturnedMunicipalities, topBarangays, topReturnedBarangays, regionSuccessRates, regionRTSRates, regionOnDeliveryRates, regionPickupRates, regionInTransitRates, regionCancelledRates, regionDetainedRates, regionProblematicRates } = performanceData
+  const { topProvinces, topReturnedProvinces, topRegions, topReturnedRegions, topMunicipalities, topBarangays, regionSuccessRates, regionRTSRates, regionOnDeliveryRates, regionPickupRates, regionInTransitRates, regionCancelledRates, regionDetainedRates, regionProblematicRates } = performanceData
 
   if (!data) {
     return (
@@ -475,9 +471,12 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
 
   return (
     <div className="space-y-6 p-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Performance Report</h1>
-        <p className="text-muted-foreground">Comprehensive performance analysis and RTS impact</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Performance Report</h1>
+          <p className="text-muted-foreground">Comprehensive performance analysis and RTS impact</p>
+        </div>
+        <ExportMenu data={data} region={currentRegion as "all" | "luzon" | "visayas" | "mindanao"} />
       </div>
 
       {/* Region Tabs */}

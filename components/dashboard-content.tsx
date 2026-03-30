@@ -2,9 +2,12 @@
 
 import { useState } from "react"
 import { DashboardView } from "@/components/dashboard-view"
+import { PredictiveInsights } from "@/components/predictive-insights"
+import { ExportMenu } from "@/components/export-menu"
 import type { ProcessedData, FilterState } from "@/lib/types"
 import { BarChart3, TrendingUp, Package, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface DashboardContentProps {
   data: ProcessedData | null
@@ -29,13 +32,32 @@ export function DashboardContent({ data, onUploadClick, filter, onFilterChange }
       </div>
 
       {data && (
-        <DashboardView
-          data={data}
-          currentRegion={currentRegion}
-          onRegionChange={setCurrentRegion}
-          filter={filter}
-          onFilterChange={onFilterChange}
-        />
+        <div className="space-y-6">
+          <div className="flex justify-end">
+            <ExportMenu data={data} region={currentRegion} />
+          </div>
+
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="insights">Insights</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview" className="space-y-6">
+              <DashboardView
+                data={data}
+                currentRegion={currentRegion}
+                onRegionChange={setCurrentRegion}
+                filter={filter}
+                onFilterChange={onFilterChange}
+              />
+            </TabsContent>
+
+            <TabsContent value="insights" className="space-y-6">
+              <PredictiveInsights data={data} />
+            </TabsContent>
+          </Tabs>
+        </div>
       )}
 
       {!data && (
@@ -66,7 +88,6 @@ export function DashboardContent({ data, onUploadClick, filter, onFilterChange }
                 onClick={onUploadClick}
                 size="lg"
                 className="gradient-orange text-primary-foreground hover:opacity-90 shadow-lg shadow-primary/20 px-8"
-                disabled={false}
               >
                 <Upload className="w-5 h-5 mr-2" />
                 Enter Dashboard

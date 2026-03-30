@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { determineRegion } from "@/lib/philippine-regions"
+import { ExportMenu } from "@/components/export-menu"
 
 interface AnalyticalReportProps {
   data: ProcessedData | null
@@ -380,9 +381,12 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
 
   return (
     <div className="p-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">PRODUCT PERFORMANCE REPORT</h1>
-        <p className="text-muted-foreground">Executive insights for strategic decision-making and operational excellence</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">PRODUCT PERFORMANCE REPORT</h1>
+          <p className="text-muted-foreground">Executive insights for strategic decision-making and operational excellence</p>
+        </div>
+        <ExportMenu data={data} region={currentRegion} />
       </div>
 
       {/* Region Tabs */}

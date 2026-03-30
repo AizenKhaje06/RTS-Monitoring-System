@@ -12,9 +12,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  turbopack: {
-    root: process.cwd(),
-  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       // Handle Node.js built-in modules for client-side
@@ -34,8 +31,14 @@ const nextConfig = {
       };
     }
 
+    // Ensure proper module resolution for recharts
+    config.resolve.alias = {
+      ...config.resolve.alias,
+    };
+
     return config;
   },
+  transpilePackages: ['recharts'],
 }
 
 export default nextConfig

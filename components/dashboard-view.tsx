@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { StatusCard } from "@/components/status-card"
+import { StatusCardSimple } from "@/components/status-card-simple"
 import { TotalParcelCard } from "@/components/total-parcel-card"
 import type { ProcessedData, FilterState } from "@/lib/types"
 
@@ -256,7 +256,7 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
       {/* Status Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {STATUSES.map((status) => (
-          <StatusCard
+          <StatusCardSimple
             key={status}
             status={status}
             count={displayData.stats[status].count}
