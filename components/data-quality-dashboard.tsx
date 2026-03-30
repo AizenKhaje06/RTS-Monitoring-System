@@ -1,8 +1,6 @@
 "use client"
 
-import { CheckCircle, XCircle, AlertCircle } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
 
 interface DataQualityDashboardProps {
   data: unknown | null
