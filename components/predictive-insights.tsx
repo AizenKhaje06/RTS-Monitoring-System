@@ -4,8 +4,16 @@ import { AlertTriangle, Lightbulb, Info } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
+interface PredictiveInsight {
+  type: "warning" | "opportunity" | "info"
+  title: string
+  description: string
+  impact: "high" | "medium" | "low"
+  recommendation: string
+}
+
 interface PredictiveInsightsProps {
-  data: { analytics?: { insights: unknown[] } } | null
+  data: { analytics?: { insights: PredictiveInsight[] } } | null
 }
 
 export function PredictiveInsights({ data }: PredictiveInsightsProps) {
@@ -43,7 +51,7 @@ export function PredictiveInsights({ data }: PredictiveInsightsProps) {
         <CardTitle>Predictive Insights & Recommendations</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {insights.map((insight: any, index: number) => (
+        {insights.map((insight, index) => (
           <div
             key={index}
             className="p-4 rounded-lg border border-border bg-secondary/20"
