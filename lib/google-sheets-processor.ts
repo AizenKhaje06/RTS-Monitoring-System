@@ -61,8 +61,8 @@ export async function fetchGoogleSheetsData(spreadsheetId?: string, sheetName?: 
           continue
         }
 
-        // Skip sheets that do not contain "2025" in their title
-        if (!sheetTitle.includes("2025")) {
+        // Skip sheets that do not contain "2025" or "2026" in their title
+        if (!sheetTitle.includes("2025") && !sheetTitle.includes("2026")) {
           continue
         }
 
@@ -146,7 +146,9 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
   const findColumnIndices = (headers: string[]): { [key: string]: number } => {
     const indices: { [key: string]: number } = {}
     const expectedHeaders = [
-      'DATE', 'STATUS', 'STORE', 'SHIPPER', 'SHIPPER NAME', 'CONSIGNEE REGION',
+      'DATE', 'NAME', 'ADDRESS', 'CONTACT', 'AMOUNT', 'ITEMS', 'TRACKING', 'STATUS', 'REASON',
+      // Legacy headers for backward compatibility
+      'STORE', 'SHIPPER', 'SHIPPER NAME', 'CONSIGNEE REGION',
       'MUNICIPALITY', 'BARANGAY', 'COD AMOUNT', 'SERVICE CHARGE', 'TOTAL COST'
     ]
 
@@ -154,16 +156,34 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
       const normalizedHeader = header?.toString().toUpperCase().trim()
       expectedHeaders.forEach(expected => {
         if (normalizedHeader?.includes(expected) || expected.includes(normalizedHeader)) {
-          indices[expected.toLowerCase().replace(' ', '')] = index
+          indices[expected.toLowerCase().replace(/\s+/g, '')] = index
         }
       })
     })
 
-    // Prioritize SHIPPER NAME, then STORE, then SHIPPER
-    if (indices['shippername'] !== undefined) {
+    // Map new column names to old field names for compatibility
+    // NAME → shipper
+    if (indices['name'] !== undefined) {
+      indices['shipper'] = indices['name']
+    } else if (indices['shippername'] !== undefined) {
       indices['shipper'] = indices['shippername']
     } else if (indices['store'] !== undefined) {
       indices['shipper'] = indices['store']
+    }
+
+    // ADDRESS → consigneeregion (for province/region extraction)
+    if (indices['address'] !== undefined) {
+      indices['consigneeregion'] = indices['address']
+    }
+
+    // AMOUNT → codamount
+    if (indices['amount'] !== undefined) {
+      indices['codamount'] = indices['amount']
+    }
+
+    // CONTACT → contactnumber (optional, not used in current data model)
+    if (indices['contact'] !== undefined || indices['contactnumber'] !== undefined) {
+      indices['contactnumber'] = indices['contact'] || indices['contactnumber']
     }
 
     return indices
@@ -183,13 +203,20 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
     const sheetData = sheet.data
     const sheetName = sheet.name
 
-    if (sheetData.length === 0) continue
+    console.log(`\n=== Processing Sheet: "${sheetName}" ===`)
+
+    if (sheetData.length === 0) {
+      console.log(`  ⚠️ Sheet is empty, skipping...`)
+      continue
+    }
 
     // Check if first row contains headers
     const firstRow = sheetData[0].map((cell: unknown) => cell?.toString() || "")
     const hasHeaders = firstRow.some((header: string) =>
       header.toUpperCase().includes("DATE") ||
       header.toUpperCase().includes("STATUS") ||
+      header.toUpperCase().includes("NAME") ||
+      header.toUpperCase().includes("ADDRESS") ||
       header.toUpperCase().includes("SHIPPER")
     )
 
@@ -200,26 +227,48 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
       columnIndices = findColumnIndices(firstRow)
       dataRows = sheetData.slice(1)
     } else {
-      // Fallback to positional mapping based on actual spreadsheet structure
-      // Column A: date, Column D: province, Column E: status, Column F: shipper name, Column G: shipper phone, Column H: cod amount, Column I: service charge, Column J: total cost
+      // Fallback to positional mapping for new Google Sheets structure
+      // A - DATE, B - NAME, C - ADDRESS, D - CONTACT NUMBER, E - AMOUNT, F - ITEMS, G - TRACKING, H - STATUS, J - REASON
       columnIndices = {
-        date: 0,        // Column A
-        consigneeregion: 3, // Column D (province/consignee region)
-        status: 4,      // Column E
-        shipper: 5,     // Column F (shipper name)
-        codamount: 7,   // Column H
-        servicecharge: 8, // Column I
-        totalcost: 9    // Column J
+        date: 0,            // Column A - DATE
+        shipper: 1,         // Column B - NAME (customer/shipper name)
+        consigneeregion: 2, // Column C - ADDRESS (for province/region extraction)
+        contactnumber: 3,   // Column D - CONTACT NUMBER
+        codamount: 4,       // Column E - AMOUNT
+        items: 5,           // Column F - ITEMS
+        tracking: 6,        // Column G - TRACKING
+        status: 7,          // Column H - STATUS
+        reason: 9           // Column J - REASON (if returned)
       }
     }
 
     // Process each row in this sheet, using sheet name as month
+    let processedRowCount = 0
+    let skippedRowCount = 0
+    let statusCounts: { [status: string]: number } = {}
+    let sampleDates: string[] = []
+    let sampleStatuses: { raw: string, normalized: string }[] = []
+    
     for (let rowIndex = 0; rowIndex < dataRows.length; rowIndex++) {
       const row = dataRows[rowIndex]
-      if (!row || row.length === 0) continue
+      
+      // Skip completely empty rows
+      if (!row || row.length === 0) {
+        skippedRowCount++
+        continue
+      }
+      
+      // Skip rows where all cells are empty
+      const hasData = row.some((cell: unknown) => cell !== null && cell !== undefined && cell.toString().trim() !== "")
+      if (!hasData) {
+        skippedRowCount++
+        continue
+      }
 
       // Use sheet name as the authoritative month for all rows in this sheet
       const month = sheetName
+      
+      processedRowCount++
 
       // Extract data with safe access - use defaults for missing columns
       const date = (columnIndices.date !== undefined && columnIndices.date < row.length) ? row[columnIndices.date]?.toString() || "" : ""
@@ -236,6 +285,19 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
       const rtsFee = totalCost * 0.20 // 20% of total cost
 
       const status = normalizeStatus(statusRaw)
+      
+      // Track status counts per sheet
+      statusCounts[status] = (statusCounts[status] || 0) + 1
+      
+      // Collect sample dates (first 5 rows)
+      if (sampleDates.length < 5 && date) {
+        sampleDates.push(date)
+      }
+      
+      // Collect sample statuses (first 5 rows)
+      if (sampleStatuses.length < 5 && statusRaw) {
+        sampleStatuses.push({ raw: statusRaw, normalized: status })
+      }
 
       // Determine region from province data (consigneeRegionRaw contains province information)
       const regionInfo = determineRegion(consigneeRegionRaw || "")
@@ -340,7 +402,35 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
         }
       }
     }
+    
+    // Log sheet processing summary
+    console.log(`\nSheet "${sheetName}" Summary:`)
+    console.log(`  - Total rows in sheet: ${dataRows.length}`)
+    console.log(`  - Processed rows: ${processedRowCount}`)
+    console.log(`  - Skipped rows: ${skippedRowCount}`)
+    console.log(`  - Sample dates (first 5):`)
+    sampleDates.forEach((date, idx) => {
+      console.log(`    ${idx + 1}. "${date}"`)
+    })
+    console.log(`  - Sample statuses (first 5):`)
+    sampleStatuses.forEach((s, idx) => {
+      console.log(`    ${idx + 1}. Raw: "${s.raw}" → Normalized: "${s.normalized}"`)
+    })
+    console.log(`  - Status breakdown:`)
+    Object.entries(statusCounts).sort((a, b) => b[1] - a[1]).forEach(([status, count]) => {
+      console.log(`    • ${status}: ${count}`)
+    })
   }
+
+  console.log(`\n=== FINAL PROCESSING SUMMARY ===`)
+  console.log(`Total parcels processed: ${processedData.all.total}`)
+  console.log(`  - Luzon: ${processedData.luzon.total}`)
+  console.log(`  - Visayas: ${processedData.visayas.total}`)
+  console.log(`  - Mindanao: ${processedData.mindanao.total}`)
+  console.log(`\nStatus Breakdown (All Regions):`)
+  Object.entries(processedData.all.stats).forEach(([status, data]) => {
+    console.log(`  • ${status}: ${data.count}`)
+  })
 
   return processedData
 }

@@ -35,6 +35,7 @@ export const philippineRegions = {
         "Urdaneta City",
         "Candon City",
         "Vigan City",
+        "Bauang",
       ],
       "Region II": [
         "Batanes",
@@ -62,6 +63,7 @@ export const philippineRegions = {
         "Malolos City",
         "Meycauayan City",
         "San Fernando City",
+        "Guimba",
       ],
       "Region IV-A": [
         "Batangas",
@@ -192,6 +194,7 @@ export const philippineRegions = {
         "Oroquieta City",
         "Ozamiz City",
         "Tangub City",
+        "Baloi",
       ],
       "Region XI": [
         "Davao de Oro",
@@ -205,6 +208,8 @@ export const philippineRegions = {
         "Tagum City",
         "Digos City",
         "Mati City",
+        "Mabini",
+        "Kiblawan",
       ],
       "Region XII": [
         "Cotabato",
@@ -233,12 +238,14 @@ export const philippineRegions = {
       BARMM: [
         "Basilan",
         "Lanao del Sur",
-        "Maguindanao",
+        "Maguindanao del Norte",
+        "Maguindanao del Sur",
         "Sulu",
         "Tawi-Tawi",
         "Cotabato City",
         "Lamitan City",
         "Marawi City",
+        "Balindong",
       ],
     },
   },
@@ -254,8 +261,41 @@ export interface RegionInfo {
 
 export function determineRegion(consigneeRegion: string): RegionInfo {
   const input = (consigneeRegion || "").toUpperCase().trim()
+  
+  // ENHANCED: Try comma-based parsing first (more accurate for "Municipality, Province" format)
+  const commaParts = input.split(',').map(p => p.trim()).filter(p => p)
+  
+  // If we have comma-separated parts, try to match from the end
+  if (commaParts.length >= 2) {
+    // Last part after comma is usually the province/region
+    const lastPart = commaParts[commaParts.length - 1]
+    
+    // Try to match the last part first (most likely to be province/region)
+    const lastPartMatch = matchRegionText(lastPart)
+    if (lastPartMatch.province !== "Unknown") {
+      return lastPartMatch
+    }
+    
+    // If last part didn't match, try second to last (might be municipality that's in our database)
+    if (commaParts.length >= 2) {
+      const secondLastPart = commaParts[commaParts.length - 2]
+      const secondLastMatch = matchRegionText(secondLastPart)
+      if (secondLastMatch.province !== "Unknown") {
+        return secondLastMatch
+      }
+    }
+  }
+  
+  // FALLBACK: Use original word-based logic (for addresses without commas)
   const words = input.split(/\s+/).filter(w => w)
   const regionText = words.slice(-3).join(' ')
+  
+  return matchRegionText(regionText)
+}
+
+// Helper function to match region text against database
+function matchRegionText(regionText: string): RegionInfo {
+  const input = regionText.toUpperCase().trim()
 
   // Enhanced matching for region names first, including common abbreviations and variations
   const regionMappings: Record<string, { island: Island; region: string; province?: string }> = {
@@ -315,6 +355,11 @@ export function determineRegion(consigneeRegion: string): RegionInfo {
     "BARMM": { island: "mindanao", region: "BARMM" },
     "BANG SAMORO": { island: "mindanao", region: "BARMM" },
     "ARMM": { island: "mindanao", region: "BARMM" },
+    "MAGUINDANAO DEL NORTE": { island: "mindanao", region: "BARMM", province: "Maguindanao del Norte" },
+    "MAGUINDANAO DEL SUR": { island: "mindanao", region: "BARMM", province: "Maguindanao del Sur" },
+    "MAGUINDANAO NORTE": { island: "mindanao", region: "BARMM", province: "Maguindanao del Norte" },
+    "MAGUINDANAO SUR": { island: "mindanao", region: "BARMM", province: "Maguindanao del Sur" },
+    "MAGUINDANAO": { island: "mindanao", region: "BARMM", province: "Maguindanao" },
   }
 
   // Check for region name matches

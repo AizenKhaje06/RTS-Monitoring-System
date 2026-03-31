@@ -31,11 +31,36 @@ export interface RegionData {
   rtsShippers: { [shipper: string]: number }
 }
 
+export interface PredictiveInsight {
+  type: "warning" | "opportunity" | "info"
+  title: string
+  description: string
+  impact: "high" | "medium" | "low"
+  recommendation: string
+}
+
+export interface TrendDataPoint {
+  date: string
+  delivered: number
+  returned: number
+  cancelled: number
+  problematic: number
+}
+
 export interface ProcessedData {
   all: RegionData
   luzon: RegionData
   visayas: RegionData
   mindanao: RegionData
+  analytics?: {
+    trends: {
+      all: TrendDataPoint[]
+      luzon: TrendDataPoint[]
+      visayas: TrendDataPoint[]
+      mindanao: TrendDataPoint[]
+    }
+    insights: PredictiveInsight[]
+  }
 }
 
 export interface FilterState {

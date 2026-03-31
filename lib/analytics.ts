@@ -172,32 +172,46 @@ export function generatePredictiveInsights(data: ProcessedData): PredictiveInsig
     })
   }
 
-  // Financial impact insight
-  const totalRTSFee = allData.data
-    .filter(p => p.normalizedStatus === "RETURNED")
-    .reduce((sum, p) => sum + (p.rtsFee || 0), 0)
-
-  if (totalRTSFee > 50000) {
-    insights.push({
-      type: "warning",
-      title: "Significant RTS Cost Impact",
-      description: `RTS fees total ₱${totalRTSFee.toLocaleString()}, representing a significant cost burden.`,
-      impact: "high",
-      recommendation: "Reducing RTS rate by just 5% could save approximately ₱" + (totalRTSFee * 0.05).toLocaleString() + ". Prioritize RTS reduction initiatives.",
-    })
-  }
-
-  // Data quality insight
+  // Data quality insights
   const unknownProvinces = allData.data.filter(p => p.province === "Unknown").length
+  const missingAddresses = allData.data.filter(p => !p.consigneeRegion || p.consigneeRegion.trim() === "").length
   const unknownPercentage = total > 0 ? (unknownProvinces / total) * 100 : 0
+  const missingPercentage = total > 0 ? (missingAddresses / total) * 100 : 0
+  const totalDataQualityIssues = unknownProvinces + missingAddresses
+  const totalDataQualityPercentage = total > 0 ? (totalDataQualityIssues / total) * 100 : 0
 
-  if (unknownPercentage > 5) {
+  // Data quality warning - Unknown provinces
+  if (unknownProvinces > 0) {
+    const impact = unknownPercentage > 10 ? "high" : unknownPercentage > 5 ? "medium" : "low"
     insights.push({
       type: "info",
       title: "Data Quality Issue Detected",
-      description: `${unknownPercentage.toFixed(1)}% of parcels have unknown province information.`,
-      impact: "medium",
-      recommendation: "Improve data collection processes to ensure complete geographic information. This will enable better regional analysis.",
+      description: `${unknownProvinces.toLocaleString()} parcels (${unknownPercentage.toFixed(1)}%) have unknown province information.`,
+      impact,
+      recommendation: "Improve data collection processes to ensure complete geographic information. This will enable better regional analysis and accurate reporting.",
+    })
+  }
+
+  // Data quality warning - Missing addresses
+  if (missingAddresses > 0) {
+    const impact = missingPercentage > 10 ? "high" : missingPercentage > 5 ? "medium" : "low"
+    insights.push({
+      type: "warning",
+      title: "Missing Address Data Detected",
+      description: `${missingAddresses.toLocaleString()} parcels (${missingPercentage.toFixed(1)}%) have no address information.`,
+      impact,
+      recommendation: "Ensure all parcel entries include complete address data. Missing addresses prevent accurate geographic analysis and delivery optimization.",
+    })
+  }
+
+  // Combined data quality summary (if both issues exist)
+  if (totalDataQualityIssues > 0 && unknownProvinces > 0 && missingAddresses > 0) {
+    insights.push({
+      type: "info",
+      title: "Data Quality Summary",
+      description: `Total of ${totalDataQualityIssues.toLocaleString()} parcels (${totalDataQualityPercentage.toFixed(1)}%) have data quality issues: ${unknownProvinces} with unknown provinces, ${missingAddresses} with missing addresses.`,
+      impact: totalDataQualityPercentage > 10 ? "high" : "medium",
+      recommendation: "Implement data validation at entry point. Consider automated address verification and standardization tools to improve data quality.",
     })
   }
 

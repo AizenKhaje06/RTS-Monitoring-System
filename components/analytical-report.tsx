@@ -363,11 +363,21 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
 
   if (!data) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-foreground mb-2">No Data Available</h2>
-          <p className="text-muted-foreground">Upload data to view corporate performance insights</p>
+      <div className="flex items-center justify-center min-h-[600px] p-8">
+        <div className="glass-strong rounded-2xl p-12 text-center max-w-2xl border border-border/50">
+          <div className="relative inline-flex items-center justify-center w-24 h-24 mb-6">
+            <div className="absolute inset-0 gradient-orange rounded-2xl opacity-20 blur-xl" />
+            <div className="relative glass-strong rounded-2xl w-full h-full flex items-center justify-center border border-primary/30">
+              <Package className="w-12 h-12 text-primary" />
+            </div>
+          </div>
+          <h3 className="text-2xl font-bold text-foreground mb-3">No Store Data</h3>
+          <p className="text-muted-foreground text-lg mb-6">
+            Load data from the dashboard to view store performance and corporate insights
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Navigate to the Parcel dashboard and click "Enter Dashboard" to load your data
+          </p>
         </div>
       </div>
     )

@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { CheckCircle, XCircle, Truck, Package, MapPin, X, Lock, AlertTriangle } from "lucide-react"
+import { CheckCircle, XCircle, Truck, Package, MapPin, X, Lock, AlertTriangle, TrendingUp } from "lucide-react"
 import type { ProcessedData, FilterState } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -463,8 +463,22 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
 
   if (!data) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-muted-foreground">No data available</p>
+      <div className="flex items-center justify-center min-h-[600px] p-8">
+        <div className="glass-strong rounded-2xl p-12 text-center max-w-2xl border border-border/50">
+          <div className="relative inline-flex items-center justify-center w-24 h-24 mb-6">
+            <div className="absolute inset-0 gradient-orange rounded-2xl opacity-20 blur-xl" />
+            <div className="relative glass-strong rounded-2xl w-full h-full flex items-center justify-center border border-primary/30">
+              <TrendingUp className="w-12 h-12 text-primary" />
+            </div>
+          </div>
+          <h3 className="text-2xl font-bold text-foreground mb-3">No Performance Data</h3>
+          <p className="text-muted-foreground text-lg mb-6">
+            Load data from the dashboard to view performance metrics and regional analytics
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Navigate to the Parcel dashboard and click "Enter Dashboard" to load your data
+          </p>
+        </div>
       </div>
     )
   }

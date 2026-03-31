@@ -1,6 +1,6 @@
 "use client"
 
-import { BarChart3, Home, TrendingUp, PieChart, DollarSign } from "lucide-react"
+import { BarChart3, Home, TrendingUp, PieChart } from "lucide-react"
 import type { ReactNode } from "react"
 import {
   SidebarProvider,
@@ -69,15 +69,6 @@ export function DashboardLayout({
                 >
                   <PieChart className="w-5 h-5" />
                   <span>Store</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={currentView === "financial"}
-                  onClick={() => onViewChange?.("financial")}
-                >
-                  <DollarSign className="w-5 h-5" />
-                  <span>Profit And Loss</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
