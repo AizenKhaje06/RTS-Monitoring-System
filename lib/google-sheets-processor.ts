@@ -201,10 +201,12 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
       if (normalizedHeader === 'STATUS') indices['status'] = index
       if (normalizedHeader === 'NAME') indices['name'] = index
       if (normalizedHeader === 'ADDRESS') indices['address'] = index
+      if (normalizedHeader === 'NUMBER') indices['contact'] = index
       if (normalizedHeader === 'CONTACT' || normalizedHeader === 'CONTACT NUMBER') indices['contact'] = index
       if (normalizedHeader === 'AMOUNT') indices['amount'] = index
       if (normalizedHeader === 'ITEMS') indices['items'] = index
       if (normalizedHeader === 'TRACKING') indices['tracking'] = index
+      if (normalizedHeader === 'TRACKING NUMBER') indices['tracking'] = index
       if (normalizedHeader === 'REASON') indices['reason'] = index
       
       // Legacy exact matches
@@ -248,9 +250,9 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
       indices['codamount'] = indices['amount']
     }
 
-    // CONTACT → contactnumber (optional, not used in current data model)
-    if (indices['contact'] !== undefined || indices['contactnumber'] !== undefined) {
-      indices['contactnumber'] = indices['contact'] || indices['contactnumber']
+    // NUMBER/CONTACT → contactnumber
+    if (indices['contact'] !== undefined) {
+      indices['contactnumber'] = indices['contact']
     }
 
     return indices
@@ -316,6 +318,10 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
     console.log(`  - Date column index: ${columnIndices.date}`)
     console.log(`  - Shipper column index: ${columnIndices.shipper}`)
     console.log(`  - Address column index: ${columnIndices.consigneeregion}`)
+    console.log(`  - Contact number column index: ${columnIndices.contactnumber}`)
+    console.log(`  - Items column index: ${columnIndices.items}`)
+    console.log(`  - Tracking column index: ${columnIndices.tracking}`)
+    console.log(`  - Reason column index: ${columnIndices.reason}`)
     
     // Validate STATUS column - if it's undefined or seems wrong, use fallback
     if (columnIndices.status === undefined || columnIndices.status < 0 || columnIndices.status > 20) {
@@ -338,6 +344,9 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
     let statusCounts: { [status: string]: number } = {}
     let sampleDates: string[] = []
     let sampleStatuses: { raw: string, normalized: string, columnIndex: number }[] = []
+    let sampleContactNumbers: string[] = []
+    let sampleItems: string[] = []
+    let sampleTracking: string[] = []
     let blankStatusCount = 0
     
     for (let rowIndex = 0; rowIndex < dataRows.length; rowIndex++) {
@@ -408,6 +417,21 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
       // Collect sample statuses (first 5 rows)
       if (sampleStatuses.length < 5 && statusRaw) {
         sampleStatuses.push({ raw: statusRaw, normalized: status, columnIndex: columnIndices.status })
+      }
+      
+      // Collect sample contact numbers (first 5 rows)
+      if (sampleContactNumbers.length < 5) {
+        sampleContactNumbers.push(contactNumber || '(empty)')
+      }
+      
+      // Collect sample items (first 5 rows)
+      if (sampleItems.length < 5) {
+        sampleItems.push(items || '(empty)')
+      }
+      
+      // Collect sample tracking (first 5 rows)
+      if (sampleTracking.length < 5) {
+        sampleTracking.push(tracking || '(empty)')
       }
 
       // Determine region from province data (consigneeRegionRaw contains province information)
@@ -532,6 +556,18 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
     console.log(`  - Sample statuses (first 5):`)
     sampleStatuses.forEach((s, idx) => {
       console.log(`    ${idx + 1}. Column ${String.fromCharCode(65 + s.columnIndex)} (index ${s.columnIndex}): Raw: "${s.raw}" → Normalized: "${s.normalized}"`)
+    })
+    console.log(`  - Sample contact numbers (first 5):`)
+    sampleContactNumbers.forEach((contact, idx) => {
+      console.log(`    ${idx + 1}. "${contact}"`)
+    })
+    console.log(`  - Sample items (first 5):`)
+    sampleItems.forEach((item, idx) => {
+      console.log(`    ${idx + 1}. "${item}"`)
+    })
+    console.log(`  - Sample tracking numbers (first 5):`)
+    sampleTracking.forEach((track, idx) => {
+      console.log(`    ${idx + 1}. "${track}"`)
     })
     console.log(`  - Status breakdown:`)
     Object.entries(statusCounts).sort((a, b) => b[1] - a[1]).forEach(([status, count]) => {
