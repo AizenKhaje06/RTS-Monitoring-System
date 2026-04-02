@@ -379,6 +379,16 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
         blankStatusCount++
       }
       
+      // Extract all data fields FIRST before any logging
+      const shipper = (columnIndices.shipper !== undefined && columnIndices.shipper < row.length) ? row[columnIndices.shipper]?.toString() || "" : ""
+      const consigneeRegionRaw = (columnIndices.consigneeregion !== undefined && columnIndices.consigneeregion < row.length) ? row[columnIndices.consigneeregion]?.toString() || "" : ""
+      const contactNumber = (columnIndices.contactnumber !== undefined && columnIndices.contactnumber < row.length) ? row[columnIndices.contactnumber]?.toString() || "" : ""
+      const items = (columnIndices.items !== undefined && columnIndices.items < row.length) ? row[columnIndices.items]?.toString() || "" : ""
+      const tracking = (columnIndices.tracking !== undefined && columnIndices.tracking < row.length) ? row[columnIndices.tracking]?.toString() || "" : ""
+      const reason = (columnIndices.reason !== undefined && columnIndices.reason < row.length) ? row[columnIndices.reason]?.toString() || "" : ""
+      const municipality = (columnIndices.municipality !== undefined && columnIndices.municipality < row.length) ? row[columnIndices.municipality]?.toString() || "" : ""
+      const barangay = (columnIndices.barangay !== undefined && columnIndices.barangay < row.length) ? row[columnIndices.barangay]?.toString() || "" : ""
+      
       // Debug logging for first 5 rows AND first 5 blank status rows
       if (rowIndex < 5 || (blankStatusCount <= 5 && (!statusRaw || statusRaw.trim() === ""))) {
         console.log(`\n  Row ${rowIndex + 2} (data row ${rowIndex + 1}) - First 12 columns:`)
@@ -396,14 +406,6 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
         console.log(`  → Tracking read: "${tracking}"`)
         console.log(`  → Contact read: "${contactNumber}"`)
       }
-      const shipper = (columnIndices.shipper !== undefined && columnIndices.shipper < row.length) ? row[columnIndices.shipper]?.toString() || "" : ""
-      const consigneeRegionRaw = (columnIndices.consigneeregion !== undefined && columnIndices.consigneeregion < row.length) ? row[columnIndices.consigneeregion]?.toString() || "" : ""
-      const contactNumber = (columnIndices.contactnumber !== undefined && columnIndices.contactnumber < row.length) ? row[columnIndices.contactnumber]?.toString() || "" : ""
-      const items = (columnIndices.items !== undefined && columnIndices.items < row.length) ? row[columnIndices.items]?.toString() || "" : ""
-      const tracking = (columnIndices.tracking !== undefined && columnIndices.tracking < row.length) ? row[columnIndices.tracking]?.toString() || "" : ""
-      const reason = (columnIndices.reason !== undefined && columnIndices.reason < row.length) ? row[columnIndices.reason]?.toString() || "" : ""
-      const municipality = (columnIndices.municipality !== undefined && columnIndices.municipality < row.length) ? row[columnIndices.municipality]?.toString() || "" : ""
-      const barangay = (columnIndices.barangay !== undefined && columnIndices.barangay < row.length) ? row[columnIndices.barangay]?.toString() || "" : ""
 
       // Debug: Log extraction for first row
       if (rowIndex === 0) {
