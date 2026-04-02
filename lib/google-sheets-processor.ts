@@ -502,6 +502,15 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
         totalCost,
         rtsFee,
       }
+      
+      // Debug: Log first 3 parcel objects to verify data is in the object
+      if (processedRowCount <= 3) {
+        console.log(`\n  📦 ParcelData Object #${processedRowCount}:`)
+        console.log(`    Shipper: "${parcelData.shipper}"`)
+        console.log(`    Items: "${parcelData.items}"`)
+        console.log(`    Tracking: "${parcelData.tracking}"`)
+        console.log(`    Contact: "${parcelData.contactNumber}"`)
+      }
 
       // Add to all data - count every row from any sheet
       processedData.all.data.push(parcelData)
