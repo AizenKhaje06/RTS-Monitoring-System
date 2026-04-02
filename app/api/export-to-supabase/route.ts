@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { processGoogleSheetsData } from "@/lib/google-sheets-processor"
+import { fetchGoogleSheetsData, processGoogleSheetsDataInternal } from "@/lib/google-sheets-processor"
 import { generateCompleteMigrationSQL, generateMigrationStats } from "@/lib/supabase-migration"
 
 export const dynamic = 'force-dynamic'
@@ -11,8 +11,9 @@ export async function POST(_request: NextRequest) {
     console.log("===========================================")
     console.log("Timestamp:", new Date().toISOString())
     
-    // Fetch all data from Google Sheets
-    const data = await processGoogleSheetsData()
+    // Fetch all data from Google Sheets - get the FULL data with arrays
+    const { sheetsData } = await fetchGoogleSheetsData()
+    const data = processGoogleSheetsDataInternal(sheetsData)
     
     console.log("\n=== MIGRATION DATA SUMMARY ===")
     console.log("Total records:", data.all.total)
@@ -22,6 +23,17 @@ export async function POST(_request: NextRequest) {
     
     // Combine all parcel data from all regions
     const allParcels = data.all.data
+    
+    console.log("\n🔍 DEBUG: Checking first 3 parcels in allParcels array:")
+    for (let i = 0; i < Math.min(3, allParcels.length); i++) {
+      console.log(`\nParcel #${i + 1}:`)
+      console.log(`  Shipper: "${allParcels[i].shipper}"`)
+      console.log(`  Items: "${allParcels[i].items}"`)
+      console.log(`  Tracking: "${allParcels[i].tracking}"`)
+      console.log(`  Contact: "${allParcels[i].contactNumber}"`)
+      console.log(`  Has items field: ${allParcels[i].hasOwnProperty('items')}`)
+      console.log(`  Has tracking field: ${allParcels[i].hasOwnProperty('tracking')}`)
+    }
     
     if (allParcels.length === 0) {
       return NextResponse.json({ 

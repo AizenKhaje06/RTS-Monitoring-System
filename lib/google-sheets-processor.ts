@@ -107,7 +107,7 @@ export async function processGoogleSheetsData(spreadsheetId?: string, sheetName?
   return processGoogleSheetsDataInternal(sheetsData)
 }
 
-function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: string }[]): ProcessedData {
+export function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: string }[]): ProcessedData {
   const STATUSES = ["DELIVERED", "ONDELIVERY", "PENDING", "INTRANSIT", "CANCELLED", "DETAINED", "PROBLEMATIC", "RETURNED", "PENDING FULFILLED", "OTHER"]
   
   // Track what raw statuses become "OTHER" with sheet information
