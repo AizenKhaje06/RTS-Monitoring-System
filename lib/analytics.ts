@@ -253,7 +253,7 @@ export function identifyBottlenecks(data: ProcessedData): {
       count: statusData.count,
       percentage: total > 0 ? (statusData.count / total) * 100 : 0,
     }))
-    .filter(item => ["PICKUP", "INTRANSIT", "DETAINED", "PROBLEMATIC"].includes(item.status))
+    .filter(item => ["PENDING", "INTRANSIT", "DETAINED", "PROBLEMATIC"].includes(item.status))
     .sort((a, b) => b.count - a.count)
 
   return bottlenecks

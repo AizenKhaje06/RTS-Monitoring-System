@@ -4,6 +4,7 @@ import { useState } from "react"
 import { DashboardView } from "@/components/dashboard-view"
 import { PredictiveInsights } from "@/components/predictive-insights"
 import { ExportMenu } from "@/components/export-menu"
+import { SupabaseExportButton } from "@/components/supabase-export-button"
 import type { ProcessedData, FilterState } from "@/lib/types"
 import { BarChart3, TrendingUp, Package, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -54,6 +55,7 @@ export function DashboardContent({ data, onUploadClick, filter, onFilterChange }
             </TabsContent>
 
             <TabsContent value="insights" className="space-y-6">
+              <SupabaseExportButton />
               <PredictiveInsights data={data} />
             </TabsContent>
           </Tabs>

@@ -19,7 +19,7 @@ export default function Home() {
   const [globalFilter, setGlobalFilter] = useState<FilterState>({ type: "all", value: "" })
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleEnterDashboard = async () => {
+  const fetchData = async (filter: FilterState = { type: "all", value: "" }) => {
     setIsLoading(true)
     try {
       const response = await fetch("/api/google-sheets/process", {
@@ -27,14 +27,13 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ forceRefresh: false }),
+        body: JSON.stringify({ forceRefresh: false, filter }),
       })
 
       if (!response.ok) throw new Error("Failed to process data")
 
       const processedData = await response.json()
       setData(processedData)
-      setCurrentView("dashboard")
       
       if (processedData.fromCache) {
         console.log("Data loaded from cache")
@@ -47,21 +46,31 @@ export default function Home() {
     }
   }
 
+  const handleEnterDashboard = async () => {
+    await fetchData(globalFilter)
+    setCurrentView("dashboard")
+  }
+
+  const handleFilterChange = async (newFilter: FilterState) => {
+    setGlobalFilter(newFilter)
+    await fetchData(newFilter)
+  }
+
   const renderView = () => {
     switch (currentView) {
       case "performance":
-        return <PerformanceReport data={data} filter={globalFilter} onFilterChange={setGlobalFilter} />
+        return <PerformanceReport data={data} filter={globalFilter} onFilterChange={handleFilterChange} />
       case "analytical":
-        return <AnalyticalReport data={data} filter={globalFilter} onFilterChange={setGlobalFilter} />
+        return <AnalyticalReport data={data} filter={globalFilter} onFilterChange={handleFilterChange} />
       case "financial":
-        return <FinancialReport data={data} filter={globalFilter} onFilterChange={setGlobalFilter} />
+        return <FinancialReport data={data} filter={globalFilter} onFilterChange={handleFilterChange} />
       default:
         return (
           <DashboardContent 
             data={data} 
             onUploadClick={handleEnterDashboard} 
             filter={globalFilter} 
-            onFilterChange={setGlobalFilter}
+            onFilterChange={handleFilterChange}
           />
         )
     }

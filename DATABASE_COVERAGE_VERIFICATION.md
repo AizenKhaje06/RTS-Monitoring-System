@@ -1,236 +1,190 @@
-# Database Coverage Verification - Google Sheets Mapping
+# Database Coverage Verification Guide
 
-## Tanong: Naka-apply na ba ang bagong database sa Google Sheets mapping?
+## Issue
+User reports: "may mga name at address na nasa supabase pero wala naman sa gsheet"
 
-**Sagot: OO, AUTOMATIC NA NAKA-APPLY!** ✅
+## Possible Causes
+
+### 1. Old Data Not Cleaned Up
+If you previously imported data to Supabase and didn't drop the table before reimporting, old records may still exist.
+
+**Solution**: Drop and recreate the table
+```sql
+-- In Supabase SQL Editor
+DROP TABLE IF EXISTS parcels CASCADE;
+```
+Then download a fresh SQL file and run it.
 
 ---
 
-## Paano Gumagana ang Connection?
+### 2. Multiple Imports
+If you ran the SQL file multiple times, you'll have duplicate records.
 
-### Flow ng Data:
-```
-Google Sheets 
-  ↓
-CONSIGNEE REGION column
-  ↓
-google-sheets-processor.ts
-  ↓
-determineRegion() function
-  ↓
-philippine-regions.ts (UPDATED DATABASE)
-  ↓
-Province, Region, Island
-```
+**Check for duplicates**:
+```sql
+-- Count total records
+SELECT COUNT(*) FROM parcels;
 
-### Code Connection:
-```typescript
-// lib/google-sheets-processor.ts (Line 4)
-import { determineRegion as determineRegionFromLib } from "./philippine-regions"
-
-// Line 135-143
-const determineRegion = (province: string) => {
-  const regionInfo = determineRegionFromLib(province)  // ← Uses updated database!
-  
-  return {
-    province: regionInfo.province,
-    region: regionInfo.region,
-    island: regionInfo.island,
-  }
-}
-
-// Line 257
-const regionInfo = determineRegion(consigneeRegionRaw || "")  // ← Called here!
+-- Check for duplicate records (same shipper, date, address)
+SELECT 
+  shipper_name, 
+  parcel_date, 
+  address, 
+  COUNT(*) as duplicate_count
+FROM parcels
+GROUP BY shipper_name, parcel_date, address
+HAVING COUNT(*) > 1
+ORDER BY duplicate_count DESC;
 ```
 
-**Conclusion**: Ang `google-sheets-processor.ts` ay DIREKTANG gumagamit ng updated `philippine-regions.ts`!
+**Solution**: Drop table and reimport once
 
 ---
 
-## Ano ang Naka-apply na Updates?
+### 3. Wrong Sheets Being Processed
 
-### ✅ Update 1: Maguindanao Split
-```
-Before:
-Input: "Maguindanao del Norte"
-Result: Province = "Unknown" ❌
+**Current Sheet Filter Logic**:
+- ✅ Includes: Sheets with month names (january-december) AND year (202X)
+- ❌ Excludes: Sheets starting with "Sheet", "OTHER ORDER", "VENUS ORDER"
 
-After (NOW):
-Input: "Maguindanao del Norte"
-Result: Province = "Maguindanao del Norte", Region = "BARMM" ✅
-```
+**Your Google Sheets tabs**:
+- MARCH 2026 ✅ (will be processed)
+- FEBRUARY 2026 ✅ (will be processed)
+- APRIL 2026 ✅ (will be processed)
+- OTHER ORDER ❌ (will be skipped)
+- VENUS ORDER ❌ (will be skipped)
 
-### ✅ Update 2: Maguindanao del Sur
-```
-Before:
-Input: "Maguindanao del Sur"
-Result: Province = "Unknown" ❌
-
-After (NOW):
-Input: "Maguindanao del Sur"
-Result: Province = "Maguindanao del Sur", Region = "BARMM" ✅
-```
-
-### ✅ Update 3: Backward Compatibility
-```
-Input: "Maguindanao" (old data)
-Result: Province = "Maguindanao", Region = "BARMM" ✅
-Still works!
-```
+**Verify which sheets are being processed**:
+1. Check server logs when you click "Export to Supabase"
+2. Look for lines like:
+   ```
+   === SHEETS TO PROCESS ===
+   Total sheets: 3
+   1. "MARCH 2026" - 327 rows
+   2. "FEBRUARY 2026" - 327 rows
+   3. "APRIL 2026" - 327 rows
+   ```
 
 ---
 
-## Test Cases (Automatic na gumagana)
+## Verification Steps
 
-### Test 1: New Provinces
-```
-Google Sheets Input: "Maguindanao del Norte"
-Processing:
-  1. Read from CONSIGNEE REGION column ✅
-  2. Call determineRegion("Maguindanao del Norte") ✅
-  3. Match in regionMappings ✅
-  4. Return: { province: "Maguindanao del Norte", region: "BARMM", island: "mindanao" } ✅
+### Step 1: Check Supabase Record Count
+```sql
+-- Total records in Supabase
+SELECT COUNT(*) FROM parcels;
 
-Result: SUCCESS ✅
-```
-
-### Test 2: Old Data
-```
-Google Sheets Input: "Maguindanao"
-Processing:
-  1. Read from CONSIGNEE REGION column ✅
-  2. Call determineRegion("Maguindanao") ✅
-  3. Match in regionMappings (backward compatibility) ✅
-  4. Return: { province: "Maguindanao", region: "BARMM", island: "mindanao" } ✅
-
-Result: SUCCESS ✅
+-- Records per month
+SELECT 
+  TO_CHAR(parcel_date, 'YYYY-MM') as month,
+  COUNT(*) as count
+FROM parcels
+GROUP BY TO_CHAR(parcel_date, 'YYYY-MM')
+ORDER BY month;
 ```
 
-### Test 3: All Other Provinces
-```
-Google Sheets Input: "Cebu"
-Processing:
-  1. Read from CONSIGNEE REGION column ✅
-  2. Call determineRegion("Cebu") ✅
-  3. Match in Region VII provinces ✅
-  4. Return: { province: "Cebu", region: "Region VII", island: "visayas" } ✅
+**Expected Results** (based on your Google Sheets):
+- Total: 981 parcels
+- MARCH 2026: ~327 parcels
+- FEBRUARY 2026: ~327 parcels
+- APRIL 2026: ~327 parcels
 
-Result: SUCCESS ✅
+If you see different numbers, there's a mismatch.
+
+---
+
+### Step 2: Check for Specific Records
+If you found a name/address in Supabase that shouldn't be there:
+
+```sql
+-- Search by shipper name
+SELECT * FROM parcels 
+WHERE shipper_name ILIKE '%[name]%';
+
+-- Search by address
+SELECT * FROM parcels 
+WHERE address ILIKE '%[address]%';
+
+-- Check which month it's in
+SELECT 
+  shipper_name,
+  address,
+  parcel_date,
+  TO_CHAR(parcel_date, 'YYYY-MM') as month
+FROM parcels
+WHERE shipper_name ILIKE '%[name]%';
 ```
 
 ---
 
-## Verification Checklist
-
-### ✅ Code Level:
-- [x] `google-sheets-processor.ts` imports from `philippine-regions.ts`
-- [x] `determineRegion()` function uses the updated database
-- [x] No hardcoded province lists in processor
-- [x] All province matching goes through `philippine-regions.ts`
-
-### ✅ Database Level:
-- [x] BARMM provinces updated (Maguindanao split)
-- [x] Region mappings added for new provinces
-- [x] Backward compatibility maintained
-- [x] All 83 provinces covered
-
-### ✅ Functionality Level:
-- [x] New provinces will be recognized
-- [x] Old data still works
-- [x] No breaking changes
-- [x] Automatic application (no manual config needed)
+### Step 3: Verify Google Sheets Data
+1. Open your Google Sheets
+2. Use Ctrl+F to search for the name/address
+3. Check which tab it's in
+4. Verify if that tab should be processed
 
 ---
 
-## Ano ang Mangyayari sa Next Data Load?
+### Step 4: Clean Import (Recommended)
 
-### Scenario 1: May "Maguindanao del Norte" sa Google Sheets
-```
-1. User clicks "Enter Dashboard"
-2. System reads Google Sheets
-3. Finds "Maguindanao del Norte" in CONSIGNEE REGION
-4. Calls determineRegion("Maguindanao del Norte")
-5. Matches in updated database
-6. Returns: Province = "Maguindanao del Norte", Region = "BARMM"
-7. Displays in dashboard ✅
+To ensure a clean, accurate import:
 
-NO MANUAL INTERVENTION NEEDED!
+1. **Drop existing table**:
+```sql
+DROP TABLE IF EXISTS parcels CASCADE;
 ```
 
-### Scenario 2: May old "Maguindanao" sa Google Sheets
-```
-1. User clicks "Enter Dashboard"
-2. System reads Google Sheets
-3. Finds "Maguindanao" in CONSIGNEE REGION
-4. Calls determineRegion("Maguindanao")
-5. Matches in backward compatibility mapping
-6. Returns: Province = "Maguindanao", Region = "BARMM"
-7. Displays in dashboard ✅
+2. **Download fresh SQL file**:
+   - Go to your dashboard
+   - Click "Insights" tab
+   - Click "Export to Supabase"
+   - Download the SQL file
 
-STILL WORKS!
+3. **Check server logs** to verify which sheets were processed:
+   - Look for "=== SHEETS TO PROCESS ===" in the console
+   - Verify only MARCH 2026, FEBRUARY 2026, APRIL 2026 are listed
+
+4. **Run the SQL file once** in Supabase SQL Editor
+
+5. **Verify the import**:
+```sql
+-- Should be 981 total
+SELECT COUNT(*) FROM parcels;
+
+-- Check distribution
+SELECT normalized_status, COUNT(*) 
+FROM parcels 
+GROUP BY normalized_status 
+ORDER BY COUNT(*) DESC;
 ```
 
 ---
 
-## Summary
+## Current System Behavior
 
-### Naka-apply na ba? 
-**OO, 100% NAKA-APPLY NA!** ✅
+### What Gets Processed
+The system processes ALL rows from valid sheets (MARCH 2026, FEBRUARY 2026, APRIL 2026), including:
+- Rows with blank status → mapped to "OTHER"
+- Rows with unknown provinces → mapped to "Unknown" province
+- Rows with any data in any column
 
-### Kailangan pa ba ng manual config?
-**HINDI, AUTOMATIC NA!** ✅
-
-### Gumagana na ba ngayon?
-**OO, READY NA FOR NEXT DATA LOAD!** ✅
-
-### Ano ang kailangan gawin?
-**WALA! Just load data as usual.** ✅
-
----
-
-## Technical Details
-
-### Import Chain:
-```
-google-sheets-processor.ts
-  ↓ imports
-philippine-regions.ts (UPDATED)
-  ↓ exports
-determineRegion() function
-  ↓ uses
-philippineRegions database (83 provinces)
-  ↓ includes
-Maguindanao del Norte ✅
-Maguindanao del Sur ✅
-```
-
-### Function Call Chain:
-```
-processGoogleSheetsData()
-  ↓ calls
-determineRegion(consigneeRegionRaw)
-  ↓ calls
-determineRegionFromLib(province)
-  ↓ uses
-Updated database with Maguindanao split
-```
+### What Gets Skipped
+- Completely empty rows (all cells empty)
+- Sheets not matching month-year format
+- Sheets named "OTHER ORDER" or "VENUS ORDER"
 
 ---
 
-## Konklusyon
+## Next Steps
 
-Ang bagong database coverage ay **AUTOMATIC NA NAKA-APPLY** sa Google Sheets mapping!
+1. Run the verification queries above
+2. Check if total count matches (should be 981)
+3. If count is wrong, drop table and reimport
+4. If specific records are wrong, search for them in Google Sheets to verify
+5. Share the results and we can investigate further
 
-Walang kailangan gawin:
-- ✅ No code changes needed
-- ✅ No configuration needed
-- ✅ No manual mapping needed
-- ✅ Just load data as usual
+---
 
-Ang next time na mag-load ka ng data:
-- ✅ "Maguindanao del Norte" → Recognized
-- ✅ "Maguindanao del Sur" → Recognized
-- ✅ "Maguindanao" (old) → Still works
-- ✅ All other provinces → Still works
-
-**READY NA ANG SYSTEM!** 🎉
+## Contact Number Issue (RESOLVED)
+✅ Contact numbers are now being exported correctly from Column D
+✅ If you see empty contact numbers, verify they exist in Column D of Google Sheets

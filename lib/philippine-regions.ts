@@ -1,3 +1,5 @@
+import { allPSGCEntries, type PSGCEntry } from "./psgc-data"
+
 // Complete Philippine Regions and Provinces Database
 export const philippineRegions = {
   luzon: {
@@ -262,23 +264,39 @@ export interface RegionInfo {
 export function determineRegion(consigneeRegion: string): RegionInfo {
   const input = (consigneeRegion || "").toUpperCase().trim()
   
-  // ENHANCED: Try comma-based parsing first (more accurate for "Municipality, Province" format)
+  // STEP 1: Try PSGC-based matching first (most accurate)
+  const psgcMatch = matchPSGCEntry(input)
+  if (psgcMatch.province !== "Unknown") {
+    return psgcMatch
+  }
+  
+  // STEP 2: Try comma-based parsing (for "Municipality, Province" format)
   const commaParts = input.split(',').map(p => p.trim()).filter(p => p)
   
-  // If we have comma-separated parts, try to match from the end
   if (commaParts.length >= 2) {
     // Last part after comma is usually the province/region
     const lastPart = commaParts[commaParts.length - 1]
     
-    // Try to match the last part first (most likely to be province/region)
+    // Try PSGC match on last part
+    const lastPartPSGC = matchPSGCEntry(lastPart)
+    if (lastPartPSGC.province !== "Unknown") {
+      return lastPartPSGC
+    }
+    
+    // Try legacy match on last part
     const lastPartMatch = matchRegionText(lastPart)
     if (lastPartMatch.province !== "Unknown") {
       return lastPartMatch
     }
     
-    // If last part didn't match, try second to last (might be municipality that's in our database)
+    // If last part didn't match, try second to last (might be municipality)
     if (commaParts.length >= 2) {
       const secondLastPart = commaParts[commaParts.length - 2]
+      const secondLastPSGC = matchPSGCEntry(secondLastPart)
+      if (secondLastPSGC.province !== "Unknown") {
+        return secondLastPSGC
+      }
+      
       const secondLastMatch = matchRegionText(secondLastPart)
       if (secondLastMatch.province !== "Unknown") {
         return secondLastMatch
@@ -286,11 +304,63 @@ export function determineRegion(consigneeRegion: string): RegionInfo {
     }
   }
   
-  // FALLBACK: Use original word-based logic (for addresses without commas)
+  // STEP 3: FALLBACK - Use original word-based logic (for addresses without commas)
   const words = input.split(/\s+/).filter(w => w)
   const regionText = words.slice(-3).join(' ')
   
   return matchRegionText(regionText)
+}
+
+// NEW: PSGC-based matching function
+function matchPSGCEntry(addressText: string): RegionInfo {
+  const input = addressText.toUpperCase().trim()
+  
+  // Normalize input: replace hyphens with spaces for better matching
+  const normalizedInput = input.replace(/-/g, ' ')
+  
+  // Try exact match first (with normalized input)
+  for (const entry of allPSGCEntries) {
+    const normalizedEntryName = entry.name.toUpperCase().replace(/-/g, ' ')
+    if (normalizedInput === normalizedEntryName) {
+      return {
+        island: entry.island,
+        region: entry.region,
+        province: entry.name,
+      }
+    }
+  }
+  
+  // Try partial match (contains) with normalized strings
+  for (const entry of allPSGCEntries) {
+    const normalizedEntryName = entry.name.toUpperCase().replace(/-/g, ' ')
+    if (normalizedInput.includes(normalizedEntryName) || normalizedEntryName.includes(normalizedInput)) {
+      return {
+        island: entry.island,
+        region: entry.region,
+        province: entry.name,
+      }
+    }
+  }
+  
+  // Try word-by-word match for multi-word provinces/cities
+  // Split by spaces, hyphens, and other separators
+  const inputWords = normalizedInput.split(/[\s\-,]+/).filter(w => w.length > 0)
+  for (const entry of allPSGCEntries) {
+    const normalizedEntryName = entry.name.toUpperCase().replace(/-/g, ' ')
+    const entryWords = normalizedEntryName.split(/[\s\-,]+/).filter(w => w.length > 0)
+    const matchCount = entryWords.filter(word => inputWords.includes(word)).length
+    
+    // If at least 50% of words match, consider it a match
+    if (matchCount >= Math.ceil(entryWords.length / 2) && matchCount > 0) {
+      return {
+        island: entry.island,
+        region: entry.region,
+        province: entry.name,
+      }
+    }
+  }
+  
+  return { island: "unknown", region: "Unknown", province: "Unknown" }
 }
 
 // Helper function to match region text against database

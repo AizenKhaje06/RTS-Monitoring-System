@@ -15,17 +15,19 @@ interface DashboardViewProps {
   onFilterChange: (filter: FilterState) => void
 }
 
-const STATUSES = ["DELIVERED", "ONDELIVERY", "PICKUP", "INTRANSIT", "CANCELLED", "DETAINED", "PROBLEMATIC", "RETURNED"]
+const STATUSES = ["DELIVERED", "ONDELIVERY", "PENDING", "INTRANSIT", "CANCELLED", "DETAINED", "PROBLEMATIC", "RETURNED", "PENDING FULFILLED", "OTHER"]
 
 const STATUS_COLORS = {
   DELIVERED: "from-green-500 to-green-600",
   ONDELIVERY: "from-blue-500 to-blue-600",
-  PICKUP: "from-purple-500 to-purple-600",
+  PENDING: "from-purple-500 to-purple-600",
   INTRANSIT: "from-orange-500 to-orange-600",
   CANCELLED: "from-red-500 to-red-600",
   DETAINED: "from-gray-600 to-gray-700",
   PROBLEMATIC: "from-orange-600 to-orange-700",
   RETURNED: "from-cyan-500 to-cyan-600",
+  "PENDING FULFILLED": "from-teal-500 to-teal-600",
+  OTHER: "from-gray-500 to-gray-600",
 }
 
 export function DashboardView({ data, currentRegion, onRegionChange, filter, onFilterChange }: DashboardViewProps) {
@@ -42,20 +44,32 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
   }, [data, currentRegion])
 
   const filteredData = useMemo(() => {
+    console.log('=== FILTER DEBUG ===');
+    console.log('Filter type:', filter.type);
+    console.log('Filter value:', filter.value);
+    console.log('Region data total:', regionData.data.length);
+    
     if (filter.type === "all") return regionData
 
     const filtered = regionData.data.filter((parcel) => {
       if (filter.type === "province") {
-        return parcel.province.toLowerCase().includes(filter.value.toLowerCase())
+        const match = parcel.province.toLowerCase().includes(filter.value.toLowerCase());
+        if (match) console.log('Province match:', parcel.province);
+        return match
       }
       if (filter.type === "month") {
         // Use the month from sheet name instead of date parsing
-        if (!parcel.month) return false
+        if (!parcel.month) {
+          console.log('No month field in parcel:', parcel);
+          return false;
+        }
         const monthStr = parcel.month.toLowerCase().trim()
         const filterMonth = Number.parseInt(filter.value, 10)
         const monthNames = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]
         const monthIndex = monthNames.findIndex(name => monthStr.includes(name))
-        return monthIndex + 1 === filterMonth
+        const match = monthIndex + 1 === filterMonth;
+        if (match) console.log('Month match:', parcel.month, 'filterMonth:', filterMonth);
+        return match
       }
       if (filter.type === "year") {
         if (!parcel.date) return false
@@ -75,10 +89,15 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
           }
         }
 
-        return parcelYear === Number.parseInt(filter.value, 10)
+        const match = parcelYear === Number.parseInt(filter.value, 10);
+        if (match) console.log('Year match:', parcelYear);
+        return match
       }
       return true
     })
+    
+    console.log('Filtered results:', filtered.length);
+    console.log('==================');
 
     // Recalculate stats for filtered data
     const stats: Record<string, { count: number; locations: Record<string, number> }> = {}
@@ -253,8 +272,8 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
         <TotalParcelCard total={displayData.total} />
       </div>
 
-      {/* Status Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Status Cards Grid - 5 columns x 2 rows */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {STATUSES.map((status) => (
           <StatusCardSimple
             key={status}

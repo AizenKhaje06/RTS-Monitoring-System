@@ -5,12 +5,17 @@ export interface ParcelData {
   normalizedStatus: string
   shipper: string
   consigneeRegion: string
+  fullAddress: string // Complete address from Google Sheets Column C
+  contactNumber: string // Contact number from Google Sheets Column D
+  items: string // Items from Google Sheets Column F
+  tracking: string // Tracking number from Google Sheets Column G
+  reason: string // Reason from Google Sheets Column I (if status is RETURNED)
   province: string
   municipality: string
   barangay: string
   region: string
   island: string
-  codAmount?: number // Column R
+  codAmount?: number // Column E
   serviceCharge?: number // Column S
   totalCost?: number // Column T (shipping fee paid by seller)
   rtsFee?: number // Calculated: totalCost * 0.20

@@ -26,7 +26,7 @@ interface PerformanceData {
   regionSuccessRates: { region: string; successRate: number; deliveredCount: number; totalCount: number }[]
   regionRTSRates: { region: string; rtsRate: number; rtsCount: number; totalCount: number }[]
   regionOnDeliveryRates: { region: string; onDeliveryRate: number; onDeliveryCount: number; totalCount: number }[]
-  regionPickupRates: { region: string; pickupRate: number; pickupCount: number; totalCount: number }[]
+  regionPickupRates: { region: string; pendingRate: number; pendingCount: number; totalCount: number }[]
   regionInTransitRates: { region: string; inTransitRate: number; inTransitCount: number; totalCount: number }[]
   regionCancelledRates: { region: string; cancelledRate: number; cancelledCount: number; totalCount: number }[]
   regionDetainedRates: { region: string; detainedRate: number; detainedCount: number; totalCount: number }[]
@@ -324,27 +324,27 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       regionOnDeliveryRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), onDeliveryRate, onDeliveryCount: onDelivery, totalCount: total })
     }
 
-    // Region Pickup rates
-    const regionPickupRates: { region: string; pickupRate: number; pickupCount: number; totalCount: number }[] = []
+    // Region Pending rates
+    const regionPickupRates: { region: string; pendingRate: number; pendingCount: number; totalCount: number }[] = []
     if (currentRegion === "all") {
-      const pickup = filteredData.filter((p) => p.normalizedStatus === "PICKUP").length
+      const pending = filteredData.filter((p) => p.normalizedStatus === "PENDING").length
       const total = filteredData.length
-      const pickupRate = total > 0 ? (pickup / total) * 100 : 0
-      regionPickupRates.push({ region: "All Regions", pickupRate, pickupCount: pickup, totalCount: total })
+      const pendingRate = total > 0 ? (pending / total) * 100 : 0
+      regionPickupRates.push({ region: "All Regions", pendingRate, pendingCount: pending, totalCount: total })
 
       const regionNames = ["luzon", "visayas", "mindanao"]
       regionNames.forEach((region) => {
         const regionFilteredData = filteredData.filter((parcel) => parcel.island === region)
-        const pickup = regionFilteredData.filter((p) => p.normalizedStatus === "PICKUP").length
+        const pending = regionFilteredData.filter((p) => p.normalizedStatus === "PENDING").length
         const total = regionFilteredData.length
-        const pickupRate = total > 0 ? (pickup / total) * 100 : 0
-        regionPickupRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), pickupRate, pickupCount: pickup, totalCount: total })
+        const pendingRate = total > 0 ? (pending / total) * 100 : 0
+        regionPickupRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), pendingRate, pendingCount: pending, totalCount: total })
       })
     } else {
-      const pickup = sourceData.data.filter((p) => p.normalizedStatus === "PICKUP").length
+      const pending = sourceData.data.filter((p) => p.normalizedStatus === "PENDING").length
       const total = sourceData.data.length
-      const pickupRate = total > 0 ? (pickup / total) * 100 : 0
-      regionPickupRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), pickupRate, pickupCount: pickup, totalCount: total })
+      const pendingRate = total > 0 ? (pending / total) * 100 : 0
+      regionPickupRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), pendingRate, pendingCount: pending, totalCount: total })
     }
 
     // Region In Transit rates
