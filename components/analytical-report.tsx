@@ -376,7 +376,7 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
             Load data from the dashboard to view store performance and corporate insights
           </p>
           <p className="text-sm text-muted-foreground">
-            Navigate to the Parcel dashboard and click "Enter Dashboard" to load your data
+            Navigate to the Parcel dashboard and click &ldquo;Enter Dashboard&rdquo; to load your data
           </p>
         </div>
       </div>

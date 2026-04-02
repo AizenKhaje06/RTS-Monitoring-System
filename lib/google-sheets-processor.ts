@@ -341,12 +341,12 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
     // Process each row in this sheet, using sheet name as month
     let processedRowCount = 0
     let skippedRowCount = 0
-    let statusCounts: { [status: string]: number } = {}
-    let sampleDates: string[] = []
-    let sampleStatuses: { raw: string, normalized: string, columnIndex: number }[] = []
-    let sampleContactNumbers: string[] = []
-    let sampleItems: string[] = []
-    let sampleTracking: string[] = []
+    const statusCounts: { [status: string]: number } = {}
+    const sampleDates: string[] = []
+    const sampleStatuses: { raw: string, normalized: string, columnIndex: number }[] = []
+    const sampleContactNumbers: string[] = []
+    const sampleItems: string[] = []
+    const sampleTracking: string[] = []
     let blankStatusCount = 0
     
     for (let rowIndex = 0; rowIndex < dataRows.length; rowIndex++) {

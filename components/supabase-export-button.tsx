@@ -6,7 +6,7 @@ import { Download, Database, Loader2 } from "lucide-react"
 
 export function SupabaseExportButton() {
   const [isExporting, setIsExporting] = useState(false)
-  const [stats, setStats] = useState<any>(null)
+  const [stats, setStats] = useState<Record<string, unknown> | null>(null)
 
   const fetchStats = async () => {
     try {
@@ -114,10 +114,10 @@ export function SupabaseExportButton() {
       <div className="text-xs text-muted-foreground space-y-1">
         <p className="font-semibold">Instructions:</p>
         <ol className="list-decimal list-inside space-y-1 ml-2">
-          <li>Click "Download SQL File" to get the migration script</li>
+          <li>Click &ldquo;Download SQL File&rdquo; to get the migration script</li>
           <li>Open your Supabase project → SQL Editor</li>
           <li>Create a new query and paste the entire SQL file</li>
-          <li>Click "Run" to create table and import all data</li>
+          <li>Click &ldquo;Run&rdquo; to create table and import all data</li>
           <li>Verify in Table Editor: parcels table</li>
         </ol>
       </div>

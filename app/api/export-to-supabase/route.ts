@@ -4,7 +4,7 @@ import { generateCompleteMigrationSQL, generateMigrationStats } from "@/lib/supa
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     console.log("===========================================")
     console.log("SUPABASE MIGRATION EXPORT STARTED")
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Get migration preview/stats without downloading
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     console.log("Fetching migration statistics...")
     
