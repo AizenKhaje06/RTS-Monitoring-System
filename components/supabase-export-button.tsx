@@ -6,12 +6,19 @@ import { Download, Database, Loader2 } from "lucide-react"
 
 export function SupabaseExportButton() {
   const [isExporting, setIsExporting] = useState(false)
-  const [stats, setStats] = useState<Record<string, unknown> | null>(null)
+  const [stats, setStats] = useState<{
+    totalRecords: number
+    byStatus: Record<string, number>
+    byRegion: Record<string, number>
+    byIsland: Record<string, number>
+    byMonth: Record<string, number>
+    estimatedSize: string
+  } | null>(null)
 
   const fetchStats = async () => {
     try {
       const response = await fetch("/api/export-to-supabase")
-      const data = await response.json()
+      const data = await response.json() as { stats: typeof stats }
       setStats(data.stats)
     } catch (error) {
       console.error("Error fetching stats:", error)

@@ -89,7 +89,8 @@ export async function GET(_request: NextRequest) {
   try {
     console.log("Fetching migration statistics...")
     
-    const data = await processGoogleSheetsData()
+    const { sheetsData } = await fetchGoogleSheetsData()
+    const data = processGoogleSheetsDataInternal(sheetsData)
     const allParcels = data.all.data
     
     if (allParcels.length === 0) {

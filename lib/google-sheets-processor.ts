@@ -294,7 +294,29 @@ export function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][],
 
     if (hasHeaders) {
       columnIndices = findColumnIndices(firstRow)
-      dataRows = sheetData.slice(1)
+      
+      // 🔥 CRITICAL: Validate required columns
+      const requiredColumns = ['items', 'tracking', 'status']
+      const missingColumns = requiredColumns.filter(col => columnIndices[col] === undefined)
+      
+      if (missingColumns.length > 0) {
+        console.log(`  ⚠️ Header detected but missing columns: ${missingColumns.join(', ')}`)
+        console.log(`  ⚠️ Falling back to positional mapping`)
+        columnIndices = {
+          date: 0,            // Column A - DATE
+          shipper: 1,         // Column B - NAME (customer/shipper name)
+          consigneeregion: 2, // Column C - ADDRESS (for province/region extraction)
+          contactnumber: 3,   // Column D - CONTACT NUMBER
+          codamount: 4,       // Column E - AMOUNT
+          items: 5,           // Column F - ITEMS
+          tracking: 6,        // Column G - TRACKING
+          status: 7,          // Column H - STATUS
+          reason: 9           // Column J - REASON (if returned)
+        }
+        dataRows = sheetData // ❗ DO NOT slice - first row is data, not header
+      } else {
+        dataRows = sheetData.slice(1) // Only slice if all required columns found
+      }
     } else {
       // Fallback to positional mapping for new Google Sheets structure
       // A - DATE, B - NAME, C - ADDRESS, D - CONTACT NUMBER, E - AMOUNT, F - ITEMS, G - TRACKING, H - STATUS, J - REASON
