@@ -384,10 +384,17 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
         console.log(`\n  Row ${rowIndex + 2} (data row ${rowIndex + 1}) - First 12 columns:`)
         for (let i = 0; i < Math.min(12, row.length); i++) {
           const cellValue = row[i]?.toString() || ""
-          const marker = i === columnIndices.status ? " ← STATUS COLUMN" : ""
+          let marker = ""
+          if (i === columnIndices.status) marker = " ← STATUS COLUMN"
+          if (i === columnIndices.items) marker = " ← ITEMS COLUMN"
+          if (i === columnIndices.tracking) marker = " ← TRACKING COLUMN"
+          if (i === columnIndices.contactnumber) marker = " ← CONTACT COLUMN"
           console.log(`    Column ${String.fromCharCode(65 + i)} (index ${i}): "${cellValue}"${marker}`)
         }
         console.log(`  → Status read: "${statusRaw}" (blank: ${!statusRaw || statusRaw.trim() === ""})`)
+        console.log(`  → Items read: "${items}"`)
+        console.log(`  → Tracking read: "${tracking}"`)
+        console.log(`  → Contact read: "${contactNumber}"`)
       }
       const shipper = (columnIndices.shipper !== undefined && columnIndices.shipper < row.length) ? row[columnIndices.shipper]?.toString() || "" : ""
       const consigneeRegionRaw = (columnIndices.consigneeregion !== undefined && columnIndices.consigneeregion < row.length) ? row[columnIndices.consigneeregion]?.toString() || "" : ""
@@ -397,6 +404,17 @@ function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][], name: 
       const reason = (columnIndices.reason !== undefined && columnIndices.reason < row.length) ? row[columnIndices.reason]?.toString() || "" : ""
       const municipality = (columnIndices.municipality !== undefined && columnIndices.municipality < row.length) ? row[columnIndices.municipality]?.toString() || "" : ""
       const barangay = (columnIndices.barangay !== undefined && columnIndices.barangay < row.length) ? row[columnIndices.barangay]?.toString() || "" : ""
+
+      // Debug: Log extraction for first row
+      if (rowIndex === 0) {
+        console.log(`\n  🔍 FIRST ROW DATA EXTRACTION DEBUG:`)
+        console.log(`    Shipper (index ${columnIndices.shipper}): "${shipper}"`)
+        console.log(`    Address (index ${columnIndices.consigneeregion}): "${consigneeRegionRaw}"`)
+        console.log(`    Contact (index ${columnIndices.contactnumber}): "${contactNumber}"`)
+        console.log(`    Items (index ${columnIndices.items}): "${items}"`)
+        console.log(`    Tracking (index ${columnIndices.tracking}): "${tracking}"`)
+        console.log(`    Reason (index ${columnIndices.reason}): "${reason}"`)
+      }
 
       // Extract financial data with safe access
       const codAmount = (columnIndices.codamount !== undefined && columnIndices.codamount < row.length) ? parseFloat(row[columnIndices.codamount]?.toString() || "0") || 0 : 0
