@@ -12,6 +12,25 @@ function convertSupabaseToParcelData(sp: SupabaseParcel): ParcelData {
                      'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']
   const month = `${monthNames[date.getMonth()]} ${date.getFullYear()}`
   
+  // Extract municipality and province from address
+  // Format: "123, Montalban, Rizal" → municipality="Montalban", province="Rizal"
+  let municipality = sp.municipality || ''
+  let province = sp.province
+  
+  if (sp.address && sp.address.includes(',')) {
+    const parts = sp.address.split(',').map(p => p.trim()).filter(p => p.length > 0)
+    
+    if (parts.length >= 2) {
+      // Last part is province
+      province = parts[parts.length - 1]
+      
+      // Second to last is municipality
+      if (parts.length >= 2) {
+        municipality = parts[parts.length - 2]
+      }
+    }
+  }
+  
   return {
     date: sp.parcel_date,
     month,
@@ -24,8 +43,8 @@ function convertSupabaseToParcelData(sp: SupabaseParcel): ParcelData {
     items: sp.items || '',
     tracking: sp.tracking_number || '',
     reason: sp.reason || '',
-    province: sp.province,
-    municipality: sp.municipality || '',
+    province: province,
+    municipality: municipality,
     barangay: '',
     region: sp.region,
     island: sp.island,

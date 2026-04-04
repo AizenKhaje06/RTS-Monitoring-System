@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
         total: filteredData.all.total,
         winningShippers: filteredData.all.winningShippers,
         rtsShippers: filteredData.all.rtsShippers,
-        data: [], // Empty array for type compatibility
+        data: filteredData.all.data, // Include full data for Performance Report
       },
       luzon: {
         stats: filteredData.luzon.stats,
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
         total: filteredData.luzon.total,
         winningShippers: filteredData.luzon.winningShippers,
         rtsShippers: filteredData.luzon.rtsShippers,
-        data: [],
+        data: filteredData.luzon.data, // Include full data
       },
       visayas: {
         stats: filteredData.visayas.stats,
@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
         total: filteredData.visayas.total,
         winningShippers: filteredData.visayas.winningShippers,
         rtsShippers: filteredData.visayas.rtsShippers,
-        data: [],
+        data: filteredData.visayas.data, // Include full data
       },
       mindanao: {
         stats: filteredData.mindanao.stats,
@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
         total: filteredData.mindanao.total,
         winningShippers: filteredData.mindanao.winningShippers,
         rtsShippers: filteredData.mindanao.rtsShippers,
-        data: [],
+        data: filteredData.mindanao.data, // Include full data
       },
       // Add pre-computed analytics
       analytics: {
