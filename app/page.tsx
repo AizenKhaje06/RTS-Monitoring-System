@@ -22,7 +22,7 @@ export default function Home() {
   const fetchData = async (filter: FilterState = { type: "all", value: "" }) => {
     setIsLoading(true)
     try {
-      const response = await fetch("/api/google-sheets/process", {
+      const response = await fetch("/api/supabase/process", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -36,11 +36,13 @@ export default function Home() {
       setData(processedData)
       
       if (processedData.fromCache) {
-        console.log("Data loaded from cache")
+        console.log("📦 Data loaded from cache")
+      } else {
+        console.log("✅ Data loaded from Supabase")
       }
     } catch (error) {
-      console.error("Error processing Google Sheets data:", error)
-      alert("Failed to process data from Google Sheets. Please check your configuration.")
+      console.error("❌ Error fetching data from Supabase:", error)
+      alert("Failed to fetch data from Supabase. Please check your configuration and ensure you have added NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your environment variables.")
     } finally {
       setIsLoading(false)
     }
@@ -79,7 +81,7 @@ export default function Home() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        {isLoading && <FullPageLoading message="Processing Google Sheets data..." />}
+        {isLoading && <FullPageLoading message="Loading data from Supabase..." />}
         <DashboardLayout
           hasData={!!data}
           currentView={currentView}
