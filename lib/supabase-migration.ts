@@ -161,23 +161,69 @@ COMMENT ON COLUMN parcels.parcel_date IS 'Parcel date in standard DATE format (Y
 `
 }
 
+// Safe string normalization utility
+function safeString(value: unknown): string {
+  // Handle null/undefined
+  if (value === null || value === undefined) {
+    return ''
+  }
+  
+  // Handle arrays (e.g., ["Shoes"] → "Shoes")
+  if (Array.isArray(value)) {
+    return value.join(', ').trim()
+  }
+  
+  // Handle numbers
+  if (typeof value === 'number') {
+    return value.toString()
+  }
+  
+  // Handle objects
+  if (typeof value === 'object') {
+    return JSON.stringify(value)
+  }
+  
+  // Convert to string and trim
+  const str = String(value).trim()
+  
+  // Return empty string for whitespace-only
+  return str.length === 0 ? '' : str
+}
+
 // Convert ParcelData to Supabase format
 export function convertToSupabaseFormat(parcel: ParcelData): SupabaseParcel {
   const dateText = parcel.date || ''
   const monthFromSheet = parcel.month || ''
   const parsedDate = parseDate(dateText, monthFromSheet)
   
+  // CRITICAL: Use safeString to ensure data integrity
+  const items = safeString(parcel.items)
+  const tracking = safeString(parcel.tracking)
+  const shipper = safeString(parcel.shipper)
+  const contact = safeString(parcel.contactNumber)
+  const address = safeString(parcel.fullAddress)
+  const reason = safeString(parcel.reason)
+  
+  // Debug: Log conversion for verification
+  if (Math.random() < 0.01) { // Log ~1% of records
+    console.log('🔍 Sample ParcelData → Supabase conversion:')
+    console.log('  Input - Items:', typeof parcel.items, JSON.stringify(parcel.items))
+    console.log('  Input - Tracking:', typeof parcel.tracking, JSON.stringify(parcel.tracking))
+    console.log('  Output - Items:', JSON.stringify(items))
+    console.log('  Output - Tracking:', JSON.stringify(tracking))
+  }
+  
   return {
-    parcel_date: parsedDate || '2026-01-01', // Default date if parsing fails
-    shipper_name: parcel.shipper || '',
-    address: parcel.fullAddress || '', // Use complete address from Google Sheets
-    contact_number: parcel.contactNumber || '', // Use contact number from Column D
+    parcel_date: parsedDate || '2026-01-01',
+    shipper_name: shipper,
+    address: address,
+    contact_number: contact,
     amount: parcel.codAmount || 0,
-    items: '',
-    tracking_number: '',
+    items: items,  // SAFE: Will never be undefined/null
+    tracking_number: tracking,  // SAFE: Will never be undefined/null
     status: parcel.status || '',
     normalized_status: parcel.normalizedStatus || '',
-    reason: '',
+    reason: reason,
     province: parcel.province || 'Unknown',
     municipality: parcel.municipality || '',
     region: parcel.region || 'Unknown',
@@ -189,21 +235,59 @@ export function convertToSupabaseFormat(parcel: ParcelData): SupabaseParcel {
   }
 }
 
-// Escape SQL string values
+// Escape SQL string values - BULLETPROOF version
 function escapeSQLString(value: string | null | undefined): string {
-  if (value === null || value === undefined) return 'NULL'
-  return `'${value.toString().replace(/'/g, "''")}'`
+  // Handle null/undefined
+  if (value === null || value === undefined) {
+    return 'NULL'
+  }
+  
+  // Convert to string safely
+  const str = String(value)
+  
+  // Handle empty strings
+  if (str.trim().length === 0) {
+    return "''"
+  }
+  
+  // Escape single quotes by doubling them (SQL standard)
+  // Also handle backslashes and other special characters
+  const escaped = str
+    .replace(/\\/g, '\\\\')  // Escape backslashes first
+    .replace(/'/g, "''")      // Escape single quotes
+    .replace(/\n/g, '\\n')    // Escape newlines
+    .replace(/\r/g, '\\r')    // Escape carriage returns
+    .replace(/\t/g, '\\t')    // Escape tabs
+  
+  return `'${escaped}'`
 }
 
 // Generate SQL INSERT statements
 export function generateInsertSQL(parcels: ParcelData[], batchSize: number = 100): string[] {
   const sqlStatements: string[] = []
   
+  // Debug: Check first parcel to verify data
+  if (parcels.length > 0) {
+    console.log('\n🔍 FIRST PARCEL IN generateInsertSQL:')
+    console.log('  Shipper:', parcels[0].shipper)
+    console.log('  Items:', parcels[0].items)
+    console.log('  Tracking:', parcels[0].tracking)
+    console.log('  Contact:', parcels[0].contactNumber)
+  }
+  
   // Process in batches for better performance
   for (let i = 0; i < parcels.length; i += batchSize) {
     const batch = parcels.slice(i, i + batchSize)
-    const values = batch.map(parcel => {
+    const values = batch.map((parcel, idx) => {
       const sp = convertToSupabaseFormat(parcel)
+      
+      // Debug first 3 conversions
+      if (i === 0 && idx < 3) {
+        console.log(`\n  Conversion #${idx + 1}:`)
+        console.log(`    Input - Items: "${parcel.items}", Tracking: "${parcel.tracking}"`)
+        console.log(`    Output - Items: "${sp.items}", Tracking: "${sp.tracking_number}"`)
+      }
+      
       return `(
   '${sp.parcel_date}',
   ${escapeSQLString(sp.shipper_name)},
@@ -261,21 +345,75 @@ export function generateCompleteMigrationSQL(parcels: ParcelData[]): string {
 
 `
 
-  const footer = `
+  const verificationQueries = `
+
+-- ============================================
+-- VERIFICATION QUERIES
+-- ============================================
+-- Run these queries to verify your data import
+-- ============================================
+
+-- 1. TOTAL RECORD COUNT (Expected: ${parcels.length})
+SELECT COUNT(*) as total_records FROM parcels;
+
+-- 2. COUNT BY MONTH
+SELECT 
+  TO_CHAR(parcel_date, 'YYYY-MM') as month,
+  TO_CHAR(parcel_date, 'Month YYYY') as month_name,
+  COUNT(*) as count
+FROM parcels
+GROUP BY TO_CHAR(parcel_date, 'YYYY-MM'), TO_CHAR(parcel_date, 'Month YYYY')
+ORDER BY month;
+
+-- 3. COUNT BY STATUS
+SELECT 
+  normalized_status,
+  COUNT(*) as count,
+  ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM parcels), 2) as percentage
+FROM parcels
+GROUP BY normalized_status
+ORDER BY count DESC;
+
+-- 4. CHECK FOR DUPLICATES (Should return 0 rows)
+SELECT 
+  shipper_name,
+  parcel_date,
+  address,
+  COUNT(*) as duplicate_count
+FROM parcels
+GROUP BY shipper_name, parcel_date, address
+HAVING COUNT(*) > 1
+ORDER BY duplicate_count DESC;
+
+-- 5. VERIFY ITEMS AND TRACKING DATA
+SELECT 
+  COUNT(*) as total_records,
+  COUNT(CASE WHEN items IS NOT NULL AND items != '' THEN 1 END) as records_with_items,
+  COUNT(CASE WHEN tracking_number IS NOT NULL AND tracking_number != '' THEN 1 END) as records_with_tracking,
+  COUNT(CASE WHEN contact_number IS NOT NULL AND contact_number != '' THEN 1 END) as records_with_contact
+FROM parcels;
+
+-- 6. SAMPLE DATA PREVIEW
+SELECT 
+  id,
+  parcel_date,
+  shipper_name,
+  items,
+  tracking_number,
+  contact_number,
+  status,
+  province
+FROM parcels
+ORDER BY id
+LIMIT 10;
 
 -- ============================================
 -- MIGRATION COMPLETE
--- ============================================
--- Total records inserted: ${parcels.length.toLocaleString()}
--- 
--- NEXT STEPS:
--- 1. Verify data: SELECT COUNT(*) FROM parcels;
--- 2. Check status distribution: SELECT normalized_status, COUNT(*) FROM parcels GROUP BY normalized_status;
--- 3. Check regional distribution: SELECT island, COUNT(*) FROM parcels GROUP BY island;
+-- Total records: ${parcels.length.toLocaleString()}
 -- ============================================
 `
 
-  return header + schema + '\n\n' + inserts.join('\n\n') + footer
+  return header + schema + '\n\n' + inserts.join('\n\n') + verificationQueries
 }
 
 // Generate statistics about the migration

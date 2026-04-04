@@ -689,9 +689,9 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="space-y-1">
-                        <div className="text-lg font-bold text-blue-600">{pickupItem?.pickupRate.toFixed(1)}%</div>
+                        <div className="text-lg font-bold text-blue-600">{pickupItem?.pendingRate.toFixed(1)}%</div>
                         <div className="text-xs text-muted-foreground">
-                          {pickupItem?.pickupCount.toLocaleString()} / {pickupItem?.totalCount.toLocaleString()}
+                          {pickupItem?.pendingCount.toLocaleString()} / {pickupItem?.totalCount.toLocaleString()}
                         </div>
                       </div>
                     </TableCell>
