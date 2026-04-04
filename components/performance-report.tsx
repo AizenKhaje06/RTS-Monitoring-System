@@ -272,7 +272,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
     // Region On Delivery rates
     const regionOnDeliveryRates: { region: string; onDeliveryRate: number; onDeliveryCount: number; totalCount: number }[] = []
     if (currentRegion === "all") {
-      const onDelivery = filteredData.filter((p) => p.normalizedStatus === "ON_DELIVERY").length
+      const onDelivery = filteredData.filter((p) => p.normalizedStatus === "ONDELIVERY").length
       const total = filteredData.length
       const onDeliveryRate = total > 0 ? (onDelivery / total) * 100 : 0
       regionOnDeliveryRates.push({ region: "All Regions", onDeliveryRate, onDeliveryCount: onDelivery, totalCount: total })
@@ -280,13 +280,13 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       const regionNames = ["luzon", "visayas", "mindanao"]
       regionNames.forEach((region) => {
         const regionFilteredData = filteredData.filter((parcel) => parcel.island === region)
-        const onDelivery = regionFilteredData.filter((p) => p.normalizedStatus === "ON_DELIVERY").length
+        const onDelivery = regionFilteredData.filter((p) => p.normalizedStatus === "ONDELIVERY").length
         const total = regionFilteredData.length
         const onDeliveryRate = total > 0 ? (onDelivery / total) * 100 : 0
         regionOnDeliveryRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), onDeliveryRate, onDeliveryCount: onDelivery, totalCount: total })
       })
     } else {
-      const onDelivery = sourceData.data.filter((p) => p.normalizedStatus === "ON_DELIVERY").length
+      const onDelivery = sourceData.data.filter((p) => p.normalizedStatus === "ONDELIVERY").length
       const total = sourceData.data.length
       const onDeliveryRate = total > 0 ? (onDelivery / total) * 100 : 0
       regionOnDeliveryRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), onDeliveryRate, onDeliveryCount: onDelivery, totalCount: total })
@@ -318,7 +318,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
     // Region In Transit rates
     const regionInTransitRates: { region: string; inTransitRate: number; inTransitCount: number; totalCount: number }[] = []
     if (currentRegion === "all") {
-      const inTransit = filteredData.filter((p) => p.normalizedStatus === "IN_TRANSIT").length
+      const inTransit = filteredData.filter((p) => p.normalizedStatus === "INTRANSIT").length
       const total = filteredData.length
       const inTransitRate = total > 0 ? (inTransit / total) * 100 : 0
       regionInTransitRates.push({ region: "All Regions", inTransitRate, inTransitCount: inTransit, totalCount: total })
@@ -326,13 +326,13 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       const regionNames = ["luzon", "visayas", "mindanao"]
       regionNames.forEach((region) => {
         const regionFilteredData = filteredData.filter((parcel) => parcel.island === region)
-        const inTransit = regionFilteredData.filter((p) => p.normalizedStatus === "IN_TRANSIT").length
+        const inTransit = regionFilteredData.filter((p) => p.normalizedStatus === "INTRANSIT").length
         const total = regionFilteredData.length
         const inTransitRate = total > 0 ? (inTransit / total) * 100 : 0
         regionInTransitRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), inTransitRate, inTransitCount: inTransit, totalCount: total })
       })
     } else {
-      const inTransit = sourceData.data.filter((p) => p.normalizedStatus === "IN_TRANSIT").length
+      const inTransit = sourceData.data.filter((p) => p.normalizedStatus === "INTRANSIT").length
       const total = sourceData.data.length
       const inTransitRate = total > 0 ? (inTransit / total) * 100 : 0
       regionInTransitRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), inTransitRate, inTransitCount: inTransit, totalCount: total })
@@ -705,21 +705,6 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       <div>
         <h2 className="text-2xl font-bold text-foreground mb-4">Delivered Results</h2>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="glass rounded-xl p-6 border border-blue-500/50">
-            <h3 className="text-xl font-bold text-foreground mb-4">Top Provinces by Delivery Count</h3>
-            <div className="space-y-3">
-              {topProvinces.map(([province, count], index) => (
-                <div key={province} className="flex items-center justify-between p-3 rounded-lg bg-blue-500/10">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-blue-500 w-6">#{index + 1}</span>
-                    <span className="text-sm font-medium text-foreground">{province}</span>
-                  </div>
-                  <span className="text-sm font-bold text-blue-500">{count.toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
           <div className="glass rounded-xl p-6 border border-purple-500/50">
             <h3 className="text-xl font-bold text-foreground mb-4">Top Regions by Delivery Count</h3>
             <div className="space-y-3">
@@ -730,6 +715,21 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
                     <span className="text-sm font-medium text-foreground">{region}</span>
                   </div>
                   <span className="text-sm font-bold text-purple-500">{count.toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="glass rounded-xl p-6 border border-blue-500/50">
+            <h3 className="text-xl font-bold text-foreground mb-4">Top Provinces by Delivery Count</h3>
+            <div className="space-y-3">
+              {topProvinces.map(([province, count], index) => (
+                <div key={province} className="flex items-center justify-between p-3 rounded-lg bg-blue-500/10">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold text-blue-500 w-6">#{index + 1}</span>
+                    <span className="text-sm font-medium text-foreground">{province}</span>
+                  </div>
+                  <span className="text-sm font-bold text-blue-500">{count.toLocaleString()}</span>
                 </div>
               ))}
             </div>
@@ -756,21 +756,6 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       <div>
         <h2 className="text-2xl font-bold text-foreground mb-4">Returned Results</h2>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="glass rounded-xl p-6 border border-red-500/50">
-            <h3 className="text-xl font-bold text-foreground mb-4">Top Provinces by RTS Count</h3>
-            <div className="space-y-3">
-              {topReturnedProvinces.map(([province, count], index) => (
-                <div key={province} className="flex items-center justify-between p-3 rounded-lg bg-red-500/10">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-red-500 w-6">#{index + 1}</span>
-                    <span className="text-sm font-medium text-foreground">{province}</span>
-                  </div>
-                  <span className="text-sm font-bold text-red-500">{count.toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
           <div className="glass rounded-xl p-6 border border-orange-500/50">
             <h3 className="text-xl font-bold text-foreground mb-4">Top Regions by RTS Count</h3>
             <div className="space-y-3">
@@ -781,6 +766,21 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
                     <span className="text-sm font-medium text-foreground">{region}</span>
                   </div>
                   <span className="text-sm font-bold text-orange-500">{count.toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="glass rounded-xl p-6 border border-red-500/50">
+            <h3 className="text-xl font-bold text-foreground mb-4">Top Provinces by RTS Count</h3>
+            <div className="space-y-3">
+              {topReturnedProvinces.map(([province, count], index) => (
+                <div key={province} className="flex items-center justify-between p-3 rounded-lg bg-red-500/10">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold text-red-500 w-6">#{index + 1}</span>
+                    <span className="text-sm font-medium text-foreground">{province}</span>
+                  </div>
+                  <span className="text-sm font-bold text-red-500">{count.toLocaleString()}</span>
                 </div>
               ))}
             </div>
