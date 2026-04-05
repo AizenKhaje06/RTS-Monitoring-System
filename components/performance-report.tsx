@@ -6,6 +6,7 @@ import type { ProcessedData, FilterState } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ExportMenu } from "@/components/export-menu"
 
 interface PerformanceReportProps {
@@ -163,7 +164,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10) as [string, number][]
 
-    // Region delivery rates (based on total parcels)
+    // Region delivery rates (based on total items)
     const regionSuccessRates: { region: string; successRate: number; deliveredCount: number; totalCount: number }[] = []
     if (currentRegion === "all") {
       // All Regions using filtered data
@@ -189,7 +190,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       regionSuccessRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), successRate: deliveryRate, deliveredCount: delivered, totalCount: total })
     }
 
-    // Region RTS rates (based on total parcels)
+    // Region RTS rates (based on total items)
     const regionRTSRates: { region: string; rtsRate: number; rtsCount: number; totalCount: number }[] = []
     if (currentRegion === "all") {
       // All Regions using filtered data
@@ -558,8 +559,16 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
         </div>
       </div>
 
-      {/* Performance Metrics Table */}
-      <div className="glass rounded-xl p-6 border border-border">
+      {/* Tabs for Overview and Insights */}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="insights">Insights</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          {/* Performance Metrics Table */}
+          <div className="glass rounded-xl p-6 border border-border">
         <h2 className="text-2xl font-bold text-foreground mb-6">Performance Metrics by Region</h2>
         <div className="overflow-x-auto">
           <Table>
@@ -802,6 +811,184 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
           </div>
         </div>
       </div>
+        </TabsContent>
+
+        <TabsContent value="insights" className="space-y-6">
+          {/* Insights Tab Content */}
+          <div className="glass rounded-xl p-6 border border-border">
+            <h2 className="text-2xl font-bold text-foreground mb-6">Performance Insights</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Delivery Success Analysis */}
+              <div className="glass-strong rounded-lg p-6 border border-green-500/30">
+                <div className="flex items-center gap-3 mb-4">
+                  <CheckCircle className="w-6 h-6 text-green-500" />
+                  <h3 className="text-xl font-bold text-foreground">Delivery Success Analysis</h3>
+                </div>
+                <div className="space-y-4">
+                  {regionSuccessRates.map((item) => (
+                    <div key={item.region} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-foreground">{item.region}</span>
+                        <span className="text-sm font-bold text-green-500">{item.successRate.toFixed(1)}%</span>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-2">
+                        <div
+                          className="bg-green-500 h-2 rounded-full transition-all"
+                          style={{ width: `${item.successRate}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {item.deliveredCount.toLocaleString()} delivered out of {item.totalCount.toLocaleString()} total items
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* RTS Impact Analysis */}
+              <div className="glass-strong rounded-lg p-6 border border-red-500/30">
+                <div className="flex items-center gap-3 mb-4">
+                  <XCircle className="w-6 h-6 text-red-500" />
+                  <h3 className="text-xl font-bold text-foreground">RTS Impact Analysis</h3>
+                </div>
+                <div className="space-y-4">
+                  {regionRTSRates.map((item) => (
+                    <div key={item.region} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-foreground">{item.region}</span>
+                        <span className="text-sm font-bold text-red-500">{item.rtsRate.toFixed(1)}%</span>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-2">
+                        <div
+                          className="bg-red-500 h-2 rounded-full transition-all"
+                          style={{ width: `${item.rtsRate}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {item.rtsCount.toLocaleString()} returned out of {item.totalCount.toLocaleString()} total items
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* In-Transit Status */}
+              <div className="glass-strong rounded-lg p-6 border border-purple-500/30">
+                <div className="flex items-center gap-3 mb-4">
+                  <MapPin className="w-6 h-6 text-purple-500" />
+                  <h3 className="text-xl font-bold text-foreground">In-Transit Status</h3>
+                </div>
+                <div className="space-y-4">
+                  {regionInTransitRates.map((item) => (
+                    <div key={item.region} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-foreground">{item.region}</span>
+                        <span className="text-sm font-bold text-purple-500">{item.inTransitRate.toFixed(1)}%</span>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-2">
+                        <div
+                          className="bg-purple-500 h-2 rounded-full transition-all"
+                          style={{ width: `${item.inTransitRate}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {item.inTransitCount.toLocaleString()} in transit out of {item.totalCount.toLocaleString()} total items
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* On Delivery Status */}
+              <div className="glass-strong rounded-lg p-6 border border-yellow-500/30">
+                <div className="flex items-center gap-3 mb-4">
+                  <Truck className="w-6 h-6 text-yellow-500" />
+                  <h3 className="text-xl font-bold text-foreground">On Delivery Status</h3>
+                </div>
+                <div className="space-y-4">
+                  {regionOnDeliveryRates.map((item) => (
+                    <div key={item.region} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-foreground">{item.region}</span>
+                        <span className="text-sm font-bold text-yellow-500">{item.onDeliveryRate.toFixed(1)}%</span>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-2">
+                        <div
+                          className="bg-yellow-500 h-2 rounded-full transition-all"
+                          style={{ width: `${item.onDeliveryRate}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {item.onDeliveryCount.toLocaleString()} on delivery out of {item.totalCount.toLocaleString()} total items
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Key Performance Indicators */}
+          <div className="glass rounded-xl p-6 border border-border">
+            <h2 className="text-2xl font-bold text-foreground mb-6">Key Performance Indicators</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Best Performing Region */}
+              <div className="glass-strong rounded-lg p-6 border border-green-500/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <TrendingUp className="w-5 h-5 text-green-500" />
+                  <h3 className="text-lg font-bold text-foreground">Best Delivery Rate</h3>
+                </div>
+                {regionSuccessRates.length > 0 && (
+                  <div>
+                    <p className="text-3xl font-bold text-green-500 mb-2">
+                      {Math.max(...regionSuccessRates.map(r => r.successRate)).toFixed(1)}%
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {regionSuccessRates.find(r => r.successRate === Math.max(...regionSuccessRates.map(r => r.successRate)))?.region}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Highest RTS Region */}
+              <div className="glass-strong rounded-lg p-6 border border-red-500/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <AlertTriangle className="w-5 h-5 text-red-500" />
+                  <h3 className="text-lg font-bold text-foreground">Highest RTS Rate</h3>
+                </div>
+                {regionRTSRates.length > 0 && (
+                  <div>
+                    <p className="text-3xl font-bold text-red-500 mb-2">
+                      {Math.max(...regionRTSRates.map(r => r.rtsRate)).toFixed(1)}%
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {regionRTSRates.find(r => r.rtsRate === Math.max(...regionRTSRates.map(r => r.rtsRate)))?.region}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Most Active Region */}
+              <div className="glass-strong rounded-lg p-6 border border-blue-500/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <Package className="w-5 h-5 text-blue-500" />
+                  <h3 className="text-lg font-bold text-foreground">Most Active Region</h3>
+                </div>
+                {regionSuccessRates.length > 0 && (
+                  <div>
+                    <p className="text-3xl font-bold text-blue-500 mb-2">
+                      {Math.max(...regionSuccessRates.map(r => r.totalCount)).toLocaleString()}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {regionSuccessRates.find(r => r.totalCount === Math.max(...regionSuccessRates.map(r => r.totalCount)))?.region} items
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

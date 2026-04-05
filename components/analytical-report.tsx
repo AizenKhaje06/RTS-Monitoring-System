@@ -260,11 +260,11 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
     const undeliveredCount = parcelData.filter((parcel) => undeliveredStatuses.includes(parcel.normalizedStatus)).length
     const undeliveredRate = totalShipments > 0 ? (undeliveredCount / totalShipments) * 100 : 0
 
-    // Regional data - filter global filtered data by island determined from region
+    // Regional data - filter global filtered data by island
     const regions = [
-      { name: "Luzon", data: { data: globalFilteredData.filter(p => determineRegion(p.region).island === "luzon") } },
-      { name: "Visayas", data: { data: globalFilteredData.filter(p => determineRegion(p.region).island === "visayas") } },
-      { name: "Mindanao", data: { data: globalFilteredData.filter(p => determineRegion(p.region).island === "mindanao") } }
+      { name: "Luzon", data: { data: globalFilteredData.filter(p => p.island === "luzon") } },
+      { name: "Visayas", data: { data: globalFilteredData.filter(p => p.island === "visayas") } },
+      { name: "Mindanao", data: { data: globalFilteredData.filter(p => p.island === "mindanao") } }
     ]
 
     const topPerformingRegions = regions.map(region => {
@@ -280,6 +280,7 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
       const regionDeliveredParcels = regionData.filter(p => p.normalizedStatus === "DELIVERED")
       const regionReturnedParcels = regionData.filter(p => p.normalizedStatus === "RETURNED")
       const regionGrossSales = regionDeliveredParcels.reduce((sum, p) => sum + (p.codAmount || 0), 0)
+      const regionReturnedAmount = regionReturnedParcels.reduce((sum, p) => sum + (p.codAmount || 0), 0)
       const regionTotalServiceCharge = regionData.reduce((sum, p) => sum + (p.serviceCharge || 0), 0)
       const regionTotalShippingCost = regionData.reduce((sum, p) => sum + (p.totalCost || 0), 0)
       const regionTotalRTSFee = regionReturnedParcels.reduce((sum, p) => sum + (p.rtsFee || 0), 0)
@@ -294,45 +295,64 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
         undeliveredRate: regionUndeliveredRate,
         deliveredCount: regionDelivered,
         rtsCount: regionRTS,
+        deliveredAmount: regionGrossSales,
+        returnedAmount: regionReturnedAmount,
         grossSales: regionGrossSales,
         netProfit: regionNetProfit,
         profitMargin: regionProfitMargin
       }
     }).sort((a, b) => b.netProfit - a.netProfit)
 
-    // Store performance (using shippers as stores) - based on global filter only
-    const storePerformance = Object.keys(data.all.winningShippers).map(shipper => {
-      const shipperParcels = globalFilteredData.filter(p => p.shipper === shipper)
-      const total = shipperParcels.length
-      const delivered = shipperParcels.filter(p => p.normalizedStatus === "DELIVERED").length
-      const rts = shipperParcels.filter(p => p.normalizedStatus === "RETURNED").length
-      const undelivered = shipperParcels.filter(p => undeliveredStatuses.includes(p.normalizedStatus)).length
-      const resolved = delivered + rts
-      const storeDeliveryRate = resolved > 0 ? (delivered / resolved) * 100 : 0
-      const storeRTSRate = resolved > 0 ? (rts / resolved) * 100 : 0
-      const storeUndeliveredRate = total > 0 ? (undelivered / total) * 100 : 0
-
-      // Calculate financials for this shipper
-      const shipperDeliveredParcels = shipperParcels.filter(p => p.normalizedStatus === "DELIVERED")
-      const shipperReturnedParcels = shipperParcels.filter(p => p.normalizedStatus === "RETURNED")
-      const storeGrossSales = shipperDeliveredParcels.reduce((sum, p) => sum + (p.codAmount || 0), 0)
-      const storeTotalServiceCharge = shipperParcels.reduce((sum, p) => sum + (p.serviceCharge || 0), 0)
-      const storeTotalShippingCost = shipperParcels.reduce((sum, p) => sum + (p.totalCost || 0), 0)
-      const storeTotalRTSFee = shipperReturnedParcels.reduce((sum, p) => sum + (p.rtsFee || 0), 0)
-      const storeGrossProfit = storeGrossSales - storeTotalShippingCost - storeTotalServiceCharge
-      const storeNetProfit = storeGrossProfit - storeTotalRTSFee
+    // Zone performance (Luzon, Visayas, Mindanao) - based on global filter only
+    const zonePerformance = [
+      { zone: "Luzon", island: "luzon" },
+      { zone: "Visayas", island: "visayas" },
+      { zone: "Mindanao", island: "mindanao" }
+    ].map(({ zone, island }) => {
+      const zoneParcels = globalFilteredData.filter(p => p.island === island)
+      const total = zoneParcels.length
+      
+      // Count parcels by status
+      const delivered = zoneParcels.filter(p => p.normalizedStatus === "DELIVERED").length
+      const returned = zoneParcels.filter(p => p.normalizedStatus === "RETURNED").length
+      const inTransit = zoneParcels.filter(p => p.normalizedStatus === "INTRANSIT").length
+      const onDelivery = zoneParcels.filter(p => p.normalizedStatus === "ONDELIVERY").length
+      const pending = zoneParcels.filter(p => p.normalizedStatus === "PENDING").length
+      const cancelled = zoneParcels.filter(p => p.normalizedStatus === "CANCELLED").length
+      const detained = zoneParcels.filter(p => p.normalizedStatus === "DETAINED").length
+      const problematic = zoneParcels.filter(p => p.normalizedStatus === "PROBLEMATIC").length
+      
+      // Calculate rates
+      const resolved = delivered + returned
+      const deliveryRate = resolved > 0 ? (delivered / resolved) * 100 : 0
+      const rtsRate = resolved > 0 ? (returned / resolved) * 100 : 0
+      
+      // Calculate financials
+      const grossSales = zoneParcels.filter(p => p.normalizedStatus === "DELIVERED").reduce((sum, p) => sum + (p.codAmount || 0), 0)
+      const totalServiceCharge = zoneParcels.reduce((sum, p) => sum + (p.serviceCharge || 0), 0)
+      const totalShippingCost = zoneParcels.reduce((sum, p) => sum + (p.totalCost || 0), 0)
+      const totalRTSFee = zoneParcels.filter(p => p.normalizedStatus === "RETURNED").reduce((sum, p) => sum + (p.rtsFee || 0), 0)
+      const grossProfit = grossSales - totalShippingCost - totalServiceCharge
+      const netProfit = grossProfit - totalRTSFee
+      const profitMargin = grossSales > 0 ? (netProfit / grossSales) * 100 : 0
 
       return {
-        store: shipper,
-        deliveryRate: storeDeliveryRate,
-        rtsRate: storeRTSRate,
-        undeliveredRate: storeUndeliveredRate,
-        deliveredCount: delivered,
-        rtsCount: rts,
-        grossSales: storeGrossSales,
-        netProfit: storeNetProfit
+        zone,
+        deliveryRate,
+        rtsRate,
+        delivered,
+        returned,
+        inTransit,
+        onDelivery,
+        pending,
+        cancelled,
+        detained,
+        problematic,
+        grossSales,
+        netProfit,
+        profitMargin
       }
-    }).sort((a, b) => b.netProfit - a.netProfit)
+    })
 
     // Critical insights
     const highestPerformingRegion = topPerformingRegions[0]
@@ -343,7 +363,45 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
       const regionRTSRate = regionTotal > 0 ? (regionRTS / regionTotal) * 100 : 0
       return regionRTSRate > (worst.rtsRate || 0) ? { region: region.name, rtsRate: regionRTSRate } : worst
     }, { region: "", rtsRate: 0 })
-    const topPerformingStore = storePerformance[0]
+    const topPerformingZone = zonePerformance[0]
+
+    // Items performance - based on global filter only
+    const itemsPerformance = (() => {
+      // Group parcels by item name
+      const itemGroups: Record<string, any[]> = {}
+      globalFilteredData.forEach(parcel => {
+        const itemName = parcel.items || "Unknown Item"
+        if (!itemGroups[itemName]) {
+          itemGroups[itemName] = []
+        }
+        itemGroups[itemName].push(parcel)
+      })
+
+      return Object.entries(itemGroups).map(([itemName, itemParcels]) => {
+        const total = itemParcels.length
+        const delivered = itemParcels.filter(p => p.normalizedStatus === "DELIVERED").length
+        const rts = itemParcels.filter(p => p.normalizedStatus === "RETURNED").length
+        const undelivered = itemParcels.filter(p => undeliveredStatuses.includes(p.normalizedStatus)).length
+        const resolved = delivered + rts
+        const itemDeliveryRate = resolved > 0 ? (delivered / resolved) * 100 : 0
+        const itemRTSRate = resolved > 0 ? (rts / resolved) * 100 : 0
+
+        // Calculate financials for this item
+        const itemDeliveredParcels = itemParcels.filter(p => p.normalizedStatus === "DELIVERED")
+        const itemGrossSales = itemDeliveredParcels.reduce((sum, p) => sum + (p.codAmount || 0), 0)
+
+        return {
+          item: itemName,
+          deliveryRate: itemDeliveryRate,
+          rtsRate: itemRTSRate,
+          deliveredCount: delivered,
+          rtsCount: rts,
+          grossSales: itemGrossSales
+        }
+      }).sort((a, b) => b.grossSales - a.grossSales)
+    })()
+
+    const topPerformingItem = itemsPerformance[0]
 
     return {
       totalShipments,
@@ -354,10 +412,12 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
       netProfit,
       avgProfitPerShipment,
       topPerformingRegions,
-      storePerformance,
+      zonePerformance,
+      itemsPerformance,
       highestPerformingRegion,
       worstRTSRegion,
-      topPerformingStore
+      topPerformingZone,
+      topPerformingItem
     }
   }, [data, filter.type, filter.value, filteredData])
 
@@ -371,9 +431,9 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
               <Package className="w-12 h-12 text-primary" />
             </div>
           </div>
-          <h3 className="text-2xl font-bold text-foreground mb-3">No Store Data</h3>
+          <h3 className="text-2xl font-bold text-foreground mb-3">No Items Data</h3>
           <p className="text-muted-foreground text-lg mb-6">
-            Load data from the dashboard to view store performance and corporate insights
+            Load data from the dashboard to view items performance and corporate insights
           </p>
           <p className="text-sm text-muted-foreground">
             Navigate to the Parcel dashboard and click &ldquo;Enter Dashboard&rdquo; to load your data
@@ -583,10 +643,9 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
                   <TableHead>Delivery Rate (%)</TableHead>
                   <TableHead>RTS Rate (%)</TableHead>
                   <TableHead>Delivered</TableHead>
+                  <TableHead>Amount</TableHead>
                   <TableHead>Returned</TableHead>
-                  <TableHead>Gross Sales (PHP)</TableHead>
-                  <TableHead>Net Profit (PHP)</TableHead>
-                  <TableHead>Profit Margin (%)</TableHead>
+                  <TableHead>Amount</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -600,12 +659,9 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
                       {region.rtsRate.toFixed(1)}%
                     </TableCell>
                     <TableCell>{region.deliveredCount}</TableCell>
+                    <TableCell>₱{region.deliveredAmount.toLocaleString()}</TableCell>
                     <TableCell>{region.rtsCount}</TableCell>
-                    <TableCell>₱{region.grossSales.toLocaleString()}</TableCell>
-                    <TableCell>₱{region.netProfit.toLocaleString()}</TableCell>
-                    <TableCell className={getColorClass(region.deliveryRate, region.profitMargin)}>
-                      {region.profitMargin.toFixed(1)}%
-                    </TableCell>
+                    <TableCell>₱{region.returnedAmount.toLocaleString()}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -614,33 +670,31 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
         </Card>
       </div>
 
-      {/* STORE PERFORMANCE */}
+      {/* ITEMS PERFORMANCE */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">STORE PERFORMANCE</h2>
+        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">ITEMS PERFORMANCE</h2>
         <Card>
           <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Store</TableHead>
+                  <TableHead>Item</TableHead>
                   <TableHead>Delivery Rate (%)</TableHead>
                   <TableHead>RTS Rate (%)</TableHead>
-                  <TableHead>Delivered</TableHead>
-                  <TableHead>Returned</TableHead>
+                  <TableHead>Delivered Items</TableHead>
+                  <TableHead>Returned Items</TableHead>
                   <TableHead>Gross Sales (PHP)</TableHead>
-                  <TableHead>Net Profit (PHP)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {metrics?.storePerformance.slice(0, 10).map((store) => (
-                  <TableRow key={store.store}>
-                    <TableCell className="font-medium">{store.store}</TableCell>
-                    <TableCell className="text-green-600">{store.deliveryRate.toFixed(1)}%</TableCell>
-                    <TableCell className="text-red-600">{store.rtsRate.toFixed(1)}%</TableCell>
-                    <TableCell>{store.deliveredCount}</TableCell>
-                    <TableCell>{store.rtsCount}</TableCell>
-                    <TableCell>₱{store.grossSales.toLocaleString()}</TableCell>
-                    <TableCell>₱{store.netProfit.toLocaleString()}</TableCell>
+                {metrics?.itemsPerformance?.slice(0, 10).map((item) => (
+                  <TableRow key={item.item}>
+                    <TableCell className="font-medium">{item.item}</TableCell>
+                    <TableCell className="text-green-600">{item.deliveryRate.toFixed(1)}%</TableCell>
+                    <TableCell className="text-red-600">{item.rtsRate.toFixed(1)}%</TableCell>
+                    <TableCell>{item.deliveredCount}</TableCell>
+                    <TableCell>{item.rtsCount}</TableCell>
+                    <TableCell>₱{item.grossSales.toLocaleString()}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -685,12 +739,12 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Target className="h-5 w-5 text-blue-600" />
-                Top Performing Store
+                Top Performing Item
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm">
-                {metrics?.topPerformingStore?.store} leads with ₱{metrics?.topPerformingStore?.netProfit.toLocaleString()} net profit
+                {metrics?.topPerformingItem?.item} leads with ₱{metrics?.topPerformingItem?.grossSales.toLocaleString()} gross sales
               </p>
             </CardContent>
           </Card>
