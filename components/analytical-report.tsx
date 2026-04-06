@@ -5,6 +5,7 @@ import { Package, TrendingUp, DollarSign, Target, AlertTriangle, Lightbulb } fro
 import type { ProcessedData, FilterState, ParcelData } from "@/lib/types"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { determineRegion } from "@/lib/philippine-regions"
@@ -242,11 +243,12 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
     const rtsCount = returnedParcels.length
 
     // Financial calculations (only for delivered and returned parcels)
-    const grossSales = deliveredParcels.reduce((sum, parcel) => sum + (parcel.codAmount || 0), 0)
+    const grossSales = parcelData.reduce((sum, parcel) => sum + (parcel.codAmount || 0), 0) // Total of all parcels
+    const deliveredAmount = deliveredParcels.reduce((sum, parcel) => sum + (parcel.codAmount || 0), 0)
     const totalServiceCharge = parcelData.reduce((sum, parcel) => sum + (parcel.serviceCharge || 0), 0)
     const totalShippingCost = parcelData.reduce((sum, parcel) => sum + (parcel.totalCost || 0), 0)
     const totalRTSFee = returnedParcels.reduce((sum, parcel) => sum + (parcel.rtsFee || 0), 0)
-    const grossProfit = grossSales - totalShippingCost - totalServiceCharge
+    const grossProfit = deliveredAmount - totalShippingCost - totalServiceCharge
     const netProfit = grossProfit - totalRTSFee
     const avgProfitPerShipment = totalShipments > 0 ? netProfit / totalShipments : 0
 
@@ -256,8 +258,10 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
     const rtsRate = resolved > 0 ? (rtsCount / resolved) * 100 : 0
 
     // Calculate Undelivered Parcel Rate (On Delivery, Pickup, In Transit, Detained, Problematic)
-    const undeliveredStatuses = ["ONDELIVERY", "PICKUP", "INTRANSIT", "DETAINED", "PROBLEMATIC"]
-    const undeliveredCount = parcelData.filter((parcel) => undeliveredStatuses.includes(parcel.normalizedStatus)).length
+    const undeliveredStatuses = ["ONDELIVERY", "PICKUP", "INTRANSIT", "DETAINED", "PROBLEMATIC", "PENDING", "CANCELLED"]
+    const undeliveredParcels = parcelData.filter((parcel) => undeliveredStatuses.includes(parcel.normalizedStatus))
+    const undeliveredCount = undeliveredParcels.length
+    const receivableAmount = undeliveredParcels.reduce((sum, parcel) => sum + (parcel.codAmount || 0), 0)
     const undeliveredRate = totalShipments > 0 ? (undeliveredCount / totalShipments) * 100 : 0
 
     // Regional data - filter global filtered data by island
@@ -409,8 +413,10 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
       rtsRate,
       undeliveredRate,
       grossSales,
+      deliveredAmount,
       netProfit,
       avgProfitPerShipment,
+      receivableAmount,
       topPerformingRegions,
       zonePerformance,
       itemsPerformance,
@@ -563,10 +569,18 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
         </div>
       </div>
 
-      {/* EXECUTIVE SUMMARY */}
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">EXECUTIVE SUMMARY</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      {/* Tabs for Overview and Comprehensive Insights */}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="insights">Comprehensive Insights</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          {/* EXECUTIVE SUMMARY */}
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">EXECUTIVE SUMMARY</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Shipments</CardTitle>
@@ -611,21 +625,21 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
+            <CardTitle className="text-sm font-medium">Delivered</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">₱{metrics?.netProfit.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-green-600">₱{metrics?.deliveredAmount.toLocaleString()}</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Profit/Shipment</CardTitle>
+            <CardTitle className="text-sm font-medium">Receivable</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">₱{metrics?.avgProfitPerShipment.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-blue-600">₱{metrics?.receivableAmount.toLocaleString()}</div>
           </CardContent>
         </Card>
         </div>
@@ -798,6 +812,157 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
           </Card>
         </div>
       </div>
+        </TabsContent>
+
+        <TabsContent value="insights" className="space-y-6">
+          {/* Comprehensive Insights Content */}
+          <div className="glass rounded-xl p-6 border border-border">
+            <h2 className="text-2xl font-bold text-foreground mb-6">Comprehensive Business Insights</h2>
+            
+            {/* Financial Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="glass-strong rounded-lg p-6 border border-green-500/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <DollarSign className="w-6 h-6 text-green-500" />
+                  <h3 className="text-lg font-bold text-foreground">Revenue Analysis</h3>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Gross Sales</p>
+                    <p className="text-2xl font-bold text-green-500">₱{metrics?.grossSales.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Delivered Amount</p>
+                    <p className="text-xl font-bold text-foreground">₱{metrics?.deliveredAmount.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Receivable Amount</p>
+                    <p className="text-xl font-bold text-blue-500">₱{metrics?.receivableAmount.toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="glass-strong rounded-lg p-6 border border-blue-500/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <Target className="w-6 h-6 text-blue-500" />
+                  <h3 className="text-lg font-bold text-foreground">Performance Metrics</h3>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Delivery Success Rate</p>
+                    <p className="text-2xl font-bold text-green-500">{metrics?.deliveryRate.toFixed(1)}%</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">RTS Rate</p>
+                    <p className="text-xl font-bold text-red-500">{metrics?.rtsRate.toFixed(1)}%</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Shipments</p>
+                    <p className="text-xl font-bold text-foreground">{metrics?.totalShipments.toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="glass-strong rounded-lg p-6 border border-purple-500/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <Package className="w-6 h-6 text-purple-500" />
+                  <h3 className="text-lg font-bold text-foreground">Top Performing Item</h3>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Item Name</p>
+                    <p className="text-lg font-bold text-foreground">{metrics?.topPerformingItem?.item}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Gross Sales</p>
+                    <p className="text-xl font-bold text-green-500">₱{metrics?.topPerformingItem?.grossSales.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Delivery Rate</p>
+                    <p className="text-lg font-bold text-blue-500">{metrics?.topPerformingItem?.deliveryRate.toFixed(1)}%</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Zone Performance Comparison */}
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-foreground mb-4">Zone Performance Comparison</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {metrics?.zonePerformance.map((zone) => (
+                  <div key={zone.zone} className="glass-strong rounded-lg p-4 border border-border">
+                    <h4 className="text-lg font-bold text-foreground mb-3">{zone.zone}</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Delivery Rate:</span>
+                        <span className="text-sm font-bold text-green-500">{zone.deliveryRate.toFixed(1)}%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">RTS Rate:</span>
+                        <span className="text-sm font-bold text-red-500">{zone.rtsRate.toFixed(1)}%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Delivered:</span>
+                        <span className="text-sm font-bold text-foreground">{zone.delivered}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Returned:</span>
+                        <span className="text-sm font-bold text-foreground">{zone.returned}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Strategic Recommendations */}
+            <div>
+              <h3 className="text-xl font-bold text-foreground mb-4">Strategic Recommendations</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="glass-strong rounded-lg p-4 border border-yellow-500/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Lightbulb className="w-5 h-5 text-yellow-500" />
+                    <h4 className="font-bold text-foreground">Focus on High-Performing Items</h4>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Prioritize inventory and marketing for top-performing items like {metrics?.topPerformingItem?.item} to maximize revenue.
+                  </p>
+                </div>
+
+                <div className="glass-strong rounded-lg p-4 border border-red-500/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertTriangle className="w-5 h-5 text-red-500" />
+                    <h4 className="font-bold text-foreground">Address RTS Issues</h4>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Focus on {metrics?.worstRTSRegion?.region} region with {metrics?.worstRTSRegion?.rtsRate.toFixed(1)}% RTS rate to improve delivery success.
+                  </p>
+                </div>
+
+                <div className="glass-strong rounded-lg p-4 border border-blue-500/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="w-5 h-5 text-blue-500" />
+                    <h4 className="font-bold text-foreground">Optimize Receivables</h4>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    ₱{metrics?.receivableAmount.toLocaleString()} in receivables - focus on completing pending deliveries to improve cash flow.
+                  </p>
+                </div>
+
+                <div className="glass-strong rounded-lg p-4 border border-green-500/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp className="w-5 h-5 text-green-500" />
+                    <h4 className="font-bold text-foreground">Leverage Best Practices</h4>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Replicate successful strategies from {metrics?.highestPerformingRegion?.region} across other regions to boost overall performance.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
