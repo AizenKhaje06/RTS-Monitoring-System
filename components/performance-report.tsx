@@ -164,62 +164,56 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
       .sort(([, a], [, b]) => b - a)
       .slice(0, 10) as [string, number][]
 
-    // Region delivery rates (based on resolved items only)
+    // Region delivery rates (based on total parcels)
     const regionSuccessRates: { region: string; successRate: number; deliveredCount: number; totalCount: number }[] = []
     if (currentRegion === "all") {
       // All Regions using filtered data
       const delivered = filteredData.filter((p) => p.normalizedStatus === "DELIVERED").length
-      const returned = filteredData.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
-      const resolved = delivered + returned
-      const deliveryRate = resolved > 0 ? (delivered / resolved) * 100 : 0
-      regionSuccessRates.push({ region: "All Regions", successRate: deliveryRate, deliveredCount: delivered, totalCount: resolved })
+      const total = filteredData.length
+      const deliveryRate = total > 0 ? (delivered / total) * 100 : 0
+      regionSuccessRates.push({ region: "All Regions", successRate: deliveryRate, deliveredCount: delivered, totalCount: total })
 
       // Individual regions using filtered data
       const regionNames = ["luzon", "visayas", "mindanao"]
       regionNames.forEach((region) => {
         const regionFilteredData = filteredData.filter((parcel) => parcel.island === region)
         const delivered = regionFilteredData.filter((p) => p.normalizedStatus === "DELIVERED").length
-        const returned = regionFilteredData.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
-        const resolved = delivered + returned
-        const deliveryRate = resolved > 0 ? (delivered / resolved) * 100 : 0
-        regionSuccessRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), successRate: deliveryRate, deliveredCount: delivered, totalCount: resolved })
+        const total = regionFilteredData.length
+        const deliveryRate = total > 0 ? (delivered / total) * 100 : 0
+        regionSuccessRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), successRate: deliveryRate, deliveredCount: delivered, totalCount: total })
       })
     } else {
       // Only show the current region using filtered data
       const delivered = sourceData.data.filter((p) => p.normalizedStatus === "DELIVERED").length
-      const returned = sourceData.data.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
-      const resolved = delivered + returned
-      const deliveryRate = resolved > 0 ? (delivered / resolved) * 100 : 0
-      regionSuccessRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), successRate: deliveryRate, deliveredCount: delivered, totalCount: resolved })
+      const total = sourceData.data.length
+      const deliveryRate = total > 0 ? (delivered / total) * 100 : 0
+      regionSuccessRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), successRate: deliveryRate, deliveredCount: delivered, totalCount: total })
     }
 
-    // Region RTS rates (based on resolved items only)
+    // Region RTS rates (based on total parcels)
     const regionRTSRates: { region: string; rtsRate: number; rtsCount: number; totalCount: number }[] = []
     if (currentRegion === "all") {
       // All Regions using filtered data
-      const delivered = filteredData.filter((p) => p.normalizedStatus === "DELIVERED").length
       const rts = filteredData.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
-      const resolved = delivered + rts
-      const rtsRate = resolved > 0 ? (rts / resolved) * 100 : 0
-      regionRTSRates.push({ region: "All Regions", rtsRate, rtsCount: rts, totalCount: resolved })
+      const total = filteredData.length
+      const rtsRate = total > 0 ? (rts / total) * 100 : 0
+      regionRTSRates.push({ region: "All Regions", rtsRate, rtsCount: rts, totalCount: total })
 
       // Individual regions using filtered data
       const regionNames = ["luzon", "visayas", "mindanao"]
       regionNames.forEach((region) => {
         const regionFilteredData = filteredData.filter((parcel) => parcel.island === region)
-        const delivered = regionFilteredData.filter((p) => p.normalizedStatus === "DELIVERED").length
         const rts = regionFilteredData.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
-        const resolved = delivered + rts
-        const rtsRate = resolved > 0 ? (rts / resolved) * 100 : 0
-        regionRTSRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), rtsRate, rtsCount: rts, totalCount: resolved })
+        const total = regionFilteredData.length
+        const rtsRate = total > 0 ? (rts / total) * 100 : 0
+        regionRTSRates.push({ region: region.charAt(0).toUpperCase() + region.slice(1), rtsRate, rtsCount: rts, totalCount: total })
       })
     } else {
       // Only show the current region using filtered data
-      const delivered = sourceData.data.filter((p) => p.normalizedStatus === "DELIVERED").length
       const rts = sourceData.data.filter((p) => rtsStatuses.includes(p.normalizedStatus)).length
-      const resolved = delivered + rts
-      const rtsRate = resolved > 0 ? (rts / resolved) * 100 : 0
-      regionRTSRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), rtsRate, rtsCount: rts, totalCount: resolved })
+      const total = sourceData.data.length
+      const rtsRate = total > 0 ? (rts / total) * 100 : 0
+      regionRTSRates.push({ region: currentRegion.charAt(0).toUpperCase() + currentRegion.slice(1), rtsRate, rtsCount: rts, totalCount: total })
     }
 
     // Top regions by delivery count

@@ -251,10 +251,9 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
     const netProfit = grossProfit - totalRTSFee
     const avgProfitPerShipment = totalShipments > 0 ? netProfit / totalShipments : 0
 
-    // Rates based on resolved parcels (delivered + returned)
-    const resolved = deliveredCount + rtsCount
-    const deliveryRate = resolved > 0 ? (deliveredCount / resolved) * 100 : 0
-    const rtsRate = resolved > 0 ? (rtsCount / resolved) * 100 : 0
+    // Rates based on total parcels
+    const deliveryRate = totalShipments > 0 ? (deliveredCount / totalShipments) * 100 : 0
+    const rtsRate = totalShipments > 0 ? (rtsCount / totalShipments) * 100 : 0
 
     // Calculate Undelivered Parcel Rate (On Delivery, Pickup, In Transit, Detained, Problematic)
     const undeliveredStatuses = ["ONDELIVERY", "PICKUP", "INTRANSIT", "DETAINED", "PROBLEMATIC", "PENDING", "CANCELLED"]
@@ -275,10 +274,10 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
       const regionDelivered = regionData.filter(p => p.normalizedStatus === "DELIVERED").length
       const regionRTS = regionData.filter(p => p.normalizedStatus === "RETURNED").length
       const regionUndelivered = regionData.filter(p => undeliveredStatuses.includes(p.normalizedStatus)).length
-      const regionTotalResolved = regionDelivered + regionRTS
-      const regionDeliveryRate = regionTotalResolved > 0 ? (regionDelivered / regionTotalResolved) * 100 : 0
-      const regionRTSRate = regionTotalResolved > 0 ? (regionRTS / regionTotalResolved) * 100 : 0
-      const regionUndeliveredRate = (regionDelivered + regionRTS + regionUndelivered) > 0 ? (regionUndelivered / (regionDelivered + regionRTS + regionUndelivered)) * 100 : 0
+      const regionTotal = regionData.length
+      const regionDeliveryRate = regionTotal > 0 ? (regionDelivered / regionTotal) * 100 : 0
+      const regionRTSRate = regionTotal > 0 ? (regionRTS / regionTotal) * 100 : 0
+      const regionUndeliveredRate = regionTotal > 0 ? (regionUndelivered / regionTotal) * 100 : 0
 
       const regionDeliveredParcels = regionData.filter(p => p.normalizedStatus === "DELIVERED")
       const regionReturnedParcels = regionData.filter(p => p.normalizedStatus === "RETURNED")
@@ -324,10 +323,10 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
       const detained = zoneParcels.filter(p => p.normalizedStatus === "DETAINED").length
       const problematic = zoneParcels.filter(p => p.normalizedStatus === "PROBLEMATIC").length
       
-      // Calculate rates
-      const resolved = delivered + returned
-      const deliveryRate = resolved > 0 ? (delivered / resolved) * 100 : 0
-      const rtsRate = resolved > 0 ? (returned / resolved) * 100 : 0
+      // Calculate rates based on total parcels
+      const total = zoneParcels.length
+      const deliveryRate = total > 0 ? (delivered / total) * 100 : 0
+      const rtsRate = total > 0 ? (returned / total) * 100 : 0
       
       // Calculate financials
       const grossSales = zoneParcels.filter(p => p.normalizedStatus === "DELIVERED").reduce((sum, p) => sum + (p.codAmount || 0), 0)
@@ -382,9 +381,9 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
       return Object.entries(itemGroups).map(([itemName, itemParcels]) => {
         const delivered = itemParcels.filter(p => p.normalizedStatus === "DELIVERED").length
         const rts = itemParcels.filter(p => p.normalizedStatus === "RETURNED").length
-        const resolved = delivered + rts
-        const itemDeliveryRate = resolved > 0 ? (delivered / resolved) * 100 : 0
-        const itemRTSRate = resolved > 0 ? (rts / resolved) * 100 : 0
+        const total = itemParcels.length
+        const itemDeliveryRate = total > 0 ? (delivered / total) * 100 : 0
+        const itemRTSRate = total > 0 ? (rts / total) * 100 : 0
 
         // Calculate financials for this item
         const itemDeliveredParcels = itemParcels.filter(p => p.normalizedStatus === "DELIVERED")
