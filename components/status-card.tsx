@@ -24,7 +24,7 @@ export function StatusCard({ status, count, locations, colorClass, total }: Stat
   const percentage = useMemo(() => {
     if (total === 0) return '0%'
     const pct = (count / total) * 100
-    return `${pct.toFixed(1)}%`
+    return `${pct.toFixed(2)}%`
   }, [count, total])
 
   const barColors = [

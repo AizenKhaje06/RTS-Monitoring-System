@@ -640,7 +640,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
                     <TableCell className="font-medium">{successItem.region}</TableCell>
                     <TableCell className="text-center">
                       <div className="space-y-1">
-                        <div className="text-lg font-bold text-green-600">{successItem.successRate.toFixed(1)}%</div>
+                        <div className="text-lg font-bold text-green-600">{successItem.successRate.toFixed(2)}%</div>
                         <div className="text-xs text-muted-foreground">
                           {successItem.deliveredCount.toLocaleString()} / {successItem.totalCount.toLocaleString()}
                         </div>
@@ -648,7 +648,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="space-y-1">
-                        <div className="text-lg font-bold text-red-600">{rtsItem?.rtsRate.toFixed(1)}%</div>
+                        <div className="text-lg font-bold text-red-600">{rtsItem?.rtsRate.toFixed(2)}%</div>
                         <div className="text-xs text-muted-foreground">
                           {rtsItem?.rtsCount.toLocaleString()} / {rtsItem?.totalCount.toLocaleString()}
                         </div>
@@ -656,7 +656,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="space-y-1">
-                        <div className="text-lg font-bold text-yellow-600">{onDeliveryItem?.onDeliveryRate.toFixed(1)}%</div>
+                        <div className="text-lg font-bold text-yellow-600">{onDeliveryItem?.onDeliveryRate.toFixed(2)}%</div>
                         <div className="text-xs text-muted-foreground">
                           {onDeliveryItem?.onDeliveryCount.toLocaleString()} / {onDeliveryItem?.totalCount.toLocaleString()}
                         </div>
@@ -664,7 +664,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="space-y-1">
-                        <div className="text-lg font-bold text-blue-600">{pickupItem?.pendingRate.toFixed(1)}%</div>
+                        <div className="text-lg font-bold text-blue-600">{pickupItem?.pendingRate.toFixed(2)}%</div>
                         <div className="text-xs text-muted-foreground">
                           {pickupItem?.pendingCount.toLocaleString()} / {pickupItem?.totalCount.toLocaleString()}
                         </div>
@@ -672,7 +672,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="space-y-1">
-                        <div className="text-lg font-bold text-purple-600">{inTransitItem?.inTransitRate.toFixed(1)}%</div>
+                        <div className="text-lg font-bold text-purple-600">{inTransitItem?.inTransitRate.toFixed(2)}%</div>
                         <div className="text-xs text-muted-foreground">
                           {inTransitItem?.inTransitCount.toLocaleString()} / {inTransitItem?.totalCount.toLocaleString()}
                         </div>
@@ -680,7 +680,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="space-y-1">
-                        <div className="text-lg font-bold text-gray-600">{cancelledItem?.cancelledRate.toFixed(1)}%</div>
+                        <div className="text-lg font-bold text-gray-600">{cancelledItem?.cancelledRate.toFixed(2)}%</div>
                         <div className="text-xs text-muted-foreground">
                           {cancelledItem?.cancelledCount.toLocaleString()} / {cancelledItem?.totalCount.toLocaleString()}
                         </div>
@@ -688,7 +688,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="space-y-1">
-                        <div className="text-lg font-bold text-orange-600">{detainedItem?.detainedRate.toFixed(1)}%</div>
+                        <div className="text-lg font-bold text-orange-600">{detainedItem?.detainedRate.toFixed(2)}%</div>
                         <div className="text-xs text-muted-foreground">
                           {detainedItem?.detainedCount.toLocaleString()} / {detainedItem?.totalCount.toLocaleString()}
                         </div>
@@ -696,7 +696,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="space-y-1">
-                        <div className="text-lg font-bold text-red-700">{problematicItem?.problematicRate.toFixed(1)}%</div>
+                        <div className="text-lg font-bold text-red-700">{problematicItem?.problematicRate.toFixed(2)}%</div>
                         <div className="text-xs text-muted-foreground">
                           {problematicItem?.problematicCount.toLocaleString()} / {problematicItem?.totalCount.toLocaleString()}
                         </div>
@@ -829,7 +829,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
                     <div key={item.region} className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-foreground">{item.region}</span>
-                        <span className="text-sm font-bold text-green-500">{item.successRate.toFixed(1)}%</span>
+                        <span className="text-sm font-bold text-green-500">{item.successRate.toFixed(2)}%</span>
                       </div>
                       <div className="w-full bg-secondary rounded-full h-2">
                         <div
@@ -856,7 +856,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
                     <div key={item.region} className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-foreground">{item.region}</span>
-                        <span className="text-sm font-bold text-red-500">{item.rtsRate.toFixed(1)}%</span>
+                        <span className="text-sm font-bold text-red-500">{item.rtsRate.toFixed(2)}%</span>
                       </div>
                       <div className="w-full bg-secondary rounded-full h-2">
                         <div
@@ -883,7 +883,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
                     <div key={item.region} className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-foreground">{item.region}</span>
-                        <span className="text-sm font-bold text-purple-500">{item.inTransitRate.toFixed(1)}%</span>
+                        <span className="text-sm font-bold text-purple-500">{item.inTransitRate.toFixed(2)}%</span>
                       </div>
                       <div className="w-full bg-secondary rounded-full h-2">
                         <div
@@ -910,7 +910,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
                     <div key={item.region} className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-foreground">{item.region}</span>
-                        <span className="text-sm font-bold text-yellow-500">{item.onDeliveryRate.toFixed(1)}%</span>
+                        <span className="text-sm font-bold text-yellow-500">{item.onDeliveryRate.toFixed(2)}%</span>
                       </div>
                       <div className="w-full bg-secondary rounded-full h-2">
                         <div
@@ -941,7 +941,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
                 {regionSuccessRates.length > 0 && (
                   <div>
                     <p className="text-3xl font-bold text-green-500 mb-2">
-                      {Math.max(...regionSuccessRates.map(r => r.successRate)).toFixed(1)}%
+                      {Math.max(...regionSuccessRates.map(r => r.successRate)).toFixed(2)}%
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {regionSuccessRates.find(r => r.successRate === Math.max(...regionSuccessRates.map(r => r.successRate)))?.region}
@@ -959,7 +959,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
                 {regionRTSRates.length > 0 && (
                   <div>
                     <p className="text-3xl font-bold text-red-500 mb-2">
-                      {Math.max(...regionRTSRates.map(r => r.rtsRate)).toFixed(1)}%
+                      {Math.max(...regionRTSRates.map(r => r.rtsRate)).toFixed(2)}%
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {regionRTSRates.find(r => r.rtsRate === Math.max(...regionRTSRates.map(r => r.rtsRate)))?.region}

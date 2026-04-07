@@ -586,7 +586,7 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{metrics?.deliveryRate.toFixed(1)}%</div>
+            <div className="text-2xl font-bold text-green-600">{metrics?.deliveryRate.toFixed(2)}%</div>
           </CardContent>
         </Card>
 
@@ -596,7 +596,7 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{metrics?.rtsRate.toFixed(1)}%</div>
+            <div className="text-2xl font-bold text-red-600">{metrics?.rtsRate.toFixed(2)}%</div>
           </CardContent>
         </Card>
 
@@ -656,10 +656,10 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
                   <TableRow key={region.region}>
                     <TableCell className="font-medium">{region.region}</TableCell>
                     <TableCell className="text-green-600">
-                      {region.deliveryRate.toFixed(1)}%
+                      {region.deliveryRate.toFixed(2)}%
                     </TableCell>
                     <TableCell className="text-red-600">
-                      {region.rtsRate.toFixed(1)}%
+                      {region.rtsRate.toFixed(2)}%
                     </TableCell>
                     <TableCell>{region.deliveredCount}</TableCell>
                     <TableCell>₱{region.deliveredAmount.toLocaleString()}</TableCell>
@@ -693,8 +693,8 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
                 {metrics?.itemsPerformance?.slice(0, 10).map((item) => (
                   <TableRow key={item.item}>
                     <TableCell className="font-medium">{item.item}</TableCell>
-                    <TableCell className="text-green-600">{item.deliveryRate.toFixed(1)}%</TableCell>
-                    <TableCell className="text-red-600">{item.rtsRate.toFixed(1)}%</TableCell>
+                    <TableCell className="text-green-600">{item.deliveryRate.toFixed(2)}%</TableCell>
+                    <TableCell className="text-red-600">{item.rtsRate.toFixed(2)}%</TableCell>
                     <TableCell>{item.deliveredCount}</TableCell>
                     <TableCell>{item.rtsCount}</TableCell>
                     <TableCell>₱{item.grossSales.toLocaleString()}</TableCell>
@@ -719,7 +719,7 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
             </CardHeader>
             <CardContent>
               <p className="text-sm">
-                {metrics?.highestPerformingRegion?.region} leads with {metrics?.highestPerformingRegion?.profitMargin.toFixed(1)}% profit margin
+                {metrics?.highestPerformingRegion?.region} leads with {metrics?.highestPerformingRegion?.profitMargin.toFixed(2)}% profit margin
               </p>
             </CardContent>
           </Card>
@@ -733,7 +733,7 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
             </CardHeader>
             <CardContent>
               <p className="text-sm">
-                {metrics?.worstRTSRegion?.region} has the highest RTS rate at {metrics?.worstRTSRegion?.rtsRate.toFixed(1)}%
+                {metrics?.worstRTSRegion?.region} has the highest RTS rate at {metrics?.worstRTSRegion?.rtsRate.toFixed(2)}%
               </p>
             </CardContent>
           </Card>
@@ -767,7 +767,7 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
             </CardHeader>
             <CardContent>
               <p className="text-sm">
-                Focus on {metrics?.worstRTSRegion?.region} to reduce RTS rate from {metrics?.worstRTSRegion?.rtsRate.toFixed(1)}%
+                Focus on {metrics?.worstRTSRegion?.region} to reduce RTS rate from {metrics?.worstRTSRegion?.rtsRate.toFixed(2)}%
               </p>
             </CardContent>
           </Card>
@@ -839,11 +839,11 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
                 <div className="space-y-3">
                   <div>
                     <p className="text-sm text-muted-foreground">Delivery Success Rate</p>
-                    <p className="text-2xl font-bold text-green-500">{metrics?.deliveryRate.toFixed(1)}%</p>
+                    <p className="text-2xl font-bold text-green-500">{metrics?.deliveryRate.toFixed(2)}%</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">RTS Rate</p>
-                    <p className="text-xl font-bold text-red-500">{metrics?.rtsRate.toFixed(1)}%</p>
+                    <p className="text-xl font-bold text-red-500">{metrics?.rtsRate.toFixed(2)}%</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Total Shipments</p>
@@ -868,7 +868,7 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Delivery Rate</p>
-                    <p className="text-lg font-bold text-blue-500">{metrics?.topPerformingItem?.deliveryRate.toFixed(1)}%</p>
+                    <p className="text-lg font-bold text-blue-500">{metrics?.topPerformingItem?.deliveryRate.toFixed(2)}%</p>
                   </div>
                 </div>
               </div>
@@ -884,11 +884,11 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Delivery Rate:</span>
-                        <span className="text-sm font-bold text-green-500">{zone.deliveryRate.toFixed(1)}%</span>
+                        <span className="text-sm font-bold text-green-500">{zone.deliveryRate.toFixed(2)}%</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">RTS Rate:</span>
-                        <span className="text-sm font-bold text-red-500">{zone.rtsRate.toFixed(1)}%</span>
+                        <span className="text-sm font-bold text-red-500">{zone.rtsRate.toFixed(2)}%</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Delivered:</span>
@@ -924,7 +924,7 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
                     <h4 className="font-bold text-foreground">Address RTS Issues</h4>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Focus on {metrics?.worstRTSRegion?.region} region with {metrics?.worstRTSRegion?.rtsRate.toFixed(1)}% RTS rate to improve delivery success.
+                    Focus on {metrics?.worstRTSRegion?.region} region with {metrics?.worstRTSRegion?.rtsRate.toFixed(2)}% RTS rate to improve delivery success.
                   </p>
                 </div>
 
