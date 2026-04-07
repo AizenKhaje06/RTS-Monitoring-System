@@ -171,7 +171,7 @@ export function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][],
       ITEMS: 5,
       TRACKING: 6,
       STATUS: 7,
-      REASON: 8
+      REASON: 9  // Column J (index 9)
     }
 
     // Check if first row is header
