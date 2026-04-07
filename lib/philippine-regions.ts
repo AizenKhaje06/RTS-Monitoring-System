@@ -1,4 +1,4 @@
-import { allPSGCEntries, type PSGCEntry } from "./psgc-data"
+import { allPSGCEntries } from "./psgc-data"
 
 // Complete Philippine Regions and Provinces Database
 export const philippineRegions = {
@@ -262,16 +262,16 @@ export interface RegionInfo {
 }
 
 export function determineRegion(consigneeRegion: string): RegionInfo {
-  const input = (consigneeRegion || "").toUpperCase().trim()
+  const normalizedInput = (consigneeRegion || "").toUpperCase().trim()
   
   // STEP 1: Try PSGC-based matching first (most accurate)
-  const psgcMatch = matchPSGCEntry(input)
+  const psgcMatch = matchPSGCEntry(normalizedInput)
   if (psgcMatch.province !== "Unknown") {
     return psgcMatch
   }
   
   // STEP 2: Try comma-based parsing (for "Municipality, Province" format)
-  const commaParts = input.split(',').map(p => p.trim()).filter(p => p)
+  const commaParts = normalizedInput.split(',').map(p => p.trim()).filter(p => p)
   
   if (commaParts.length >= 2) {
     // Last part after comma is usually the province/region
@@ -305,7 +305,7 @@ export function determineRegion(consigneeRegion: string): RegionInfo {
   }
   
   // STEP 3: FALLBACK - Use original word-based logic (for addresses without commas)
-  const words = input.split(/\s+/).filter(w => w)
+  const words = normalizedInput.split(/\s+/).filter(w => w)
   const regionText = words.slice(-3).join(' ')
   
   return matchRegionText(regionText)
@@ -365,7 +365,7 @@ function matchPSGCEntry(addressText: string): RegionInfo {
 
 // Helper function to match region text against database
 function matchRegionText(regionText: string): RegionInfo {
-  const input = regionText.toUpperCase().trim()
+  const normalizedInput = regionText.toUpperCase().trim()
 
   // Enhanced matching for region names first, including common abbreviations and variations
   const regionMappings: Record<string, { island: Island; region: string; province?: string }> = {
@@ -459,11 +459,11 @@ function matchRegionText(regionText: string): RegionInfo {
   }
 
   // Fallback to island-level matching with more keywords
-  if (regionText.includes("LUZON") || regionText.includes("NCR") || regionText.includes("CAR") || regionText.includes("MANILA") || regionText.includes("QUEZON")) {
+  if (normalizedInput.includes("LUZON") || normalizedInput.includes("NCR") || normalizedInput.includes("CAR") || normalizedInput.includes("MANILA") || normalizedInput.includes("QUEZON")) {
     return { island: "luzon", region: "Unknown", province: "Unknown" }
-  } else if (regionText.includes("VISAYAS") || regionText.includes("CEBU") || regionText.includes("ILOILO") || regionText.includes("NEGROS") || regionText.includes("LEYTE")) {
+  } else if (normalizedInput.includes("VISAYAS") || normalizedInput.includes("CEBU") || normalizedInput.includes("ILOILO") || normalizedInput.includes("NEGROS") || normalizedInput.includes("LEYTE")) {
     return { island: "visayas", region: "Unknown", province: "Unknown" }
-  } else if (regionText.includes("MINDANAO") || regionText.includes("DAVAO") || regionText.includes("CAGAYAN DE ORO") || regionText.includes("ZAMBOANGA") || regionText.includes("COTABATO")) {
+  } else if (normalizedInput.includes("MINDANAO") || normalizedInput.includes("DAVAO") || normalizedInput.includes("CAGAYAN DE ORO") || normalizedInput.includes("ZAMBOANGA") || normalizedInput.includes("COTABATO")) {
     return { island: "mindanao", region: "Unknown", province: "Unknown" }
   }
 

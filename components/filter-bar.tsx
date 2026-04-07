@@ -13,16 +13,12 @@ interface FilterBarProps {
   filter: FilterState
   onFilterChange: (filter: FilterState) => void
   availableProvinces?: string[]
-  availableMonths?: string[]
-  availableYears?: string[]
 }
 
 export function FilterBar({
   filter,
   onFilterChange,
   availableProvinces = [],
-  availableMonths = [],
-  availableYears = [],
 }: FilterBarProps) {
   const [filterType, setFilterType] = useState<"all" | "province" | "month" | "year">(filter.type)
   const [filterValue, setFilterValue] = useState(filter.value)

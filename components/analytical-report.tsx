@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { determineRegion } from "@/lib/philippine-regions"
 import { ExportMenu } from "@/components/export-menu"
 
 interface AnalyticalReportProps {
@@ -314,7 +313,6 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
       { zone: "Mindanao", island: "mindanao" }
     ].map(({ zone, island }) => {
       const zoneParcels = globalFilteredData.filter(p => p.island === island)
-      const total = zoneParcels.length
       
       // Count parcels by status
       const delivered = zoneParcels.filter(p => p.normalizedStatus === "DELIVERED").length
@@ -372,7 +370,7 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
     // Items performance - based on global filter only
     const itemsPerformance = (() => {
       // Group parcels by item name
-      const itemGroups: Record<string, any[]> = {}
+      const itemGroups: Record<string, ParcelData[]> = {}
       globalFilteredData.forEach(parcel => {
         const itemName = parcel.items || "Unknown Item"
         if (!itemGroups[itemName]) {
@@ -382,10 +380,8 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
       })
 
       return Object.entries(itemGroups).map(([itemName, itemParcels]) => {
-        const total = itemParcels.length
         const delivered = itemParcels.filter(p => p.normalizedStatus === "DELIVERED").length
         const rts = itemParcels.filter(p => p.normalizedStatus === "RETURNED").length
-        const undelivered = itemParcels.filter(p => undeliveredStatuses.includes(p.normalizedStatus)).length
         const resolved = delivered + rts
         const itemDeliveryRate = resolved > 0 ? (delivered / resolved) * 100 : 0
         const itemRTSRate = resolved > 0 ? (rts / resolved) * 100 : 0
@@ -447,12 +443,6 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
         </div>
       </div>
     )
-  }
-
-  const getColorClass = (deliveryRate: number, profitMargin: number) => {
-    if (deliveryRate >= 80 && profitMargin >= 25) return "text-green-600"
-    if (deliveryRate >= 70 && profitMargin >= 15) return "text-amber-600"
-    return "text-red-600"
   }
 
   return (

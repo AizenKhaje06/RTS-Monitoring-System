@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { fetchGoogleSheetsData, processGoogleSheetsDataInternal } from "@/lib/google-sheets-processor"
 import { generateCompleteMigrationSQL, generateMigrationStats } from "@/lib/supabase-migration"
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(_request: NextRequest) {
+export async function POST() {
   try {
     console.log("===========================================")
     console.log("SUPABASE MIGRATION EXPORT STARTED")
@@ -85,7 +85,7 @@ export async function POST(_request: NextRequest) {
 }
 
 // Get migration preview/stats without downloading
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     console.log("Fetching migration statistics...")
     
