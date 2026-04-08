@@ -18,8 +18,6 @@ import {
 
 interface OrdersReportProps {
   data: ProcessedData | null
-  filter: FilterState
-  onFilterChange: (filter: FilterState) => void
 }
 
 const STATUS_OPTIONS = [
@@ -49,7 +47,7 @@ const REASON_OPTIONS = [
   "Other",
 ]
 
-export function OrdersReport({ data, filter, onFilterChange }: OrdersReportProps) {
+export function OrdersReport({ data }: OrdersReportProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [currentPage, setCurrentPage] = useState(1)

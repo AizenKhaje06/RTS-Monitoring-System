@@ -100,7 +100,7 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
         setIsInitialized(true)
       }
     }
-  }, [data])
+  }, [data, isInitialized])
 
   // Auto-save function with debounce
   const autoSaveOrder = useCallback(async (order: OrderWithId, field: keyof ParcelData, value: string | number) => {
@@ -200,7 +200,7 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
         })
       }, 3000)
     }
-  }, [onDataChange])
+  }, [toast])
 
   // Filter orders based on search term, month, and status
   const filteredOrders = useMemo(() => {
@@ -249,7 +249,7 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
             const monthYear = date.toLocaleString('en-US', { month: 'long', year: 'numeric' })
             months.add(monthYear)
           }
-        } catch (e) {
+        } catch {
           // Skip invalid dates
         }
       }

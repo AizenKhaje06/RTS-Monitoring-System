@@ -70,7 +70,7 @@ export function OtherStatusBreakdown({ data }: OtherStatusBreakdownProps) {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            ✅ No parcels with "OTHER" status found. All statuses are properly categorized!
+            ✅ No parcels with &quot;OTHER&quot; status found. All statuses are properly categorized!
           </p>
         </CardContent>
       </Card>
@@ -85,14 +85,14 @@ export function OtherStatusBreakdown({ data }: OtherStatusBreakdownProps) {
           OTHER Status Breakdown
         </CardTitle>
         <p className="text-sm text-muted-foreground mt-2">
-          Total parcels with "OTHER" status: <span className="font-bold text-foreground">{totalOtherCount}</span>
+          Total parcels with &quot;OTHER&quot; status: <span className="font-bold text-foreground">{totalOtherCount}</span>
         </p>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <div className="rounded-lg border border-orange-200 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-900 p-4">
             <p className="text-sm text-orange-800 dark:text-orange-200">
-              <strong>Note:</strong> These parcels have status values that don't match any standard categories. 
+              <strong>Note:</strong> These parcels have status values that don&apos;t match any standard categories. 
               Review the raw status values below and consider standardizing them in your source data.
             </p>
           </div>
