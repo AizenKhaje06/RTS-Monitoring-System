@@ -83,7 +83,7 @@ export async function PUT(request: Request) {
       }, { status: 400 })
     }
 
-    const updates: any = {
+    const updates: Record<string, string | number | boolean> = {
       updated_at: new Date().toISOString()
     }
 

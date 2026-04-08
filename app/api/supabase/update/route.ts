@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Map frontend field names to database column names
-    const dbUpdates: Record<string, any> = {
+    const dbUpdates: Record<string, string | number | boolean> = {
       updated_at: new Date().toISOString(),
     }
 
