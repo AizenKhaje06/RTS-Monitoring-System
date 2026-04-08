@@ -43,6 +43,7 @@ const STATUS_OPTIONS = [
   "CANCELLED",
   "DETAINED",
   "PROBLEMATIC",
+  "SHOPEE",
 ]
 
 export function NewOrderModal({ onOrderCreated }: NewOrderModalProps) {

@@ -256,7 +256,7 @@ export function ItemsManagementModal() {
         <div className="border rounded-lg p-4 bg-muted/50">
           <h3 className="text-sm font-semibold mb-3">Add New Item</h3>
           <div className="grid grid-cols-12 gap-3">
-            <div className="col-span-8">
+            <div className="col-span-6">
               <Label htmlFor="new-item-name" className="text-xs">Item Name</Label>
               <Input
                 id="new-item-name"
@@ -266,7 +266,7 @@ export function ItemsManagementModal() {
                 className="h-9"
               />
             </div>
-            <div className="col-span-2">
+            <div className="col-span-4">
               <Label htmlFor="new-item-price" className="text-xs">Price</Label>
               <Input
                 id="new-item-price"
@@ -295,8 +295,8 @@ export function ItemsManagementModal() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[60%]">Item Name</TableHead>
-                <TableHead className="w-[20%]">Price</TableHead>
+                <TableHead className="w-[50%]">Item Name</TableHead>
+                <TableHead className="w-[30%]">Price</TableHead>
                 <TableHead className="w-[10%]">Save</TableHead>
                 <TableHead className="w-[10%]">Delete</TableHead>
               </TableRow>
