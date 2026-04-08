@@ -256,23 +256,13 @@ export function ItemsManagementModal() {
         <div className="border rounded-lg p-4 bg-muted/50">
           <h3 className="text-sm font-semibold mb-3">Add New Item</h3>
           <div className="grid grid-cols-12 gap-3">
-            <div className="col-span-4">
+            <div className="col-span-8">
               <Label htmlFor="new-item-name" className="text-xs">Item Name</Label>
               <Input
                 id="new-item-name"
                 value={newItem.item_name}
                 onChange={(e) => setNewItem(prev => ({ ...prev, item_name: e.target.value }))}
                 placeholder="e.g., T-Shirt"
-                className="h-9"
-              />
-            </div>
-            <div className="col-span-4">
-              <Label htmlFor="new-item-desc" className="text-xs">Description</Label>
-              <Input
-                id="new-item-desc"
-                value={newItem.description}
-                onChange={(e) => setNewItem(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="e.g., Cotton T-Shirt"
                 className="h-9"
               />
             </div>
@@ -283,7 +273,7 @@ export function ItemsManagementModal() {
                 type="number"
                 value={newItem.default_price}
                 onChange={(e) => setNewItem(prev => ({ ...prev, default_price: parseFloat(e.target.value) || 0 }))}
-                placeholder="0.00"
+                placeholder="0"
                 step="0.01"
                 className="h-9"
               />
@@ -305,23 +295,22 @@ export function ItemsManagementModal() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[30%]">Item Name</TableHead>
-                <TableHead className="w-[22%]">Description</TableHead>
-                <TableHead className="w-[18%]">Price</TableHead>
-                <TableHead className="w-[15%]">Save</TableHead>
-                <TableHead className="w-[15%]">Delete</TableHead>
+                <TableHead className="w-[60%]">Item Name</TableHead>
+                <TableHead className="w-[20%]">Price</TableHead>
+                <TableHead className="w-[10%]">Save</TableHead>
+                <TableHead className="w-[10%]">Delete</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading && items.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                  <TableCell colSpan={4} className="text-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                   </TableCell>
                 </TableRow>
               ) : items.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                     No items found. Add your first item above.
                   </TableCell>
                 </TableRow>
@@ -339,13 +328,6 @@ export function ItemsManagementModal() {
                           target.style.height = 'auto'
                           target.style.height = target.scrollHeight + 'px'
                         }}
-                      />
-                    </TableCell>
-                    <TableCell className="py-2">
-                      <Input
-                        value={item.description}
-                        onChange={(e) => handleItemChange(item.id, 'description', e.target.value)}
-                        className="h-8 text-xs"
                       />
                     </TableCell>
                     <TableCell className="py-2">
@@ -440,7 +422,6 @@ export function ItemsManagementModal() {
           <div className="text-sm text-muted-foreground mt-2">
             <div className="space-y-1">
               <p><span className="font-medium">Item Name:</span> {itemToSave?.item_name}</p>
-              <p><span className="font-medium">Description:</span> {itemToSave?.description || "N/A"}</p>
               <p><span className="font-medium">Price:</span> ₱{itemToSave?.default_price.toFixed(2)}</p>
             </div>
           </div>
