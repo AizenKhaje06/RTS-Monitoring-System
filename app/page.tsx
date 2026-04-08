@@ -9,6 +9,7 @@ import { DashboardContent } from "@/components/dashboard-content"
 import { PerformanceReport } from "@/components/performance-report"
 import { AnalyticalReport } from "@/components/analytical-report"
 import { FinancialReport } from "@/components/financial-report"
+import { OrdersTableView } from "@/components/orders-table-view"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { FullPageLoading } from "@/components/loading-state"
 import type { ProcessedData, FilterState } from "@/lib/types"
@@ -60,6 +61,12 @@ export default function Home() {
 
   const renderView = () => {
     switch (currentView) {
+      case "orders":
+        return (
+          <div className="p-8">
+            <OrdersTableView data={data} onDataChange={() => fetchData(globalFilter)} />
+          </div>
+        )
       case "performance":
         return <PerformanceReport data={data} filter={globalFilter} onFilterChange={handleFilterChange} />
       case "analytical":

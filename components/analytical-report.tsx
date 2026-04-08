@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ExportMenu } from "@/components/export-menu"
+import { StatusAmountCards } from "@/components/status-amount-cards"
 
 interface AnalyticalReportProps {
   data: ProcessedData | null
@@ -256,7 +257,7 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
     const rtsRate = totalShipments > 0 ? (rtsCount / totalShipments) * 100 : 0
 
     // Calculate Undelivered Parcel Rate (On Delivery, Pickup, In Transit, Detained, Problematic)
-    const undeliveredStatuses = ["ONDELIVERY", "PICKUP", "INTRANSIT", "DETAINED", "PROBLEMATIC", "PENDING", "CANCELLED"]
+    const undeliveredStatuses = ["ONDELIVERY", "PICKUP", "INTRANSIT", "DETAINED", "PROBLEMATIC", "PENDING"]
     const undeliveredParcels = parcelData.filter((parcel) => undeliveredStatuses.includes(parcel.normalizedStatus))
     const undeliveredCount = undeliveredParcels.length
     const receivableAmount = undeliveredParcels.reduce((sum, parcel) => sum + (parcel.codAmount || 0), 0)
@@ -271,39 +272,36 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
 
     const topPerformingRegions = regions.map(region => {
       const regionData = region.data.data
-      const regionDelivered = regionData.filter(p => p.normalizedStatus === "DELIVERED").length
-      const regionRTS = regionData.filter(p => p.normalizedStatus === "RETURNED").length
-      const regionUndelivered = regionData.filter(p => undeliveredStatuses.includes(p.normalizedStatus)).length
-      const regionTotal = regionData.length
-      const regionDeliveryRate = regionTotal > 0 ? (regionDelivered / regionTotal) * 100 : 0
-      const regionRTSRate = regionTotal > 0 ? (regionRTS / regionTotal) * 100 : 0
-      const regionUndeliveredRate = regionTotal > 0 ? (regionUndelivered / regionTotal) * 100 : 0
+      
+      // Calculate amounts per status
+      const statusAmounts: Record<string, number> = {
+        DELIVERED: 0,
+        ONDELIVERY: 0,
+        PENDING: 0,
+        INTRANSIT: 0,
+        RETURNED: 0,
+        CANCELLED: 0,
+        DETAINED: 0,
+        PROBLEMATIC: 0,
+        "PENDING FULFILLED": 0,
+        OTHER: 0,
+      }
 
-      const regionDeliveredParcels = regionData.filter(p => p.normalizedStatus === "DELIVERED")
-      const regionReturnedParcels = regionData.filter(p => p.normalizedStatus === "RETURNED")
-      const regionGrossSales = regionDeliveredParcels.reduce((sum, p) => sum + (p.codAmount || 0), 0)
-      const regionReturnedAmount = regionReturnedParcels.reduce((sum, p) => sum + (p.codAmount || 0), 0)
-      const regionTotalServiceCharge = regionData.reduce((sum, p) => sum + (p.serviceCharge || 0), 0)
-      const regionTotalShippingCost = regionData.reduce((sum, p) => sum + (p.totalCost || 0), 0)
-      const regionTotalRTSFee = regionReturnedParcels.reduce((sum, p) => sum + (p.rtsFee || 0), 0)
-      const regionGrossProfit = regionGrossSales - regionTotalShippingCost - regionTotalServiceCharge
-      const regionNetProfit = regionGrossProfit - regionTotalRTSFee
-      const regionProfitMargin = regionGrossSales > 0 ? (regionNetProfit / regionGrossSales) * 100 : 0
+      regionData.forEach(p => {
+        const status = p.normalizedStatus
+        if (statusAmounts[status] !== undefined) {
+          statusAmounts[status] += p.codAmount || 0
+        }
+      })
+
+      const totalAmount = Object.values(statusAmounts).reduce((sum, amt) => sum + amt, 0)
 
       return {
         region: region.name,
-        deliveryRate: regionDeliveryRate,
-        rtsRate: regionRTSRate,
-        undeliveredRate: regionUndeliveredRate,
-        deliveredCount: regionDelivered,
-        rtsCount: regionRTS,
-        deliveredAmount: regionGrossSales,
-        returnedAmount: regionReturnedAmount,
-        grossSales: regionGrossSales,
-        netProfit: regionNetProfit,
-        profitMargin: regionProfitMargin
+        ...statusAmounts,
+        totalAmount,
       }
-    }).sort((a, b) => b.netProfit - a.netProfit)
+    }).sort((a, b) => b.totalAmount - a.totalAmount)
 
     // Zone performance (Luzon, Visayas, Mindanao) - based on global filter only
     const zonePerformance = [
@@ -356,7 +354,11 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
     })
 
     // Critical insights
-    const highestPerformingRegion = topPerformingRegions[0]
+    const highestPerformingRegion = topPerformingRegions[0] ? {
+      region: topPerformingRegions[0].region,
+      totalAmount: topPerformingRegions[0].totalAmount,
+      profitMargin: 0, // Not calculated in new structure
+    } : null
     const worstRTSRegion = regions.reduce((worst, region) => {
       const regionData = region.data.data
       const regionRTS = regionData.filter((p: ParcelData) => rtsStatuses.includes(p.normalizedStatus)).length
@@ -634,41 +636,55 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
         </div>
       </div>
 
-      {/* TOP PERFORMING REGIONS */}
+      {/* STATUS AMOUNT BREAKDOWN */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">AMOUNT BY STATUS</h2>
+        <StatusAmountCards data={data} />
+      </div>
+
+      {/* ZONE PERFORMANCE */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">ZONE PERFORMANCE</h2>
+        <h2 className="text-2xl font-bold text-foreground border-b border-border/50 pb-2">ZONE PERFORMANCE BY STATUS</h2>
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Region</TableHead>
-                  <TableHead>Delivery Rate (%)</TableHead>
-                  <TableHead>RTS Rate (%)</TableHead>
-                  <TableHead>Delivered</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Returned</TableHead>
-                  <TableHead>Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {metrics?.topPerformingRegions.map((region) => (
-                  <TableRow key={region.region}>
-                    <TableCell className="font-medium">{region.region}</TableCell>
-                    <TableCell className="text-green-600">
-                      {region.deliveryRate.toFixed(2)}%
-                    </TableCell>
-                    <TableCell className="text-red-600">
-                      {region.rtsRate.toFixed(2)}%
-                    </TableCell>
-                    <TableCell>{region.deliveredCount}</TableCell>
-                    <TableCell>₱{region.deliveredAmount.toLocaleString()}</TableCell>
-                    <TableCell>{region.rtsCount}</TableCell>
-                    <TableCell>₱{region.returnedAmount.toLocaleString()}</TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="font-bold">Region</TableHead>
+                    <TableHead className="text-right text-green-600">Delivered</TableHead>
+                    <TableHead className="text-right text-blue-600">On Delivery</TableHead>
+                    <TableHead className="text-right text-purple-600">Pending</TableHead>
+                    <TableHead className="text-right text-orange-600">In Transit</TableHead>
+                    <TableHead className="text-right text-red-600">Returned</TableHead>
+                    <TableHead className="text-right text-gray-600">Cancelled</TableHead>
+                    <TableHead className="text-right text-gray-700">Detained</TableHead>
+                    <TableHead className="text-right text-orange-700">Problematic</TableHead>
+                    <TableHead className="text-right text-teal-600">Pending Fulfilled</TableHead>
+                    <TableHead className="text-right text-gray-500">Other</TableHead>
+                    <TableHead className="text-right font-bold">Total Amount</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {metrics?.topPerformingRegions.map((region) => (
+                    <TableRow key={region.region}>
+                      <TableCell className="font-medium">{region.region}</TableCell>
+                      <TableCell className="text-right text-green-600">₱{region.DELIVERED.toLocaleString()}</TableCell>
+                      <TableCell className="text-right text-blue-600">₱{region.ONDELIVERY.toLocaleString()}</TableCell>
+                      <TableCell className="text-right text-purple-600">₱{region.PENDING.toLocaleString()}</TableCell>
+                      <TableCell className="text-right text-orange-600">₱{region.INTRANSIT.toLocaleString()}</TableCell>
+                      <TableCell className="text-right text-red-600">₱{region.RETURNED.toLocaleString()}</TableCell>
+                      <TableCell className="text-right text-gray-600">₱{region.CANCELLED.toLocaleString()}</TableCell>
+                      <TableCell className="text-right text-gray-700">₱{region.DETAINED.toLocaleString()}</TableCell>
+                      <TableCell className="text-right text-orange-700">₱{region.PROBLEMATIC.toLocaleString()}</TableCell>
+                      <TableCell className="text-right text-teal-600">₱{region["PENDING FULFILLED"].toLocaleString()}</TableCell>
+                      <TableCell className="text-right text-gray-500">₱{region.OTHER.toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-bold">₱{region.totalAmount.toLocaleString()}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -719,7 +735,7 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
             </CardHeader>
             <CardContent>
               <p className="text-sm">
-                {metrics?.highestPerformingRegion?.region} leads with {metrics?.highestPerformingRegion?.profitMargin.toFixed(2)}% profit margin
+                {metrics?.highestPerformingRegion?.region} leads with ₱{metrics?.highestPerformingRegion?.totalAmount.toLocaleString()} total amount
               </p>
             </CardContent>
           </Card>

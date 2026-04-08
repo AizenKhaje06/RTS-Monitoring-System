@@ -12,6 +12,17 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Suppress Watchpack warnings for Windows system files
+  watchOptions: {
+    ignored: [
+      '**/node_modules/**',
+      '**/.git/**',
+      '**/DumpStack.log.tmp',
+      '**/System Volume Information/**',
+      '**/pagefile.sys',
+      '**/$RECYCLE.BIN/**',
+    ],
+  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       // Handle Node.js built-in modules for client-side

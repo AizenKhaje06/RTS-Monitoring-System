@@ -1,4 +1,5 @@
 export interface ParcelData {
+  id?: number // Supabase database ID
   date: string
   month: string // Month extracted from sheet name (e.g., "JULY 2025")
   status: string

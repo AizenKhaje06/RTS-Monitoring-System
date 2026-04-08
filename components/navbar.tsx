@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { BarChart3, Home, TrendingUp, PieChart, Menu, X } from "lucide-react"
+import { BarChart3, Home, TrendingUp, PieChart, Menu, X, Sun, Moon, FileText } from "lucide-react"
+import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 
 interface NavbarProps {
@@ -11,11 +12,13 @@ interface NavbarProps {
 
 export function Navbar({ currentView = "dashboard", onViewChange }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { theme, setTheme } = useTheme()
 
   const menuItems = [
     { id: "dashboard", label: "Parcel", icon: Home },
+    { id: "orders", label: "Orders", icon: FileText },
     { id: "performance", label: "Performance", icon: TrendingUp },
-    { id: "analytical", label: "Store", icon: PieChart },
+    { id: "analytical", label: "Analytical", icon: PieChart },
   ]
 
   return (
@@ -73,17 +76,41 @@ export function Navbar({ currentView = "dashboard", onViewChange }: NavbarProps)
                 Mindanao
               </span>
             </div>
+            
+            {/* Theme Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="ml-2"
+            >
+              <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <span className="sr-only">Toggle theme</span>
+            </Button>
           </div>
 
           {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </Button>
+          <div className="md:hidden flex items-center gap-2">
+            {/* Theme Toggle - Mobile */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            >
+              <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <span className="sr-only">Toggle theme</span>
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </Button>
+          </div>
         </div>
 
         {/* Mobile Navigation */}

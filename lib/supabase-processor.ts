@@ -32,6 +32,7 @@ function convertSupabaseToParcelData(sp: SupabaseParcel): ParcelData {
   }
   
   return {
+    id: sp.id, // Include Supabase ID
     date: sp.parcel_date,
     month,
     status: sp.status,
@@ -277,3 +278,4 @@ export function processSupabaseDataInternal(supabaseParcels: SupabaseParcel[]): 
 
   return processedData
 }
+

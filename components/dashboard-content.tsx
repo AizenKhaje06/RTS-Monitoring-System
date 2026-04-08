@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { DashboardView } from "@/components/dashboard-view"
 import { PredictiveInsights } from "@/components/predictive-insights"
+import { OtherStatusBreakdown } from "@/components/other-status-breakdown"
 import { ExportMenu } from "@/components/export-menu"
 import { SupabaseExportButton } from "@/components/supabase-export-button"
 import type { ProcessedData, FilterState } from "@/lib/types"
@@ -56,6 +57,7 @@ export function DashboardContent({ data, onUploadClick, filter, onFilterChange }
 
             <TabsContent value="insights" className="space-y-6">
               <SupabaseExportButton />
+              <OtherStatusBreakdown data={data} />
               <PredictiveInsights data={data} />
             </TabsContent>
           </Tabs>
