@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { Search, Download, Filter, Package } from "lucide-react"
-import type { ProcessedData, FilterState } from "@/lib/types"
+import type { ProcessedData } from "@/lib/types"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"

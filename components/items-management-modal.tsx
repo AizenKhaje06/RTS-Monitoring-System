@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Package, Plus, Trash2, Loader2, Save, AlertTriangle, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -60,14 +60,7 @@ export function ItemsManagementModal() {
     default_price: 0,
   })
 
-  // Fetch items when modal opens
-  useEffect(() => {
-    if (open) {
-      fetchItems()
-    }
-  }, [open])
-
-  const fetchItems = async () => {
+  const fetchItems = useCallback(async () => {
     setLoading(true)
     try {
       const response = await fetch("/api/items")
@@ -92,7 +85,14 @@ export function ItemsManagementModal() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [toast])
+
+  // Fetch items when modal opens
+  useEffect(() => {
+    if (open) {
+      fetchItems()
+    }
+  }, [open, fetchItems])
 
   const handleAddItem = async () => {
     if (!newItem.item_name.trim()) {
@@ -401,13 +401,13 @@ export function ItemsManagementModal() {
               <div>
                 <AlertDialogTitle>Delete Item</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Are you sure you want to delete "{itemToDelete?.name}"?
+                  Are you sure you want to delete &quot;{itemToDelete?.name}&quot;?
                 </AlertDialogDescription>
               </div>
             </div>
           </AlertDialogHeader>
           <div className="text-sm text-muted-foreground mt-2">
-            This action cannot be undone. The item will be removed from the system and won't appear in the order form dropdown.
+            This action cannot be undone. The item will be removed from the system and won&apos;t appear in the order form dropdown.
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -432,7 +432,7 @@ export function ItemsManagementModal() {
               <div>
                 <AlertDialogTitle>Save Changes</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Save changes to "{itemToSave?.item_name}"?
+                  Save changes to &quot;{itemToSave?.item_name}&quot;?
                 </AlertDialogDescription>
               </div>
             </div>

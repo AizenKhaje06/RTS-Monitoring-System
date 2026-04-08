@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Plus, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -64,14 +64,7 @@ export function NewOrderModal({ onOrderCreated }: NewOrderModalProps) {
     status: "PENDING",
   })
 
-  // Fetch items when modal opens
-  useEffect(() => {
-    if (open && items.length === 0) {
-      fetchItems()
-    }
-  }, [open])
-
-  const fetchItems = async () => {
+  const fetchItems = useCallback(async () => {
     setLoadingItems(true)
     try {
       const response = await fetch("/api/items")
@@ -96,7 +89,14 @@ export function NewOrderModal({ onOrderCreated }: NewOrderModalProps) {
     } finally {
       setLoadingItems(false)
     }
-  }
+  }, [toast])
+
+  // Fetch items when modal opens
+  useEffect(() => {
+    if (open && items.length === 0) {
+      fetchItems()
+    }
+  }, [open, items.length, fetchItems])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
