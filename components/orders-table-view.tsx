@@ -446,15 +446,20 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
         throw new Error(result.error || "Failed to delete order")
       }
 
+      // Remove from local state immediately
+      setOrders(prev => prev.filter(o => o.id !== selectedOrder.id))
+      
+      // Close dialogs immediately
+      setDeleteDialogOpen(false)
+      setEditModalOpen(false)
+      setSelectedOrder(null)
+      setEditFormData({})
+      
+      // Show success toast
       toast({
         title: "Order Deleted",
         description: "Successfully deleted order",
       })
-
-      // Remove from local state immediately
-      setOrders(prev => prev.filter(o => o.id !== selectedOrder.id))
-      setDeleteDialogOpen(false)
-      setEditModalOpen(false)
       
       // Refresh data in background (don't await)
       if (onDataChange) {
@@ -489,13 +494,14 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header - Responsive */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">ORDERS</h1>
-          <p className="text-muted-foreground">View and manage all customer orders (auto-saves changes)</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">ORDERS</h1>
+          <p className="text-sm md:text-base text-muted-foreground">View and manage all customer orders (auto-saves changes)</p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="text-sm text-muted-foreground flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <div className="text-sm text-muted-foreground flex items-center gap-2 justify-center sm:justify-start">
             <CheckCircle2 className="h-4 w-4 text-green-500" />
             <span>Auto-save enabled</span>
           </div>
@@ -504,9 +510,9 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
         </div>
       </div>
 
-      {/* Search and Controls */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
+      {/* Search and Controls - Responsive */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
@@ -519,21 +525,21 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
             className="pl-10"
           />
         </div>
-        <div className="text-sm text-muted-foreground">
+        <div className="text-sm text-muted-foreground text-center md:text-left whitespace-nowrap">
           Showing {startIndex + 1}-{Math.min(endIndex, filteredOrders.length)} of {filteredOrders.length} orders
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex items-center gap-4">
+      {/* Filters - Responsive Stack */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         {/* Month Filter */}
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-foreground">Month:</label>
+        <div className="flex items-center gap-2 flex-1">
+          <label className="text-sm font-medium text-foreground whitespace-nowrap">Month:</label>
           <Select value={selectedMonth} onValueChange={(value) => {
             setSelectedMonth(value)
             setCurrentPage(1)
           }}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="flex-1 sm:w-[200px]">
               <SelectValue placeholder="All Months" />
             </SelectTrigger>
             <SelectContent>
@@ -548,13 +554,13 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
         </div>
 
         {/* Status Filter */}
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-foreground">Status:</label>
+        <div className="flex items-center gap-2 flex-1">
+          <label className="text-sm font-medium text-foreground whitespace-nowrap">Status:</label>
           <Select value={selectedStatus} onValueChange={(value) => {
             setSelectedStatus(value)
             setCurrentPage(1)
           }}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="flex-1 sm:w-[180px]">
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
             <SelectContent>
@@ -578,14 +584,15 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
               setSelectedStatus("all")
               setCurrentPage(1)
             }}
+            className="w-full sm:w-auto"
           >
             Clear Filters
           </Button>
         )}
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Summary Cards - Responsive */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -615,10 +622,10 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
         </Card>
       </div>
 
-      {/* Orders Table */}
-      <Card>
+      {/* Desktop Table View */}
+      <Card className="hidden md:block">
         <CardContent className="p-0">
-          <div className="w-full">
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -755,17 +762,118 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
         </CardContent>
       </Card>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between">
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-3">
+        {currentOrders.map((order, index) => (
+          <Card key={`${order.tracking}-${index}`} className="overflow-hidden">
+            <CardContent className="p-4">
+              <div className="space-y-3">
+                {/* Header Row */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{order.shipper || "N/A"}</p>
+                    <p className="text-xs text-muted-foreground">{formatDate(order.date)}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {getSaveIndicator(order)}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewOrder(order)}
+                      className="h-9 px-2"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Address */}
+                <div className="text-sm">
+                  <p className="text-xs text-muted-foreground mb-1">Address</p>
+                  <p className="line-clamp-2">{order.fullAddress || "N/A"}</p>
+                </div>
+
+                {/* Contact & Price Row */}
+                <div className="flex items-center justify-between text-sm">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Contact</p>
+                    <p className="font-medium">{order.contactNumber || "N/A"}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-muted-foreground">Price</p>
+                    <p className="font-medium">₱{order.codAmount || 0}</p>
+                  </div>
+                </div>
+
+                {/* Items & Tracking */}
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Items</p>
+                    <p className="truncate">{order.items || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Tracking</p>
+                    <p className="font-mono text-xs truncate">{order.tracking || "N/A"}</p>
+                  </div>
+                </div>
+
+                {/* Status & Reason */}
+                <div className="flex flex-col gap-2">
+                  <Select
+                    value={order.normalizedStatus}
+                    onValueChange={(value) => handleCellChange(index, "normalizedStatus", value)}
+                  >
+                    <SelectTrigger className="h-10 text-sm w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATUS_OPTIONS.map((status) => (
+                        <SelectItem key={status} value={status}>
+                          {status}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select
+                    value={order.reason || ""}
+                    onValueChange={(value) => handleCellChange(index, "reason", value)}
+                    disabled={order.normalizedStatus !== "RETURNED" && order.normalizedStatus !== "CANCELLED"}
+                  >
+                    <SelectTrigger className="h-10 text-sm w-full">
+                      <SelectValue placeholder={
+                        order.normalizedStatus === "RETURNED" || order.normalizedStatus === "CANCELLED" 
+                          ? "Select reason" 
+                          : "N/A"
+                      } />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getReasonOptions(order.normalizedStatus).map((reason) => (
+                        <SelectItem key={reason} value={reason}>
+                          {reason}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Pagination - Responsive */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="text-sm text-muted-foreground">
           Page {currentPage} of {totalPages}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
             disabled={currentPage === 1}
+            className="flex-1 sm:flex-none h-10"
           >
             <ChevronLeft className="h-4 w-4 mr-1" />
             Previous
@@ -775,6 +883,7 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
             size="sm"
             onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
             disabled={currentPage === totalPages}
+            className="flex-1 sm:flex-none h-10"
           >
             Next
             <ChevronRight className="h-4 w-4 ml-1" />
@@ -784,7 +893,7 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
       
       {/* Edit Order Modal */}
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Order Details</DialogTitle>
             <DialogDescription>
@@ -794,92 +903,92 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
 
           <div className="grid gap-4 py-4">
             {/* Date */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-date" className="text-right">Date</Label>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+              <Label htmlFor="edit-date" className="md:text-right font-medium">Date</Label>
               <Input
                 id="edit-date"
                 type="text"
                 value={editFormData.date || ""}
                 onChange={(e) => setEditFormData(prev => ({ ...prev, date: e.target.value }))}
-                className="col-span-3"
+                className="md:col-span-3"
               />
             </div>
 
             {/* Name */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-name" className="text-right">Name</Label>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+              <Label htmlFor="edit-name" className="md:text-right font-medium">Name</Label>
               <Input
                 id="edit-name"
                 value={editFormData.shipper || ""}
                 onChange={(e) => setEditFormData(prev => ({ ...prev, shipper: e.target.value }))}
-                className="col-span-3"
+                className="md:col-span-3"
               />
             </div>
 
             {/* Address */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-address" className="text-right">Address</Label>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+              <Label htmlFor="edit-address" className="md:text-right font-medium">Address</Label>
               <Input
                 id="edit-address"
                 value={editFormData.fullAddress || ""}
                 onChange={(e) => setEditFormData(prev => ({ ...prev, fullAddress: e.target.value }))}
-                className="col-span-3"
+                className="md:col-span-3"
               />
             </div>
 
             {/* Contact Number */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-contact" className="text-right">Contact No.</Label>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+              <Label htmlFor="edit-contact" className="md:text-right font-medium">Contact No.</Label>
               <Input
                 id="edit-contact"
                 value={editFormData.contactNumber || ""}
                 onChange={(e) => setEditFormData(prev => ({ ...prev, contactNumber: e.target.value }))}
-                className="col-span-3"
+                className="md:col-span-3"
               />
             </div>
 
             {/* Price */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-price" className="text-right">Price</Label>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+              <Label htmlFor="edit-price" className="md:text-right font-medium">Price</Label>
               <Input
                 id="edit-price"
                 type="number"
                 value={editFormData.codAmount || 0}
                 onChange={(e) => setEditFormData(prev => ({ ...prev, codAmount: parseFloat(e.target.value) || 0 }))}
-                className="col-span-3"
+                className="md:col-span-3"
               />
             </div>
 
             {/* Items */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-items" className="text-right">Items</Label>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+              <Label htmlFor="edit-items" className="md:text-right font-medium">Items</Label>
               <Input
                 id="edit-items"
                 value={editFormData.items || ""}
                 onChange={(e) => setEditFormData(prev => ({ ...prev, items: e.target.value }))}
-                className="col-span-3"
+                className="md:col-span-3"
               />
             </div>
 
             {/* Tracking */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-tracking" className="text-right">Tracking</Label>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+              <Label htmlFor="edit-tracking" className="md:text-right font-medium">Tracking</Label>
               <Input
                 id="edit-tracking"
                 value={editFormData.tracking || ""}
                 onChange={(e) => setEditFormData(prev => ({ ...prev, tracking: e.target.value }))}
-                className="col-span-3"
+                className="md:col-span-3"
               />
             </div>
 
             {/* Status */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-status" className="text-right">Status</Label>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+              <Label htmlFor="edit-status" className="md:text-right font-medium">Status</Label>
               <Select
                 value={editFormData.normalizedStatus || ""}
                 onValueChange={(value) => setEditFormData(prev => ({ ...prev, normalizedStatus: value }))}
               >
-                <SelectTrigger className="col-span-3">
+                <SelectTrigger className="md:col-span-3">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -893,14 +1002,14 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
             </div>
 
             {/* Reason */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-reason" className="text-right">Reason</Label>
+            <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
+              <Label htmlFor="edit-reason" className="md:text-right font-medium">Reason</Label>
               <Select
                 value={editFormData.reason || ""}
                 onValueChange={(value) => setEditFormData(prev => ({ ...prev, reason: value }))}
                 disabled={editFormData.normalizedStatus !== "RETURNED" && editFormData.normalizedStatus !== "CANCELLED"}
               >
-                <SelectTrigger className="col-span-3">
+                <SelectTrigger className="md:col-span-3">
                   <SelectValue placeholder="Select reason" />
                 </SelectTrigger>
                 <SelectContent>
@@ -914,11 +1023,12 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
             </div>
           </div>
 
-          <DialogFooter className="gap-2">
+          <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button
               variant="destructive"
               onClick={() => setDeleteDialogOpen(true)}
               disabled={isDeleting || isSaving}
+              className="w-full sm:w-auto h-10"
             >
               <Trash2 className="mr-2 h-4 w-4" />
               Delete
@@ -926,6 +1036,7 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
             <Button
               onClick={handleSaveOrder}
               disabled={isDeleting || isSaving}
+              className="w-full sm:w-auto h-10"
             >
               {isSaving ? (
                 <>

@@ -51,6 +51,7 @@ export function NewOrderModal({ onOrderCreated }: NewOrderModalProps) {
   const [loading, setLoading] = useState(false)
   const [items, setItems] = useState<Item[]>([])
   const [loadingItems, setLoadingItems] = useState(false)
+  const [contactError, setContactError] = useState("")
   const { toast } = useToast()
 
   // Form state
@@ -99,17 +100,64 @@ export function NewOrderModal({ onOrderCreated }: NewOrderModalProps) {
     }
   }, [open, items.length, fetchItems])
 
+  // Validate contact number
+  const validateContactNumber = (contact: string): string => {
+    if (!contact) return "Contact number is required"
+    
+    const cleaned = contact.replace(/\s+/g, '') // Remove spaces
+    
+    // Check if starts with 9 (10 digits required)
+    if (cleaned.startsWith('9')) {
+      if (cleaned.length !== 10) {
+        return "Contact starting with 9 must be 10 digits"
+      }
+    }
+    // Check if starts with 09 (11 digits required)
+    else if (cleaned.startsWith('09')) {
+      if (cleaned.length !== 11) {
+        return "Contact starting with 09 must be 11 digits"
+      }
+    }
+    // Check if starts with 639 or +639 (12 digits required)
+    else if (cleaned.startsWith('639') || cleaned.startsWith('+639')) {
+      const withoutPlus = cleaned.replace('+', '')
+      if (withoutPlus.length !== 12) {
+        return "Contact starting with 639/+639 must be 12 digits"
+      }
+    }
+    else {
+      return "Contact must start with 9, 09, 639, or +639"
+    }
+    
+    return "" // Valid
+  }
+
+  const handleContactChange = (value: string) => {
+    setFormData(prev => ({ ...prev, contact_number: value }))
+    const error = validateContactNumber(value)
+    setContactError(error)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validate contact number before submitting
+    const contactValidation = validateContactNumber(formData.contact_number)
+    if (contactValidation) {
+      setContactError(contactValidation)
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: contactValidation,
+      })
+      return
+    }
+    
     setLoading(true)
 
     try {
-      // Generate tracking number if not provided
-      const tracking = formData.tracking_number || `TRK-${Date.now()}`
-
       const orderData = {
         ...formData,
-        tracking_number: tracking,
         normalized_status: formData.status,
       }
 
@@ -129,7 +177,7 @@ export function NewOrderModal({ onOrderCreated }: NewOrderModalProps) {
 
       toast({
         title: "Order Created",
-        description: `Successfully created order ${tracking}`,
+        description: `Successfully created order${formData.tracking_number ? ' ' + formData.tracking_number : ''}`,
       })
 
       // Reset form
@@ -240,14 +288,22 @@ export function NewOrderModal({ onOrderCreated }: NewOrderModalProps) {
               <Label htmlFor="contact" className="text-right">
                 Contact No.
               </Label>
-              <Input
-                id="contact"
-                value={formData.contact_number}
-                onChange={(e) => setFormData(prev => ({ ...prev, contact_number: e.target.value }))}
-                className="col-span-3"
-                placeholder="09XXXXXXXXX"
-                required
-              />
+              <div className="col-span-3">
+                <Input
+                  id="contact"
+                  value={formData.contact_number}
+                  onChange={(e) => handleContactChange(e.target.value)}
+                  className={contactError ? "border-red-500" : ""}
+                  placeholder="09XXXXXXXXX, 9XXXXXXXXX, or 639XXXXXXXXXX"
+                  required
+                />
+                {contactError && (
+                  <p className="text-xs text-red-500 mt-1">{contactError}</p>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  Format: 9 (10 digits), 09 (11 digits), or 639/+639 (12 digits)
+                </p>
+              </div>
             </div>
 
             {/* Items Dropdown */}
@@ -281,11 +337,12 @@ export function NewOrderModal({ onOrderCreated }: NewOrderModalProps) {
               <Input
                 id="price"
                 type="number"
-                value={formData.cod_amount}
+                value={formData.cod_amount || ""}
                 onChange={(e) => setFormData(prev => ({ ...prev, cod_amount: parseFloat(e.target.value) || 0 }))}
                 className="col-span-3"
                 placeholder="0.00"
                 step="0.01"
+                min="0"
                 required
               />
             </div>
@@ -300,7 +357,7 @@ export function NewOrderModal({ onOrderCreated }: NewOrderModalProps) {
                 value={formData.tracking_number}
                 onChange={(e) => setFormData(prev => ({ ...prev, tracking_number: e.target.value }))}
                 className="col-span-3"
-                placeholder="Auto-generated if empty"
+                placeholder="Optional - Leave blank if not available"
               />
             </div>
 

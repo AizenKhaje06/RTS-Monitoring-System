@@ -34,14 +34,14 @@ export function StatusCardSimple({ status, count, locations, colorClass, total }
 
         <div className="relative flex items-center justify-between">
           <div>
-            <span className="text-sm font-semibold text-white/80 uppercase tracking-wider">{status}</span>
+            <span className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">{status}</span>
             <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-3xl font-bold text-white">{count.toLocaleString()}</span>
-              <TrendingUp className="w-4 h-4 text-white/60" />
+              <span className="text-3xl font-bold text-gray-900 dark:text-white">{count.toLocaleString()}</span>
+              <TrendingUp className="w-4 h-4 text-gray-700 dark:text-white/80" />
             </div>
           </div>
           <div className="text-right">
-            <span className={`inline-block px-2 py-1 text-xs font-medium text-white bg-white/10 backdrop-blur-sm rounded-full shadow-lg border border-white/20 ${colorClass.replace('from-', 'bg-gradient-to-r from-').replace('to-', ' to-')} min-w-[3rem] text-center`}>
+            <span className="inline-block px-2 py-1 text-xs font-medium text-white bg-orange-500 dark:bg-black/20 backdrop-blur-sm rounded-full shadow-lg border border-orange-600 dark:border-white/30 min-w-[3rem] text-center">
               {percentage}
             </span>
           </div>
@@ -49,7 +49,7 @@ export function StatusCardSimple({ status, count, locations, colorClass, total }
       </div>
 
       <div className="p-5">
-        <h6 className="text-xs font-bold text-primary uppercase tracking-wider mb-4 flex items-center gap-2">
+        <h6 className="text-xs font-bold text-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
           <span className="w-1 h-4 gradient-orange rounded-full" />
           Top Provinces
         </h6>

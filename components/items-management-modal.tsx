@@ -271,10 +271,11 @@ export function ItemsManagementModal() {
               <Input
                 id="new-item-price"
                 type="number"
-                value={newItem.default_price}
+                value={newItem.default_price || ""}
                 onChange={(e) => setNewItem(prev => ({ ...prev, default_price: parseFloat(e.target.value) || 0 }))}
-                placeholder="0"
+                placeholder="0.00"
                 step="0.01"
+                min="0"
                 className="h-9"
               />
             </div>
@@ -333,9 +334,11 @@ export function ItemsManagementModal() {
                     <TableCell className="py-2">
                       <Input
                         type="number"
-                        value={item.default_price}
+                        value={item.default_price || ""}
                         onChange={(e) => handleItemChange(item.id, 'default_price', parseFloat(e.target.value) || 0)}
                         step="0.01"
+                        min="0"
+                        placeholder="0.00"
                         className="h-8 text-xs"
                       />
                     </TableCell>
