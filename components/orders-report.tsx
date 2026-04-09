@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { Search, Download, Filter, Package } from "lucide-react"
-import type { ProcessedData } from "@/lib/types"
+import type { ProcessedData, FilterState } from "@/lib/types"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -18,6 +18,8 @@ import {
 
 interface OrdersReportProps {
   data: ProcessedData | null
+  filter: FilterState
+  onFilterChange: (filter: FilterState) => void
 }
 
 const STATUS_OPTIONS = [
@@ -47,7 +49,7 @@ const REASON_OPTIONS = [
   "Other",
 ]
 
-export function OrdersReport({ data }: OrdersReportProps) {
+export function OrdersReport({ data, filter, onFilterChange }: OrdersReportProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [currentPage, setCurrentPage] = useState(1)
@@ -61,13 +63,12 @@ export function OrdersReport({ data }: OrdersReportProps) {
     // Search filter
     if (searchTerm) {
       const search = searchTerm.toLowerCase()
-      filtered = filtered.filter(
-        (order) =>
-          order.tracking?.toLowerCase().includes(search) ||
-          order.items?.toLowerCase().includes(search) ||
-          order.fullAddress?.toLowerCase().includes(search) ||
-          order.contactNumber?.toLowerCase().includes(search) ||
-          order.shipper?.toLowerCase().includes(search)
+      filtered = filtered.filter((order) =>
+        order.tracking?.toLowerCase().includes(search) ||
+        order.items?.toLowerCase().includes(search) ||
+        order.fullAddress?.toLowerCase().includes(search) ||
+        order.contactNumber?.toLowerCase().includes(search) ||
+        order.shipper?.toLowerCase().includes(search)
       )
     }
 
@@ -172,7 +173,9 @@ export function OrdersReport({ data }: OrdersReportProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Orders Management</h1>
-          <p className="text-muted-foreground">View and manage all customer orders with editable status and reason</p>
+          <p className="text-muted-foreground">
+            View and manage all customer orders with editable status and reason
+          </p>
         </div>
         <ExportMenu data={data} region="all" />
       </div>
@@ -212,7 +215,6 @@ export function OrdersReport({ data }: OrdersReportProps) {
               ))}
             </SelectContent>
           </Select>
-
           <Button onClick={handleExport} variant="outline" size="sm">
             <Download className="w-4 h-4 mr-2" />
             Export CSV
