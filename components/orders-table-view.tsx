@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useCallback } from "react"
-import { Search, ChevronLeft, ChevronRight, Loader2, CheckCircle2, AlertCircle, Package, DollarSign } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, Loader2, CheckCircle2, AlertCircle, Package, DollarSign, Eye, Save, Trash2, X } from "lucide-react"
 import type { ProcessedData, ParcelData } from "@/lib/types"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -17,6 +17,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Label } from "@/components/ui/label"
 
 interface OrdersTableViewProps {
   data: ProcessedData | null
@@ -89,6 +108,12 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
   const [savingStates, setSavingStates] = useState<Record<string, "saving" | "saved" | "error">>({})
   const [selectedMonth, setSelectedMonth] = useState<string>("all")
   const [selectedStatus, setSelectedStatus] = useState<string>("all")
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [selectedOrder, setSelectedOrder] = useState<OrderWithId | null>(null)
+  const [editFormData, setEditFormData] = useState<Partial<OrderWithId>>({})
+  const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const { toast } = useToast()
 
   // Initialize orders from data with IDs
@@ -341,6 +366,112 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
     return null
   }
 
+  // Handle view/edit order
+  const handleViewOrder = (order: OrderWithId) => {
+    setSelectedOrder(order)
+    setEditFormData({ ...order })
+    setEditModalOpen(true)
+  }
+
+  // Handle save edited order
+  const handleSaveOrder = async () => {
+    if (!selectedOrder?.id) return
+
+    setIsSaving(true)
+    try {
+      const response = await fetch("/api/supabase/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: selectedOrder.id,
+          updates: editFormData
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to update order")
+      }
+
+      toast({
+        title: "Order Updated",
+        description: "Successfully updated order information",
+      })
+
+      // Update local state
+      setOrders(prev => prev.map(o => o.id === selectedOrder.id ? { ...o, ...editFormData } : o))
+      setEditModalOpen(false)
+      
+      // Refresh data
+      if (onDataChange) {
+        await onDataChange()
+      }
+    } catch (error) {
+      console.error("Error updating order:", error)
+      toast({
+        variant: "destructive",
+        title: "Update Failed",
+        description: error instanceof Error ? error.message : "Failed to update order",
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // Handle delete order
+  const handleDeleteOrder = async () => {
+    if (!selectedOrder?.id) return
+
+    setIsDeleting(true)
+    try {
+      console.log("🗑️ Deleting order ID:", selectedOrder.id)
+      
+      const response = await fetch(`/api/supabase/delete`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: selectedOrder.id
+        }),
+      })
+
+      const result = await response.json()
+      console.log("Delete API response:", result)
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to delete order")
+      }
+
+      toast({
+        title: "Order Deleted",
+        description: "Successfully deleted order",
+      })
+
+      // Remove from local state immediately
+      setOrders(prev => prev.filter(o => o.id !== selectedOrder.id))
+      setDeleteDialogOpen(false)
+      setEditModalOpen(false)
+      
+      // Refresh data in background (don't await)
+      if (onDataChange) {
+        onDataChange().catch(err => console.error("Background refresh error:", err))
+      }
+    } catch (error) {
+      console.error("❌ Error deleting order:", error)
+      toast({
+        variant: "destructive",
+        title: "Delete Failed",
+        description: error instanceof Error ? error.message : "Failed to delete order",
+      })
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   if (!data) {
     return (
       <div className="flex items-center justify-center min-h-[600px]">
@@ -487,20 +618,21 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
       {/* Orders Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="w-full">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[40px]"></TableHead>
-                  <TableHead className="w-[100px]">Date</TableHead>
-                  <TableHead className="w-[150px]">Name</TableHead>
-                  <TableHead className="min-w-[250px]">Address</TableHead>
-                  <TableHead className="w-[120px]">Contact No.</TableHead>
-                  <TableHead className="w-[100px]">Price</TableHead>
-                  <TableHead className="w-[150px]">Items</TableHead>
-                  <TableHead className="w-[150px]">Tracking</TableHead>
-                  <TableHead className="w-[150px]">Status</TableHead>
-                  <TableHead className="w-[180px]">Reason</TableHead>
+                  <TableHead className="w-[85px]">Date</TableHead>
+                  <TableHead className="w-[140px]">Name</TableHead>
+                  <TableHead className="w-[90px]">Address</TableHead>
+                  <TableHead className="w-[105px]">Contact No.</TableHead>
+                  <TableHead className="w-[70px]">Price</TableHead>
+                  <TableHead className="w-[100px]">Items</TableHead>
+                  <TableHead className="w-[100px]">Tracking</TableHead>
+                  <TableHead className="w-[120px]">Status</TableHead>
+                  <TableHead className="w-[140px]">Reason</TableHead>
+                  <TableHead className="w-[80px]">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -511,74 +643,53 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
                       {getSaveIndicator(order)}
                     </TableCell>
 
-                    {/* Date */}
+                    {/* Date - Read Only */}
                     <TableCell>
-                      <Input
-                        type="text"
-                        value={formatDate(order.date)}
-                        onChange={(e) => handleCellChange(index, "date", e.target.value)}
-                        className="h-8 text-sm"
-                      />
+                      <div className="text-xs text-foreground py-2 px-2 text-left">
+                        {formatDate(order.date)}
+                      </div>
                     </TableCell>
 
-                    {/* Name */}
-                    <TableCell>
-                      <Input
-                        type="text"
-                        value={order.shipper || ""}
-                        onChange={(e) => handleCellChange(index, "shipper", e.target.value)}
-                        className="h-8 text-sm"
-                      />
+                    {/* Name - Read Only */}
+                    <TableCell className="max-w-[140px]">
+                      <div className="text-xs text-foreground py-2 px-2 text-left truncate overflow-hidden" title={order.shipper || ""}>
+                        {order.shipper || "-"}
+                      </div>
                     </TableCell>
 
-                    {/* Address */}
-                    <TableCell>
-                      <Input
-                        type="text"
-                        value={order.fullAddress || ""}
-                        onChange={(e) => handleCellChange(index, "fullAddress", e.target.value)}
-                        className="h-8 text-sm"
-                      />
+                    {/* Address - Read Only */}
+                    <TableCell className="max-w-[90px]">
+                      <div className="text-xs text-foreground py-2 px-2 text-left truncate overflow-hidden" title={order.fullAddress || ""}>
+                        {order.fullAddress || "-"}
+                      </div>
                     </TableCell>
 
-                    {/* Contact No. */}
+                    {/* Contact No. - Read Only */}
                     <TableCell>
-                      <Input
-                        type="text"
-                        value={order.contactNumber || ""}
-                        onChange={(e) => handleCellChange(index, "contactNumber", e.target.value)}
-                        className="h-8 text-sm"
-                      />
+                      <div className="text-xs text-foreground py-2 px-2 text-left">
+                        {order.contactNumber || "-"}
+                      </div>
                     </TableCell>
 
-                    {/* Price */}
+                    {/* Price - Read Only */}
                     <TableCell>
-                      <Input
-                        type="number"
-                        value={order.codAmount || 0}
-                        onChange={(e) => handleCellChange(index, "codAmount", parseFloat(e.target.value) || 0)}
-                        className="h-8 text-sm"
-                      />
+                      <div className="text-xs text-foreground py-2 px-2 text-left font-medium">
+                        ₱{order.codAmount || 0}
+                      </div>
                     </TableCell>
 
-                    {/* Items */}
-                    <TableCell>
-                      <Input
-                        type="text"
-                        value={order.items || ""}
-                        onChange={(e) => handleCellChange(index, "items", e.target.value)}
-                        className="h-8 text-sm"
-                      />
+                    {/* Items - Read Only */}
+                    <TableCell className="max-w-[100px]">
+                      <div className="text-xs text-foreground py-2 px-2 text-left truncate overflow-hidden" title={order.items || ""}>
+                        {order.items || "-"}
+                      </div>
                     </TableCell>
 
-                    {/* Tracking */}
-                    <TableCell>
-                      <Input
-                        type="text"
-                        value={order.tracking || ""}
-                        onChange={(e) => handleCellChange(index, "tracking", e.target.value)}
-                        className="h-8 text-sm"
-                      />
+                    {/* Tracking - Read Only */}
+                    <TableCell className="max-w-[100px]">
+                      <div className="text-xs font-mono text-foreground py-2 px-2 text-left truncate overflow-hidden" title={order.tracking || ""}>
+                        {order.tracking || "-"}
+                      </div>
                     </TableCell>
 
                     {/* Status Dropdown */}
@@ -587,7 +698,7 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
                         value={order.normalizedStatus}
                         onValueChange={(value) => handleCellChange(index, "normalizedStatus", value)}
                       >
-                        <SelectTrigger className="h-8 text-sm">
+                        <SelectTrigger className="h-8 text-xs">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -600,14 +711,14 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
                       </Select>
                     </TableCell>
 
-                    {/* Reason Dropdown - Dynamic based on status */}
+                    {/* Reason Dropdown - Editable */}
                     <TableCell>
                       <Select
                         value={order.reason || ""}
                         onValueChange={(value) => handleCellChange(index, "reason", value)}
                         disabled={order.normalizedStatus !== "RETURNED" && order.normalizedStatus !== "CANCELLED"}
                       >
-                        <SelectTrigger className="h-8 text-sm">
+                        <SelectTrigger className="h-8 text-xs">
                           <SelectValue placeholder={
                             order.normalizedStatus === "RETURNED" || order.normalizedStatus === "CANCELLED" 
                               ? "Select reason" 
@@ -622,6 +733,19 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
                           ))}
                         </SelectContent>
                       </Select>
+                    </TableCell>
+
+                    {/* Action Column */}
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewOrder(order)}
+                        className="h-7 px-2 text-xs text-primary hover:text-primary hover:bg-primary/10"
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        View
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -657,6 +781,206 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
           </Button>
         </div>
       </div>
+      
+      {/* Edit Order Modal */}
+      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Order Details</DialogTitle>
+            <DialogDescription>
+              Update customer information and order details
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            {/* Date */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-date" className="text-right">Date</Label>
+              <Input
+                id="edit-date"
+                type="text"
+                value={editFormData.date || ""}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, date: e.target.value }))}
+                className="col-span-3"
+              />
+            </div>
+
+            {/* Name */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-name" className="text-right">Name</Label>
+              <Input
+                id="edit-name"
+                value={editFormData.shipper || ""}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, shipper: e.target.value }))}
+                className="col-span-3"
+              />
+            </div>
+
+            {/* Address */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-address" className="text-right">Address</Label>
+              <Input
+                id="edit-address"
+                value={editFormData.fullAddress || ""}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, fullAddress: e.target.value }))}
+                className="col-span-3"
+              />
+            </div>
+
+            {/* Contact Number */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-contact" className="text-right">Contact No.</Label>
+              <Input
+                id="edit-contact"
+                value={editFormData.contactNumber || ""}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, contactNumber: e.target.value }))}
+                className="col-span-3"
+              />
+            </div>
+
+            {/* Price */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-price" className="text-right">Price</Label>
+              <Input
+                id="edit-price"
+                type="number"
+                value={editFormData.codAmount || 0}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, codAmount: parseFloat(e.target.value) || 0 }))}
+                className="col-span-3"
+              />
+            </div>
+
+            {/* Items */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-items" className="text-right">Items</Label>
+              <Input
+                id="edit-items"
+                value={editFormData.items || ""}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, items: e.target.value }))}
+                className="col-span-3"
+              />
+            </div>
+
+            {/* Tracking */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-tracking" className="text-right">Tracking</Label>
+              <Input
+                id="edit-tracking"
+                value={editFormData.tracking || ""}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, tracking: e.target.value }))}
+                className="col-span-3"
+              />
+            </div>
+
+            {/* Status */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-status" className="text-right">Status</Label>
+              <Select
+                value={editFormData.normalizedStatus || ""}
+                onValueChange={(value) => setEditFormData(prev => ({ ...prev, normalizedStatus: value }))}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Reason */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-reason" className="text-right">Reason</Label>
+              <Select
+                value={editFormData.reason || ""}
+                onValueChange={(value) => setEditFormData(prev => ({ ...prev, reason: value }))}
+                disabled={editFormData.normalizedStatus !== "RETURNED" && editFormData.normalizedStatus !== "CANCELLED"}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select reason" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getReasonOptions(editFormData.normalizedStatus || "").map((reason) => (
+                    <SelectItem key={reason} value={reason}>
+                      {reason}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="destructive"
+              onClick={() => setDeleteDialogOpen(true)}
+              disabled={isDeleting || isSaving}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </Button>
+            <Button
+              onClick={handleSaveOrder}
+              disabled={isDeleting || isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Changes
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Order</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this order? This action cannot be undone.
+              {selectedOrder && (
+                <div className="mt-4 p-3 bg-muted rounded-md">
+                  <p className="text-sm font-medium text-foreground">Order Details:</p>
+                  <p className="text-sm text-muted-foreground mt-1">Tracking: {selectedOrder.tracking}</p>
+                  <p className="text-sm text-muted-foreground">Customer: {selectedOrder.shipper}</p>
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteOrder}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Order
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
