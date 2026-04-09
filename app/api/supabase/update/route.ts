@@ -60,3 +60,40 @@ export async function POST(request: NextRequest) {
     }, { status: 500 })
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json({ error: "Parcel ID is required" }, { status: 400 })
+    }
+
+    // Delete from Supabase
+    const { error } = await supabase
+      .from('parcels')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.error('❌ Error deleting parcel from Supabase:', error)
+      return NextResponse.json({
+        error: "Failed to delete parcel",
+        details: error.message
+      }, { status: 500 })
+    }
+
+    // Clear cache to force refresh on next data fetch
+    dataCache.clear()
+
+    console.log(`✅ Deleted parcel ID ${id} from Supabase`)
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("❌ Error in delete endpoint:", error)
+    return NextResponse.json({
+      error: "Failed to delete parcel",
+      details: error instanceof Error ? error.message : "Unknown error"
+    }, { status: 500 })
+  }
+}

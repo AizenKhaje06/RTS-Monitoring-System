@@ -76,7 +76,7 @@ export async function fetchSupabaseData(): Promise<SupabaseParcel[]> {
 
 // Process Supabase data into the same format as Google Sheets processor
 export async function processSupabaseData(): Promise<ProcessedData> {
-  const STATUSES = ["DELIVERED", "ONDELIVERY", "PENDING", "INTRANSIT", "CANCELLED", "DETAINED", "PROBLEMATIC", "RETURNED", "PENDING FULFILLED", "OTHER", "SHOPEE"]
+  const STATUSES = ["DELIVERED", "ONDELIVERY", "PENDING", "INTRANSIT", "CANCELLED", "DETAINED", "PROBLEMATIC", "RETURNED", "PENDING FULFILLED", "OTHER"]
   
   const initializeRegionData = (): RegionData => {
     const stats: { [status: string]: StatusCount } = {}
@@ -117,11 +117,6 @@ export async function processSupabaseData(): Promise<ProcessedData> {
     const parcelData = convertSupabaseToParcelData(sp)
     const status = parcelData.normalizedStatus
     const island = parcelData.island
-
-    // Skip SHOPEE status - excluded from all calculations (transferred to Shopee platform)
-    if (status === "SHOPEE") {
-      continue
-    }
 
     // Add to all data
     processedData.all.data.push(parcelData)
@@ -225,11 +220,6 @@ export function processSupabaseDataInternal(supabaseParcels: SupabaseParcel[]): 
     const parcelData = convertSupabaseToParcelData(sp)
     const status = parcelData.normalizedStatus
     const island = parcelData.island
-
-    // Skip SHOPEE status - excluded from all calculations (transferred to Shopee platform)
-    if (status === "SHOPEE") {
-      continue
-    }
 
     processedData.all.data.push(parcelData)
     processedData.all.total++
