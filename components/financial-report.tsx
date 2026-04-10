@@ -5,7 +5,6 @@ import { DollarSign, AlertCircle, TrendingUp, TrendingDown } from "lucide-react"
 import type { ProcessedData, FilterState } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ExportMenu } from "@/components/export-menu"
 
 interface FinancialReportProps {
   data: ProcessedData | null
@@ -172,7 +171,6 @@ export function FinancialReport({ data, filter, onFilterChange }: FinancialRepor
           <h1 className="text-3xl font-bold text-foreground mb-2">FINANCIAL IMPACT REPORT</h1>
           <p className="text-muted-foreground">Comprehensive financial analysis and RTS cost impact</p>
         </div>
-        <ExportMenu data={data} region={currentRegion} />
       </div>
 
       {/* Region Tabs */}

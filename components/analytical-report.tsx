@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ExportMenu } from "@/components/export-menu"
 import { StatusAmountCards } from "@/components/status-amount-cards"
 
 interface AnalyticalReportProps {
@@ -453,7 +452,6 @@ export function AnalyticalReport({ data, filter, onFilterChange }: AnalyticalRep
           <h1 className="text-3xl font-bold text-foreground mb-2">PRODUCT PERFORMANCE REPORT</h1>
           <p className="text-muted-foreground">Executive insights for strategic decision-making and operational excellence</p>
         </div>
-        <ExportMenu data={data} region={currentRegion} />
       </div>
 
       {/* Region Tabs */}

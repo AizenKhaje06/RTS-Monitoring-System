@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ExportMenu } from "@/components/export-menu"
+import { PerformanceExportButton } from "@/components/performance-export-button"
 
 interface PerformanceReportProps {
   data: ProcessedData | null
@@ -457,7 +457,7 @@ export function PerformanceReport({ data, filter, onFilterChange }: PerformanceR
           <h1 className="text-3xl font-bold text-foreground mb-2">Performance Report</h1>
           <p className="text-muted-foreground">Comprehensive performance analysis and RTS impact</p>
         </div>
-        <ExportMenu data={data} region={currentRegion as "all" | "luzon" | "visayas" | "mindanao"} />
+        <PerformanceExportButton data={data} performanceData={performanceData} />
       </div>
 
       {/* Region Tabs */}

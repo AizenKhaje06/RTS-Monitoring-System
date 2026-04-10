@@ -7,7 +7,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { ExportMenu } from "@/components/export-menu"
 import {
   Select,
   SelectContent,
@@ -177,7 +176,6 @@ export function OrdersReport({ data, filter, onFilterChange }: OrdersReportProps
             View and manage all customer orders with editable status and reason
           </p>
         </div>
-        <ExportMenu data={data} region="all" />
       </div>
 
       {/* Search and Filters */}

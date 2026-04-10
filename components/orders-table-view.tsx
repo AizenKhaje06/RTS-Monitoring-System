@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useCallback } from "react"
-import { Search, ChevronLeft, ChevronRight, Loader2, CheckCircle2, AlertCircle, Package, DollarSign, Eye, Save, Trash2, X } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, Loader2, CheckCircle2, AlertCircle, Package, DollarSign, Eye, Save, Trash2 } from "lucide-react"
 import type { ProcessedData, ParcelData } from "@/lib/types"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import { NewOrderModal } from "@/components/new-order-modal"
 import { ItemsManagementModal } from "@/components/items-management-modal"
+import { OrdersExportButton } from "@/components/orders-export-button"
 import {
   Select,
   SelectContent,
@@ -573,6 +574,9 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
             </SelectContent>
           </Select>
         </div>
+
+        {/* Export Button */}
+        <OrdersExportButton orders={filteredOrders} />
 
         {/* Clear Filters Button */}
         {(selectedMonth !== "all" || selectedStatus !== "all") && (

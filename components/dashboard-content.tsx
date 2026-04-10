@@ -4,8 +4,8 @@ import { useState } from "react"
 import { DashboardView } from "@/components/dashboard-view"
 import { PredictiveInsights } from "@/components/predictive-insights"
 import { OtherStatusBreakdown } from "@/components/other-status-breakdown"
-import { ExportMenu } from "@/components/export-menu"
 import { SupabaseExportButton } from "@/components/supabase-export-button"
+import { ParcelExportButton } from "@/components/parcel-export-button"
 import type { ProcessedData, FilterState } from "@/lib/types"
 import { BarChart3, TrendingUp, Package, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -36,7 +36,7 @@ export function DashboardContent({ data, onUploadClick, filter, onFilterChange }
       {data && (
         <div className="space-y-6">
           <div className="flex justify-end">
-            <ExportMenu data={data} region={currentRegion} />
+            <ParcelExportButton data={data} region={currentRegion} />
           </div>
 
           <Tabs defaultValue="overview" className="w-full">
