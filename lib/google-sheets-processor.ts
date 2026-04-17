@@ -251,19 +251,30 @@ export function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][],
         totalCost: amount,
         rtsFee: amount * 0.20,
       }
+      
+      // IMPORTANT: SHOPEE orders are excluded from all computations but still shown in table
+      const isShopee = status === "SHOPEE"
 
-      // Add to all data
+      // Add to all data (including SHOPEE for display)
       processedData.all.data.push(parcelData)
-      processedData.all.total++
+      
+      // Only count non-SHOPEE orders in totals
+      if (!isShopee) {
+        processedData.all.total++
+      }
 
       // Add to island
       if (island !== "unknown" && processedData[island as keyof typeof processedData]) {
         processedData[island as keyof typeof processedData].data.push(parcelData)
-        processedData[island as keyof typeof processedData].total++
+        
+        // Only count non-SHOPEE orders in island totals
+        if (!isShopee) {
+          processedData[island as keyof typeof processedData].total++
+        }
       }
 
-      // Update province and region counts
-      if (regionInfo.province !== "Unknown") {
+      // Update province and region counts (exclude SHOPEE)
+      if (!isShopee && regionInfo.province !== "Unknown") {
         processedData.all.provinces[regionInfo.province] = (processedData.all.provinces[regionInfo.province] || 0) + 1
         processedData.all.regions[regionInfo.region] = (processedData.all.regions[regionInfo.region] || 0) + 1
 
@@ -275,7 +286,7 @@ export function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][],
         }
       }
 
-      // Update status counts
+      // Update status counts (SHOPEE still gets counted in its own status)
       if (STATUSES.includes(status)) {
         processedData.all.stats[status].count++
 
@@ -293,8 +304,8 @@ export function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][],
         }
       }
 
-      // Update winning and RTS shippers
-      if (status === "DELIVERED") {
+      // Update winning and RTS shippers (exclude SHOPEE)
+      if (!isShopee && status === "DELIVERED") {
         processedData.all.winningShippers[shipper] = (processedData.all.winningShippers[shipper] || 0) + 1
         if (island !== "unknown" && processedData[island as keyof typeof processedData]) {
           processedData[island as keyof typeof processedData].winningShippers[shipper] =
@@ -303,7 +314,7 @@ export function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][],
       }
 
       const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
-      if (rtsStatuses.includes(status)) {
+      if (!isShopee && rtsStatuses.includes(status)) {
         processedData.all.rtsShippers[shipper] = (processedData.all.rtsShippers[shipper] || 0) + 1
         if (island !== "unknown" && processedData[island as keyof typeof processedData]) {
           processedData[island as keyof typeof processedData].rtsShippers[shipper] =
@@ -317,7 +328,7 @@ export function processGoogleSheetsDataInternal(sheetsData: { data: unknown[][],
     console.log(`  ✅ Processed ${processedCount} rows from "${sheetName}"`)
   }
 
-  console.log(`\n=== FINAL SUMMARY ===`)
+  console.log(`\n=== FINAL SUMMARY (Excluding SHOPEE) ===`)
   console.log(`Total parcels: ${processedData.all.total}`)
   console.log(`  - Luzon: ${processedData.luzon.total}`)
   console.log(`  - Visayas: ${processedData.visayas.total}`)

@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
-import { TrendingUp } from "lucide-react"
+import { TrendingUp, CheckCircle2, Truck, Clock, XCircle, AlertTriangle, Package, RotateCcw, PackageCheck, HelpCircle } from "lucide-react"
 
 interface StatusCardProps {
   status: string
@@ -10,6 +10,20 @@ interface StatusCardProps {
   locations: { [province: string]: number }
   colorClass: string
   total: number
+}
+
+// Status icon mapping
+const STATUS_ICONS = {
+  "DELIVERED": CheckCircle2,
+  "ONDELIVERY": Truck,
+  "PENDING": Clock,
+  "INTRANSIT": Package,
+  "CANCELLED": XCircle,
+  "DETAINED": AlertTriangle,
+  "PROBLEMATIC": AlertTriangle,
+  "RETURNED": RotateCcw,
+  "PENDING FULFILLED": PackageCheck,
+  "OTHER": HelpCircle,
 }
 
 export function StatusCard({ status, count, locations, colorClass, total }: StatusCardProps) {
@@ -35,6 +49,8 @@ export function StatusCard({ status, count, locations, colorClass, total }: Stat
     "oklch(0.78 0.13 65)",
   ]
 
+  const StatusIcon = STATUS_ICONS[status as keyof typeof STATUS_ICONS] || HelpCircle
+
   return (
     <div className="glass-strong rounded-2xl overflow-hidden border border-border/50 hover:border-primary/30 transition-all group">
       <div className={`p-5 relative overflow-hidden ${colorClass}`}>
@@ -43,7 +59,10 @@ export function StatusCard({ status, count, locations, colorClass, total }: Stat
 
         <div className="relative flex items-center justify-between">
           <div>
-            <span className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">{status}</span>
+            <div className="flex items-center gap-2 mb-1">
+              <StatusIcon className="w-4 h-4 text-gray-900 dark:text-white" />
+              <span className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">{status}</span>
+            </div>
             <div className="flex items-baseline gap-2 mt-1">
               <span className="text-3xl font-bold text-gray-900 dark:text-white">{count.toLocaleString()}</span>
               <TrendingUp className="w-4 h-4 text-gray-700 dark:text-white/80" />

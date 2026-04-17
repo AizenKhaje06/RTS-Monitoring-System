@@ -117,19 +117,30 @@ export async function processSupabaseData(): Promise<ProcessedData> {
     const parcelData = convertSupabaseToParcelData(sp)
     const status = parcelData.normalizedStatus
     const island = parcelData.island
+    
+    // IMPORTANT: SHOPEE orders are excluded from all computations but still shown in table
+    const isShopee = status === "SHOPEE"
 
-    // Add to all data
+    // Add to all data (including SHOPEE for display)
     processedData.all.data.push(parcelData)
-    processedData.all.total++
+    
+    // Only count non-SHOPEE orders in totals
+    if (!isShopee) {
+      processedData.all.total++
+    }
 
     // Add to island
     if (island !== "unknown" && processedData[island as keyof typeof processedData]) {
       processedData[island as keyof typeof processedData].data.push(parcelData)
-      processedData[island as keyof typeof processedData].total++
+      
+      // Only count non-SHOPEE orders in island totals
+      if (!isShopee) {
+        processedData[island as keyof typeof processedData].total++
+      }
     }
 
-    // Update province and region counts
-    if (parcelData.province !== "Unknown") {
+    // Update province and region counts (exclude SHOPEE)
+    if (!isShopee && parcelData.province !== "Unknown") {
       processedData.all.provinces[parcelData.province] = (processedData.all.provinces[parcelData.province] || 0) + 1
       processedData.all.regions[parcelData.region] = (processedData.all.regions[parcelData.region] || 0) + 1
 
@@ -141,7 +152,7 @@ export async function processSupabaseData(): Promise<ProcessedData> {
       }
     }
 
-    // Update status counts
+    // Update status counts (SHOPEE still gets counted in its own status)
     if (STATUSES.includes(status)) {
       processedData.all.stats[status].count++
 
@@ -159,8 +170,8 @@ export async function processSupabaseData(): Promise<ProcessedData> {
       }
     }
 
-    // Update winning and RTS shippers
-    if (status === "DELIVERED") {
+    // Update winning and RTS shippers (exclude SHOPEE)
+    if (!isShopee && status === "DELIVERED") {
       processedData.all.winningShippers[parcelData.shipper] = (processedData.all.winningShippers[parcelData.shipper] || 0) + 1
       if (island !== "unknown" && processedData[island as keyof typeof processedData]) {
         processedData[island as keyof typeof processedData].winningShippers[parcelData.shipper] =
@@ -169,7 +180,7 @@ export async function processSupabaseData(): Promise<ProcessedData> {
     }
 
     const rtsStatuses = ["CANCELLED", "PROBLEMATIC", "RETURNED"]
-    if (rtsStatuses.includes(status)) {
+    if (!isShopee && rtsStatuses.includes(status)) {
       processedData.all.rtsShippers[parcelData.shipper] = (processedData.all.rtsShippers[parcelData.shipper] || 0) + 1
       if (island !== "unknown" && processedData[island as keyof typeof processedData]) {
         processedData[island as keyof typeof processedData].rtsShippers[parcelData.shipper] =
@@ -178,7 +189,7 @@ export async function processSupabaseData(): Promise<ProcessedData> {
     }
   }
 
-  console.log(`\n=== FINAL SUMMARY ===`)
+  console.log(`\n=== FINAL SUMMARY (Excluding SHOPEE) ===`)
   console.log(`Total parcels: ${processedData.all.total}`)
   console.log(`  - Luzon: ${processedData.luzon.total}`)
   console.log(`  - Visayas: ${processedData.visayas.total}`)

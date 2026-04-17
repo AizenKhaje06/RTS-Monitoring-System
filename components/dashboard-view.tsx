@@ -99,7 +99,7 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
     console.log('Filtered results:', filtered.length);
     console.log('==================');
 
-    // Recalculate stats for filtered data
+    // Recalculate stats for filtered data (excluding SHOPEE from totals)
     const stats: Record<string, { count: number; locations: Record<string, number> }> = {}
     const provinces: Record<string, number> = {}
     const regions: Record<string, number> = {}
@@ -112,10 +112,17 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
     })
 
     filtered.forEach((parcel) => {
-      total++
       const status = parcel.normalizedStatus
       const province = parcel.province
       const region = parcel.region
+      
+      // IMPORTANT: SHOPEE orders are excluded from all computations
+      const isShopee = status === "SHOPEE"
+      
+      // Only count non-SHOPEE orders in total
+      if (!isShopee) {
+        total++
+      }
 
       if (STATUSES.includes(status)) {
         stats[status].count++
@@ -124,17 +131,22 @@ export function DashboardView({ data, currentRegion, onRegionChange, filter, onF
         }
       }
 
-      if (province && province !== "unknown location" && province !== "Unknown" && province.trim() !== "") {
-        provinces[province] = (provinces[province] || 0) + 1
+      // Only count non-SHOPEE orders in province/region stats
+      if (!isShopee) {
+        if (province && province !== "unknown location" && province !== "Unknown" && province.trim() !== "") {
+          provinces[province] = (provinces[province] || 0) + 1
+        }
+        regions[region] = (regions[region] || 0) + 1
       }
-      regions[region] = (regions[region] || 0) + 1
 
-      if (status === "DELIVERED") {
+      // Only count non-SHOPEE orders in winning shippers
+      if (!isShopee && status === "DELIVERED") {
         winningShippers[parcel.shipper] = (winningShippers[parcel.shipper] || 0) + 1
       }
 
+      // Only count non-SHOPEE orders in RTS shippers
       const rtsStatuses = ["RETURNED"]
-      if (rtsStatuses.includes(status)) {
+      if (!isShopee && rtsStatuses.includes(status)) {
         rtsShippers[parcel.shipper] = (rtsShippers[parcel.shipper] || 0) + 1
       }
     })

@@ -117,6 +117,24 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const { toast } = useToast()
 
+  // Keyboard shortcuts
+  useMemo(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+K or Cmd+K to focus search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault()
+        const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement
+        if (searchInput) {
+          searchInput.focus()
+          searchInput.select()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
   // Initialize orders from data with IDs
   useMemo(() => {
     if (data?.all?.data) {
@@ -288,10 +306,13 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
     })
   }, [orders])
 
-  // Calculate summary stats based on filtered orders
+  // Calculate summary stats based on filtered orders (excluding SHOPEE)
   const summaryStats = useMemo(() => {
-    const totalParcels = filteredOrders.length
-    const totalAmount = filteredOrders.reduce((sum, order) => {
+    // Filter out SHOPEE orders from stats
+    const nonShopeeOrders = filteredOrders.filter(order => order.normalizedStatus !== "SHOPEE")
+    
+    const totalParcels = nonShopeeOrders.length
+    const totalAmount = nonShopeeOrders.reduce((sum, order) => {
       return sum + (order.codAmount || 0)
     }, 0)
 
@@ -517,22 +538,92 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search by name, address, tracking, status..."
+            placeholder="Search by name, address, tracking, status... (Ctrl+K)"
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value)
               setCurrentPage(1)
             }}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setSearchTerm('')
+                setCurrentPage(1)
+              }
+            }}
             className="pl-10"
           />
         </div>
+        
+        {/* Quick Filter Presets */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-muted-foreground whitespace-nowrap hidden sm:inline">Quick:</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const today = new Date()
+              const monthValue = String(today.getMonth() + 1).padStart(2, "0")
+              setSelectedMonth("all")
+              setSelectedStatus("all")
+              setCurrentPage(1)
+            }}
+            className="h-8 text-xs"
+          >
+            All
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setSelectedStatus("DELIVERED")
+              setCurrentPage(1)
+            }}
+            className="h-8 text-xs"
+          >
+            Delivered
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setSelectedStatus("RETURNED")
+              setCurrentPage(1)
+            }}
+            className="h-8 text-xs"
+          >
+            Returned
+          </Button>
+        </div>
+        
         <div className="text-sm text-muted-foreground text-center md:text-left whitespace-nowrap">
           Showing {startIndex + 1}-{Math.min(endIndex, filteredOrders.length)} of {filteredOrders.length} orders
         </div>
       </div>
 
       {/* Filters - Responsive Stack */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      <div className="space-y-3">
+        {/* Active Filters Badge */}
+        {(selectedMonth !== "all" || selectedStatus !== "all") && (
+          <div className="flex items-center gap-2 p-3 bg-primary/10 border border-primary/20 rounded-lg">
+            <span className="text-sm font-medium text-primary">Active Filters:</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              {selectedMonth !== "all" && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-background rounded-md text-xs">
+                  <span className="text-muted-foreground">Month:</span>
+                  <span className="font-medium">{availableMonths.find(m => m === selectedMonth) || selectedMonth}</span>
+                </span>
+              )}
+              {selectedStatus !== "all" && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-background rounded-md text-xs">
+                  <span className="text-muted-foreground">Status:</span>
+                  <span className="font-medium">{selectedStatus}</span>
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+        
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         {/* Month Filter */}
         <div className="flex items-center gap-2 flex-1">
           <label className="text-sm font-medium text-foreground whitespace-nowrap">Month:</label>
@@ -594,6 +685,7 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
           </Button>
         )}
       </div>
+      </div>
 
       {/* Summary Cards - Responsive */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -629,87 +721,90 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
       {/* Desktop Table View */}
       <Card className="hidden md:block">
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
             <Table>
-              <TableHeader>
+              <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
                 <TableRow>
-                  <TableHead className="w-[40px]"></TableHead>
-                  <TableHead className="w-[85px]">Date</TableHead>
-                  <TableHead className="w-[140px]">Name</TableHead>
-                  <TableHead className="w-[90px]">Address</TableHead>
-                  <TableHead className="w-[105px]">Contact No.</TableHead>
-                  <TableHead className="w-[70px]">Price</TableHead>
-                  <TableHead className="w-[100px]">Items</TableHead>
-                  <TableHead className="w-[100px]">Tracking</TableHead>
-                  <TableHead className="w-[120px]">Status</TableHead>
-                  <TableHead className="w-[140px]">Reason</TableHead>
-                  <TableHead className="w-[80px]">Action</TableHead>
+                  <TableHead className="w-[50px] px-3"></TableHead>
+                  <TableHead className="w-[100px] px-3">Date</TableHead>
+                  <TableHead className="w-[150px] px-3">Name</TableHead>
+                  <TableHead className="w-[120px] px-3">Address</TableHead>
+                  <TableHead className="w-[120px] px-3">Contact No.</TableHead>
+                  <TableHead className="w-[90px] px-3">Price</TableHead>
+                  <TableHead className="w-[120px] px-3">Items</TableHead>
+                  <TableHead className="w-[120px] px-3">Tracking</TableHead>
+                  <TableHead className="w-[130px] px-3">Status</TableHead>
+                  <TableHead className="w-[150px] px-3">Reason</TableHead>
+                  <TableHead className="w-[90px] px-3">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {currentOrders.map((order, index) => (
-                  <TableRow key={`${order.tracking}-${index}`}>
+                  <TableRow 
+                    key={`${order.tracking}-${index}`}
+                    className="hover:bg-muted/50 transition-colors even:bg-muted/20"
+                  >
                     {/* Save Status Indicator */}
-                    <TableCell className="text-center">
+                    <TableCell className="text-center px-3 py-3">
                       {getSaveIndicator(order)}
                     </TableCell>
 
                     {/* Date - Read Only */}
-                    <TableCell>
-                      <div className="text-xs text-foreground py-2 px-2 text-left">
+                    <TableCell className="px-3 py-3">
+                      <div className="text-xs text-foreground">
                         {formatDate(order.date)}
                       </div>
                     </TableCell>
 
                     {/* Name - Read Only */}
-                    <TableCell className="max-w-[140px]">
-                      <div className="text-xs text-foreground py-2 px-2 text-left truncate overflow-hidden" title={order.shipper || ""}>
+                    <TableCell className="max-w-[150px] px-3 py-3">
+                      <div className="text-xs text-foreground truncate overflow-hidden" title={order.shipper || ""}>
                         {order.shipper || "-"}
                       </div>
                     </TableCell>
 
                     {/* Address - Read Only */}
-                    <TableCell className="max-w-[90px]">
-                      <div className="text-xs text-foreground py-2 px-2 text-left truncate overflow-hidden" title={order.fullAddress || ""}>
+                    <TableCell className="max-w-[120px] px-3 py-3">
+                      <div className="text-xs text-foreground truncate overflow-hidden" title={order.fullAddress || ""}>
                         {order.fullAddress || "-"}
                       </div>
                     </TableCell>
 
                     {/* Contact No. - Read Only */}
-                    <TableCell>
-                      <div className="text-xs text-foreground py-2 px-2 text-left">
+                    <TableCell className="px-3 py-3">
+                      <div className="text-xs text-foreground">
                         {order.contactNumber || "-"}
                       </div>
                     </TableCell>
 
                     {/* Price - Read Only */}
-                    <TableCell>
-                      <div className="text-xs text-foreground py-2 px-2 text-left font-medium">
+                    <TableCell className="px-3 py-3">
+                      <div className="text-xs text-foreground font-medium">
                         ₱{order.codAmount || 0}
                       </div>
                     </TableCell>
 
                     {/* Items - Read Only */}
-                    <TableCell className="max-w-[100px]">
-                      <div className="text-xs text-foreground py-2 px-2 text-left truncate overflow-hidden" title={order.items || ""}>
+                    <TableCell className="max-w-[120px] px-3 py-3">
+                      <div className="text-xs text-foreground truncate overflow-hidden" title={order.items || ""}>
                         {order.items || "-"}
                       </div>
                     </TableCell>
 
                     {/* Tracking - Read Only */}
-                    <TableCell className="max-w-[100px]">
-                      <div className="text-xs font-mono text-foreground py-2 px-2 text-left truncate overflow-hidden" title={order.tracking || ""}>
+                    <TableCell className="max-w-[120px] px-3 py-3">
+                      <div className="text-xs font-mono text-foreground truncate overflow-hidden" title={order.tracking || ""}>
                         {order.tracking || "-"}
                       </div>
                     </TableCell>
 
                     {/* Status Dropdown */}
-                    <TableCell>
+                    <TableCell className="px-3 py-3">
                       <Select
                         value={order.normalizedStatus}
                         onValueChange={(value) => handleCellChange(index, "normalizedStatus", value)}
                       >
-                        <SelectTrigger className="h-8 text-xs">
+                        <SelectTrigger className="h-9 text-xs">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -723,13 +818,13 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
                     </TableCell>
 
                     {/* Reason Dropdown - Editable */}
-                    <TableCell>
+                    <TableCell className="px-3 py-3">
                       <Select
                         value={order.reason || ""}
                         onValueChange={(value) => handleCellChange(index, "reason", value)}
                         disabled={order.normalizedStatus !== "RETURNED" && order.normalizedStatus !== "CANCELLED"}
                       >
-                        <SelectTrigger className="h-8 text-xs">
+                        <SelectTrigger className="h-9 text-xs">
                           <SelectValue placeholder={
                             order.normalizedStatus === "RETURNED" || order.normalizedStatus === "CANCELLED" 
                               ? "Select reason" 
@@ -747,12 +842,12 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
                     </TableCell>
 
                     {/* Action Column */}
-                    <TableCell>
+                    <TableCell className="px-3 py-3">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleViewOrder(order)}
-                        className="h-7 px-2 text-xs text-primary hover:text-primary hover:bg-primary/10"
+                        className="h-8 px-3 text-xs text-primary hover:text-primary hover:bg-primary/10"
                       >
                         <Eye className="h-3 w-3 mr-1" />
                         View
