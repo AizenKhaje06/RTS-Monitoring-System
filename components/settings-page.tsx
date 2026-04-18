@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Settings, Loader2, Save, Eye, EyeOff } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 
 interface User {
   id: number
@@ -16,10 +16,10 @@ interface User {
 }
 
 export function SettingsPage() {
-  const { toast } = useToast()
   const [users, setUsers] = useState<User[]>([])
+  const [originalUsers, setOriginalUsers] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
+  const [savingUserId, setSavingUserId] = useState<number | null>(null)
   const [showPasswords, setShowPasswords] = useState<{ [key: number]: boolean }>({})
 
   useEffect(() => {
@@ -29,7 +29,13 @@ export function SettingsPage() {
   const fetchUsers = async () => {
     console.log("🔵 Fetching users from API...")
     try {
-      const response = await fetch("/api/users")
+      const response = await fetch("/api/users", {
+        method: "GET",
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache",
+        },
+      })
       console.log("📥 Response status:", response.status)
       
       if (!response.ok) throw new Error("Failed to fetch users")
@@ -37,20 +43,17 @@ export function SettingsPage() {
       const data = await response.json()
       console.log("📥 Received users:", data)
       setUsers(data)
+      setOriginalUsers(JSON.parse(JSON.stringify(data))) // Deep copy for comparison
     } catch (error) {
       console.error("❌ Error fetching users:", error)
-      toast({
-        title: "Error",
-        description: "Failed to load users",
-        variant: "destructive",
-      })
+      toast.error("Failed to load users")
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleSave = async (userId: number) => {
-    setIsSaving(true)
+    setSavingUserId(userId)
     console.log("🔵 Saving user:", userId)
     
     try {
@@ -72,26 +75,35 @@ export function SettingsPage() {
       const data = await response.json()
       console.log("📥 Response data:", data)
 
-      if (!response.ok) throw new Error(data.error || "Failed to update user")
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update user")
+      }
 
       console.log("✅ Update successful!")
       
-      toast({
-        title: "Credentials Updated",
-        description: `${user.role === "admin" ? "Admin" : "Tracker"} account has been updated successfully. Changes will take effect on next login.`,
-        duration: 5000,
+      // Refresh the users list to show updated data
+      await fetchUsers()
+      
+      toast.success("Credentials Updated", {
+        description: `${user.role === "admin" ? "Admin" : "Tracker"} account has been updated successfully.`,
+        duration: 4000,
       })
     } catch (error) {
       console.error("❌ Error updating user:", error)
-      toast({
-        title: "Update Failed",
+      toast.error("Update Failed", {
         description: error instanceof Error ? error.message : "Unable to update credentials. Please try again.",
-        variant: "destructive",
-        duration: 5000,
+        duration: 4000,
       })
     } finally {
-      setIsSaving(false)
+      setSavingUserId(null)
     }
+  }
+
+  const hasChanges = (userId: number) => {
+    const current = users.find(u => u.id === userId)
+    const original = originalUsers.find(u => u.id === userId)
+    if (!current || !original) return false
+    return current.username !== original.username || current.password !== original.password
   }
 
   const updateUser = (userId: number, field: keyof User, value: string) => {
@@ -176,10 +188,10 @@ export function SettingsPage() {
               </div>
               <Button
                 onClick={() => handleSave(user.id)}
-                disabled={isSaving}
+                disabled={savingUserId === user.id || !hasChanges(user.id)}
                 className="w-full md:w-auto"
               >
-                {isSaving ? (
+                {savingUserId === user.id ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Saving...
@@ -187,10 +199,15 @@ export function SettingsPage() {
                 ) : (
                   <>
                     <Save className="w-4 h-4 mr-2" />
-                    Save Changes
+                    {hasChanges(user.id) ? "Save Changes" : "No Changes"}
                   </>
                 )}
               </Button>
+              {hasChanges(user.id) && (
+                <p className="text-sm text-orange-600 dark:text-orange-400">
+                  • Unsaved changes
+                </p>
+              )}
             </CardContent>
           </Card>
         ))}

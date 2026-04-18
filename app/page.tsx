@@ -36,11 +36,9 @@ export default function Home() {
     const user = JSON.parse(storedUser)
     setUserRole(user.role)
 
-    // If tracker, redirect to orders view and auto-load data
+    // If tracker, redirect to orders view (but don't auto-load data)
     if (user.role === "tracker") {
       setCurrentView("orders")
-      // Auto-load data for tracker
-      fetchData(globalFilter)
     }
 
     setIsCheckingAuth(false)

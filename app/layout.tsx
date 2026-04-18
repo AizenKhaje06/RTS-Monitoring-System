@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
+import { Toaster as SonnerToaster } from "sonner"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -36,6 +37,7 @@ export default function RootLayout({
             {children}
           </Suspense>
           <Toaster />
+          <SonnerToaster position="top-right" richColors />
         </ThemeProvider>
         <Analytics />
       </body>

@@ -6,6 +6,10 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
+// Disable caching for this route
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 // GET - Fetch all users
 export async function GET() {
   try {
@@ -49,6 +53,23 @@ export async function PUT(request: Request) {
     }
 
     console.log("📤 Updating user in Supabase...")
+    
+    // First, check if username already exists for a different user
+    const { data: existingUser } = await supabase
+      .from("users")
+      .select("id")
+      .eq("username", username)
+      .neq("id", id)
+      .single()
+
+    if (existingUser) {
+      console.error("❌ Username already exists")
+      return NextResponse.json(
+        { error: "Username already exists" },
+        { status: 409 }
+      )
+    }
+
     const { data, error } = await supabase
       .from("users")
       .update({ username, password, role })
@@ -57,15 +78,18 @@ export async function PUT(request: Request) {
 
     if (error) {
       console.error("❌ Supabase error:", error)
-      throw error
+      return NextResponse.json(
+        { error: error.message || "Failed to update user" },
+        { status: 500 }
+      )
     }
 
     console.log("✅ Update successful:", data[0])
     return NextResponse.json(data[0])
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ Error updating user:", error)
     return NextResponse.json(
-      { error: "Failed to update user", details: error },
+      { error: error.message || "Failed to update user" },
       { status: 500 }
     )
   }
