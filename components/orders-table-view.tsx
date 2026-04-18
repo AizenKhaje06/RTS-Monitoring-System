@@ -41,6 +41,7 @@ import { Label } from "@/components/ui/label"
 interface OrdersTableViewProps {
   data: ProcessedData | null
   onDataChange?: () => Promise<void>
+  userRole?: "admin" | "tracker" | null
 }
 
 // Extended ParcelData with ID for tracking
@@ -100,7 +101,7 @@ const getReasonOptions = (status: string): string[] => {
   }
 }
 
-export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
+export function OrdersTableView({ data, onDataChange, userRole }: OrdersTableViewProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(50)
@@ -527,8 +528,6 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
             <CheckCircle2 className="h-4 w-4 text-green-500" />
             <span>Auto-save enabled</span>
           </div>
-          <ItemsManagementModal />
-          <NewOrderModal onOrderCreated={onDataChange} />
         </div>
       </div>
 
@@ -723,19 +722,19 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
         <CardContent className="p-0">
           <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
             <Table>
-              <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
-                <TableRow>
-                  <TableHead className="w-[50px] px-3"></TableHead>
-                  <TableHead className="w-[100px] px-3">Date</TableHead>
-                  <TableHead className="w-[150px] px-3">Name</TableHead>
-                  <TableHead className="w-[120px] px-3">Address</TableHead>
-                  <TableHead className="w-[120px] px-3">Contact No.</TableHead>
-                  <TableHead className="w-[90px] px-3">Price</TableHead>
-                  <TableHead className="w-[120px] px-3">Items</TableHead>
-                  <TableHead className="w-[120px] px-3">Tracking</TableHead>
-                  <TableHead className="w-[130px] px-3">Status</TableHead>
-                  <TableHead className="w-[150px] px-3">Reason</TableHead>
-                  <TableHead className="w-[90px] px-3">Action</TableHead>
+              <TableHeader className="sticky top-0 bg-black z-10 shadow-sm">
+                <TableRow className="hover:bg-black border-b border-gray-700">
+                  <TableHead className="w-[50px] px-3 text-white"></TableHead>
+                  <TableHead className="w-[100px] px-3 text-white">Date</TableHead>
+                  <TableHead className="w-[150px] px-3 text-white">Name</TableHead>
+                  <TableHead className="w-[120px] px-3 text-white">Address</TableHead>
+                  <TableHead className="w-[120px] px-3 text-white">Contact No.</TableHead>
+                  <TableHead className="w-[90px] px-3 text-white">Price</TableHead>
+                  <TableHead className="w-[120px] px-3 text-white">Items</TableHead>
+                  <TableHead className="w-[120px] px-3 text-white">Tracking</TableHead>
+                  <TableHead className="w-[130px] px-3 text-white">Status</TableHead>
+                  <TableHead className="w-[150px] px-3 text-white">Reason</TableHead>
+                  <TableHead className="w-[90px] px-3 text-white">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1083,42 +1082,60 @@ export function OrdersTableView({ data, onDataChange }: OrdersTableViewProps) {
             {/* Status */}
             <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
               <Label htmlFor="edit-status" className="md:text-right font-medium">Status</Label>
-              <Select
-                value={editFormData.normalizedStatus || ""}
-                onValueChange={(value) => setEditFormData(prev => ({ ...prev, normalizedStatus: value }))}
-              >
-                <SelectTrigger className="md:col-span-3">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUS_OPTIONS.map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {status}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {userRole === "tracker" ? (
+                <Input
+                  value={editFormData.normalizedStatus || ""}
+                  readOnly
+                  disabled
+                  className="md:col-span-3 bg-muted"
+                />
+              ) : (
+                <Select
+                  value={editFormData.normalizedStatus || ""}
+                  onValueChange={(value) => setEditFormData(prev => ({ ...prev, normalizedStatus: value }))}
+                >
+                  <SelectTrigger className="md:col-span-3">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_OPTIONS.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
 
             {/* Reason */}
             <div className="grid grid-cols-1 md:grid-cols-4 items-start md:items-center gap-2 md:gap-4">
               <Label htmlFor="edit-reason" className="md:text-right font-medium">Reason</Label>
-              <Select
-                value={editFormData.reason || ""}
-                onValueChange={(value) => setEditFormData(prev => ({ ...prev, reason: value }))}
-                disabled={editFormData.normalizedStatus !== "RETURNED" && editFormData.normalizedStatus !== "CANCELLED"}
-              >
-                <SelectTrigger className="md:col-span-3">
-                  <SelectValue placeholder="Select reason" />
-                </SelectTrigger>
-                <SelectContent>
-                  {getReasonOptions(editFormData.normalizedStatus || "").map((reason) => (
-                    <SelectItem key={reason} value={reason}>
-                      {reason}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {userRole === "tracker" ? (
+                <Input
+                  value={editFormData.reason || ""}
+                  readOnly
+                  disabled
+                  className="md:col-span-3 bg-muted"
+                />
+              ) : (
+                <Select
+                  value={editFormData.reason || ""}
+                  onValueChange={(value) => setEditFormData(prev => ({ ...prev, reason: value }))}
+                  disabled={editFormData.normalizedStatus !== "RETURNED" && editFormData.normalizedStatus !== "CANCELLED"}
+                >
+                  <SelectTrigger className="md:col-span-3">
+                    <SelectValue placeholder="Select reason" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getReasonOptions(editFormData.normalizedStatus || "").map((reason) => (
+                      <SelectItem key={reason} value={reason}>
+                        {reason}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
 

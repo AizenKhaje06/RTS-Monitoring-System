@@ -1,25 +1,39 @@
 "use client"
 
 import { useState } from "react"
-import { BarChart3, Home, TrendingUp, PieChart, Menu, X, Sun, Moon, FileText } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { BarChart3, Home, TrendingUp, PieChart, Menu, X, Sun, Moon, FileText, LogOut, Settings } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 
 interface NavbarProps {
   currentView?: string
   onViewChange?: (view: string) => void
+  userRole?: "admin" | "tracker" | null
 }
 
-export function Navbar({ currentView = "dashboard", onViewChange }: NavbarProps) {
+export function Navbar({ currentView = "dashboard", onViewChange, userRole }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { theme, setTheme } = useTheme()
+  const router = useRouter()
 
-  const menuItems = [
+  const allMenuItems = [
     { id: "dashboard", label: "Parcel", icon: Home },
     { id: "performance", label: "Performance", icon: TrendingUp },
     { id: "analytical", label: "Analytical", icon: PieChart },
     { id: "orders", label: "Orders", icon: FileText },
+    { id: "settings", label: "Settings", icon: Settings },
   ]
+
+  // Filter menu items based on role
+  const menuItems = userRole === "tracker" 
+    ? allMenuItems.filter(item => item.id === "orders")
+    : allMenuItems
+
+  const handleLogout = () => {
+    localStorage.removeItem("user")
+    router.push("/login")
+  }
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -38,7 +52,7 @@ export function Navbar({ currentView = "dashboard", onViewChange }: NavbarProps)
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-1">
-            {menuItems.map((item) => {
+            {userRole !== "tracker" && menuItems.map((item) => {
               const Icon = item.icon
               const isActive = currentView === item.id
               return (
@@ -62,34 +76,32 @@ export function Navbar({ currentView = "dashboard", onViewChange }: NavbarProps)
             })}
           </div>
 
-          {/* Coverage Areas - Desktop */}
-          <div className="hidden lg:flex items-center gap-4 text-sm">
-            <span className="text-muted-foreground font-bold tracking-wide">COVERAGE:</span>
-            <div className="flex items-center gap-4">
-              <span className="flex items-center gap-2 font-medium">
-                <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
-                Luzon
-              </span>
-              <span className="flex items-center gap-2 font-medium">
-                <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
-                Visayas
-              </span>
-              <span className="flex items-center gap-2 font-medium">
-                <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
-                Mindanao
-              </span>
-            </div>
-            
+          {/* Coverage Areas - Desktop (Admin only) */}
+          {/* Removed - no longer needed */}
+
+          {/* Right side controls */}
+          <div className="hidden lg:flex items-center gap-2">
             {/* Theme Toggle */}
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="ml-2 hover:bg-secondary/80"
+              className="hover:bg-secondary/80"
             >
               <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
               <span className="sr-only">Toggle theme</span>
+            </Button>
+
+            {/* Logout Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="hover:bg-destructive/10 hover:text-destructive"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
             </Button>
           </div>
 
@@ -117,7 +129,7 @@ export function Navbar({ currentView = "dashboard", onViewChange }: NavbarProps)
         </div>
 
         {/* Mobile Navigation */}
-        {mobileMenuOpen && (
+        {mobileMenuOpen && userRole !== "tracker" && (
           <div className="md:hidden py-4 border-t border-border/40">
             <div className="flex flex-col gap-2">
               {menuItems.map((item) => {
@@ -144,24 +156,7 @@ export function Navbar({ currentView = "dashboard", onViewChange }: NavbarProps)
               })}
             </div>
             
-            {/* Coverage Areas - Mobile */}
-            <div className="mt-4 pt-4 border-t border-border/40">
-              <p className="text-sm font-bold text-muted-foreground mb-3 tracking-wide">COVERAGE AREAS</p>
-              <div className="flex flex-col gap-3 text-sm">
-                <span className="flex items-center gap-2 font-medium">
-                  <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
-                  Luzon - Active
-                </span>
-                <span className="flex items-center gap-2 font-medium">
-                  <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
-                  Visayas - Active
-                </span>
-                <span className="flex items-center gap-2 font-medium">
-                  <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
-                  Mindanao - Active
-                </span>
-              </div>
-            </div>
+            {/* Coverage Areas - Mobile (Removed) */}
           </div>
         )}
       </div>

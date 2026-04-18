@@ -8,6 +8,7 @@ interface DashboardLayoutProps {
   hasData: boolean
   currentView?: string
   onViewChange?: (view: string) => void
+  userRole?: "admin" | "tracker" | null
 }
 
 export function DashboardLayout({
@@ -15,10 +16,11 @@ export function DashboardLayout({
   hasData,
   currentView = "dashboard",
   onViewChange,
+  userRole,
 }: DashboardLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
-      {hasData && <Navbar currentView={currentView} onViewChange={onViewChange} />}
+      {hasData && <Navbar currentView={currentView} onViewChange={onViewChange} userRole={userRole} />}
       <main className="w-full">
         {children}
       </main>
