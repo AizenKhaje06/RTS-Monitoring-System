@@ -63,7 +63,7 @@ export async function fetchSupabaseData(): Promise<SupabaseParcel[]> {
   const { data, error } = await supabase
     .from('parcels')
     .select('*')
-    .order('parcel_date', { ascending: false })
+    .order('id', { ascending: false })  // Order by ID descending (newest records first)
   
   if (error) {
     console.error('❌ Error fetching from Supabase:', error)
@@ -71,6 +71,15 @@ export async function fetchSupabaseData(): Promise<SupabaseParcel[]> {
   }
   
   console.log(`✅ Fetched ${data?.length || 0} parcels from Supabase`)
+  
+  // Debug: Log first 10 records to verify order
+  if (data && data.length > 0) {
+    console.log('\n🔍 First 10 records from Supabase (by ID DESC):')
+    data.slice(0, 10).forEach((parcel, index) => {
+      console.log(`  ${index + 1}. ID: ${parcel.id}, Date: ${parcel.parcel_date}, Name: ${parcel.shipper_name}`)
+    })
+  }
+  
   return data || []
 }
 
@@ -111,6 +120,12 @@ export async function processSupabaseData(): Promise<ProcessedData> {
   }
 
   console.log(`\n=== Processing ${supabaseParcels.length} parcels from Supabase ===`)
+  
+  // Debug: Log first 5 IDs before processing
+  console.log('🔍 First 5 parcel IDs before processing:')
+  supabaseParcels.slice(0, 5).forEach((sp, i) => {
+    console.log(`  ${i + 1}. ID: ${sp.id}, Name: ${sp.shipper_name}`)
+  })
 
   // Process each parcel
   for (const sp of supabaseParcels) {
@@ -194,6 +209,12 @@ export async function processSupabaseData(): Promise<ProcessedData> {
   console.log(`  - Luzon: ${processedData.luzon.total}`)
   console.log(`  - Visayas: ${processedData.visayas.total}`)
   console.log(`  - Mindanao: ${processedData.mindanao.total}`)
+  
+  // Debug: Log first 5 IDs after processing
+  console.log('\n🔍 First 5 parcel IDs after processing (in processedData.all.data):')
+  processedData.all.data.slice(0, 5).forEach((p, i) => {
+    console.log(`  ${i + 1}. ID: ${p.id}, Name: ${p.shipper}`)
+  })
 
   return processedData
 }

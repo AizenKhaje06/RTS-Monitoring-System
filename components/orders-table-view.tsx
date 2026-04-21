@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useCallback } from "react"
-import { Search, ChevronLeft, ChevronRight, Loader2, CheckCircle2, AlertCircle, Package, DollarSign, Eye, Save, Trash2 } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, Loader2, CheckCircle2, AlertCircle, Package, DollarSign, Eye, Save, Trash2, RefreshCw } from "lucide-react"
 import type { ProcessedData, ParcelData } from "@/lib/types"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -140,8 +140,10 @@ export function OrdersTableView({ data, onDataChange, userRole }: OrdersTableVie
   useMemo(() => {
     if (data?.all?.data) {
       // Use actual Supabase ID from data
-      console.log("📦 Loading orders, first order:", data.all.data[0])
-      console.log("📦 First order has ID?", data.all.data[0]?.id)
+      console.log("📦 Loading orders, first 10 orders:")
+      data.all.data.slice(0, 10).forEach((order, index) => {
+        console.log(`  ${index + 1}. ID: ${order.id}, Date: ${order.date}, Name: ${order.shipper}`)
+      })
       setOrders(data.all.data as OrderWithId[])
       if (!isInitialized) {
         setIsInitialized(true)
@@ -528,6 +530,25 @@ export function OrdersTableView({ data, onDataChange, userRole }: OrdersTableVie
             <CheckCircle2 className="h-4 w-4 text-green-500" />
             <span>Auto-save enabled</span>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              if (onDataChange) {
+                await onDataChange()
+                toast({
+                  title: "Data Refreshed",
+                  description: "Successfully reloaded data from Supabase",
+                })
+              }
+            }}
+            className="gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+          <ItemsManagementModal />
+          <NewOrderModal onOrderCreated={onDataChange} />
         </div>
       </div>
 

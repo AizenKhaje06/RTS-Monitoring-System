@@ -80,13 +80,24 @@ export function Navbar({ currentView = "dashboard", onViewChange, userRole }: Na
           {/* Removed - no longer needed */}
 
           {/* Right side controls */}
-          <div className="hidden lg:flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-3">
+            {/* User Profile */}
+            <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-secondary/50 border border-border/50">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground font-semibold text-sm shadow-sm">
+                {userRole === "admin" ? "A" : "T"}
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium text-foreground leading-none">{userRole === "admin" ? "Admin" : "Tracker"}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">User</p>
+              </div>
+            </div>
+
             {/* Theme Toggle */}
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="hover:bg-secondary/80"
+              className="hover:bg-secondary/80 transition-colors"
             >
               <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -98,7 +109,7 @@ export function Navbar({ currentView = "dashboard", onViewChange, userRole }: Na
               variant="ghost"
               size="sm"
               onClick={handleLogout}
-              className="hover:bg-destructive/10 hover:text-destructive"
+              className="hover:bg-destructive/10 hover:text-destructive transition-colors"
             >
               <LogOut className="w-4 h-4 mr-2" />
               Logout

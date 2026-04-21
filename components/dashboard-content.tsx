@@ -5,6 +5,7 @@ import { DashboardView } from "@/components/dashboard-view"
 import { PredictiveInsights } from "@/components/predictive-insights"
 import { OtherStatusBreakdown } from "@/components/other-status-breakdown"
 import { SupabaseExportButton } from "@/components/supabase-export-button"
+import { MarchExportButton } from "@/components/march-export-button"
 import { ParcelExportButton } from "@/components/parcel-export-button"
 import type { ProcessedData, FilterState } from "@/lib/types"
 import { BarChart3, TrendingUp, Package, Upload } from "lucide-react"
@@ -57,6 +58,7 @@ export function DashboardContent({ data, onUploadClick, filter, onFilterChange }
 
             <TabsContent value="insights" className="space-y-6">
               <SupabaseExportButton />
+              <MarchExportButton />
               <OtherStatusBreakdown data={data} />
               <PredictiveInsights data={data} />
             </TabsContent>

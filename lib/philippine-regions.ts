@@ -259,15 +259,30 @@ export interface RegionInfo {
   island: Island
   region: string
   province: string
+  municipality?: string
 }
 
 export function determineRegion(consigneeRegion: string): RegionInfo {
   const normalizedInput = (consigneeRegion || "").toUpperCase().trim()
   
+  // Extract municipality from comma-separated address
+  // Format: "Street, Barangay, Municipality, Province [extra text]"
+  let municipality: string | undefined = undefined
+  
+  if (normalizedInput.includes(',')) {
+    const parts = normalizedInput.split(',').map(p => p.trim()).filter(p => p.length > 0)
+    
+    if (parts.length >= 2) {
+      // Second to last part is usually the municipality
+      municipality = parts[parts.length - 2]
+    }
+  }
+  
   // STEP 1: Try PSGC-based matching first (most accurate)
+  // This will match the full address string against known provinces/cities
   const psgcMatch = matchPSGCEntry(normalizedInput)
   if (psgcMatch.province !== "Unknown") {
-    return psgcMatch
+    return { ...psgcMatch, municipality }
   }
   
   // STEP 2: Try comma-based parsing (for "Municipality, Province" format)
@@ -280,11 +295,11 @@ export function determineRegion(consigneeRegion: string): RegionInfo {
     // Try PSGC match on last part
     const lastPartPSGC = matchPSGCEntry(lastPart)
     if (lastPartPSGC.province !== "Unknown") {
-      return lastPartPSGC
+      return { ...lastPartPSGC, municipality }
     }
     
     // Try legacy match on last part
-    const lastPartMatch = matchRegionText(lastPart)
+    const lastPartMatch = matchRegionText(lastPart, municipality)
     if (lastPartMatch.province !== "Unknown") {
       return lastPartMatch
     }
@@ -294,10 +309,10 @@ export function determineRegion(consigneeRegion: string): RegionInfo {
       const secondLastPart = commaParts[commaParts.length - 2]
       const secondLastPSGC = matchPSGCEntry(secondLastPart)
       if (secondLastPSGC.province !== "Unknown") {
-        return secondLastPSGC
+        return { ...secondLastPSGC, municipality }
       }
       
-      const secondLastMatch = matchRegionText(secondLastPart)
+      const secondLastMatch = matchRegionText(secondLastPart, municipality)
       if (secondLastMatch.province !== "Unknown") {
         return secondLastMatch
       }
@@ -308,7 +323,7 @@ export function determineRegion(consigneeRegion: string): RegionInfo {
   const words = normalizedInput.split(/\s+/).filter(w => w)
   const regionText = words.slice(-3).join(' ')
   
-  return matchRegionText(regionText)
+  return matchRegionText(regionText, municipality)
 }
 
 // NEW: PSGC-based matching function
@@ -364,7 +379,7 @@ function matchPSGCEntry(addressText: string): RegionInfo {
 }
 
 // Helper function to match region text against database
-function matchRegionText(regionText: string): RegionInfo {
+function matchRegionText(regionText: string, municipality?: string): RegionInfo {
   const normalizedInput = regionText.toUpperCase().trim()
 
   // Enhanced matching for region names first, including common abbreviations and variations
@@ -452,6 +467,7 @@ function matchRegionText(regionText: string): RegionInfo {
             island: island as Island,
             region: region,
             province: province,
+            municipality,
           }
         }
       }
@@ -460,12 +476,12 @@ function matchRegionText(regionText: string): RegionInfo {
 
   // Fallback to island-level matching with more keywords
   if (normalizedInput.includes("LUZON") || normalizedInput.includes("NCR") || normalizedInput.includes("CAR") || normalizedInput.includes("MANILA") || normalizedInput.includes("QUEZON")) {
-    return { island: "luzon", region: "Unknown", province: "Unknown" }
+    return { island: "luzon", region: "Unknown", province: "Unknown", municipality }
   } else if (normalizedInput.includes("VISAYAS") || normalizedInput.includes("CEBU") || normalizedInput.includes("ILOILO") || normalizedInput.includes("NEGROS") || normalizedInput.includes("LEYTE")) {
-    return { island: "visayas", region: "Unknown", province: "Unknown" }
+    return { island: "visayas", region: "Unknown", province: "Unknown", municipality }
   } else if (normalizedInput.includes("MINDANAO") || normalizedInput.includes("DAVAO") || normalizedInput.includes("CAGAYAN DE ORO") || normalizedInput.includes("ZAMBOANGA") || normalizedInput.includes("COTABATO")) {
-    return { island: "mindanao", region: "Unknown", province: "Unknown" }
+    return { island: "mindanao", region: "Unknown", province: "Unknown", municipality }
   }
 
-  return { island: "unknown", region: "Unknown", province: "Unknown" }
+  return { island: "unknown", region: "Unknown", province: "Unknown", municipality }
 }

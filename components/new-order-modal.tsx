@@ -273,14 +273,15 @@ export function NewOrderModal({ onOrderCreated }: NewOrderModalProps) {
               <Label htmlFor="address" className="text-right">
                 Address
               </Label>
-              <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                className="col-span-3"
-                placeholder="Complete address (Province and Municipality will be auto-extracted)"
-                required
-              />
+              <div className="col-span-3">
+                <Input
+                  id="address"
+                  value={formData.address}
+                  onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                  placeholder="Street, Barangay, Municipality, Province (comma-separated)"
+                  required
+                />
+              </div>
             </div>
 
             {/* Contact Number */}
@@ -300,9 +301,6 @@ export function NewOrderModal({ onOrderCreated }: NewOrderModalProps) {
                 {contactError && (
                   <p className="text-xs text-red-500 mt-1">{contactError}</p>
                 )}
-                <p className="text-xs text-muted-foreground mt-1">
-                  Format: 9 (10 digits), 09 (11 digits), or 639/+639 (12 digits)
-                </p>
               </div>
             </div>
 

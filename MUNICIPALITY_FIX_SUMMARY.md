@@ -1,123 +1,163 @@
-# Municipality Database Fix - Summary
+# Municipality Data Fix
 
-## Issue Resolved ✅
+## Problem
+Municipality column in Supabase was EMPTY even though the system shows municipality data.
 
-**Problem:** 8 addresses with unknown provinces due to municipality-only format
-
-**Root Cause:** Municipalities not in province database
-
----
-
-## Municipalities Added
-
-### Region I (Ilocos Region)
-- ✅ **Bauang** → La Union
-
-### Region III (Central Luzon)
-- ✅ **Guimba** → Nueva Ecija
-
-### Region X (Northern Mindanao)
-- ✅ **Baloi** → Lanao del Norte
-
-### Region XI (Davao Region)
-- ✅ **Mabini** → Davao de Oro
-- ✅ **Kiblawan** → Davao del Sur
-
-### BARMM (Bangsamoro)
-- ✅ **Balindong** → Lanao del Sur
-
----
-
-## Address Matching Now Works
-
-### Before Fix ❌
-```
-"Apokon, Tagum City" → Province: Unknown
-"Baloi" → Province: Unknown
-"San Roque, Guimba" → Province: Unknown
-"Balasiao, Kiblawan" → Province: Unknown
-"Cadunan, Mabini (Davao de Oro)" → Province: Unknown
-"Salipongan, Balindong" → Province: Unknown
-"Bawanta, Bauang" → Province: Unknown
+## Root Cause
+In `lib/google-sheets-processor.ts` line 245, municipality was hardcoded as empty string:
+```typescript
+municipality: "",  // ← Always empty!
 ```
 
-### After Fix ✅
-```
-"Apokon, Tagum City" → Province: Davao del Norte (Tagum City already in DB)
-"Baloi" → Province: Lanao del Norte ✅
-"San Roque, Guimba" → Province: Nueva Ecija ✅
-"Balasiao, Kiblawan" → Province: Davao del Sur ✅
-"Cadunan, Mabini (Davao de Oro)" → Province: Davao de Oro ✅
-"Salipongan, Balindong" → Province: Lanao del Sur ✅
-"Bawanta, Bauang" → Province: La Union ✅
-```
+## Solution Applied
 
----
+### 1. Updated RegionInfo Interface
+**File:** `lib/philippine-regions.ts`
 
-## Special Case: Cagayan de Oro
-
-**Address:** "PUROK 3 Riverview A Kware gusa, Gusa, Cagayan de Oro City"
-
-**Status:** ✅ Already works!
-- "Cagayan de Oro City" is already in database
-- Province: Misamis Oriental
-- Region: Region X
-
----
-
-## Files Modified
-
-1. ✅ `lib/philippine-regions.ts` - Added 6 municipalities
-2. ✅ `UNKNOWN_PROVINCES_REPORT.md` - Detailed analysis
-3. ✅ `MUNICIPALITY_FIX_SUMMARY.md` - This file
-
----
-
-## Testing
-
-### Test These Addresses:
-```
-1. "Baloi" → Should return Lanao del Norte
-2. "Guimba" → Should return Nueva Ecija
-3. "Bauang" → Should return La Union
-4. "Kiblawan" → Should return Davao del Sur
-5. "Mabini" → Should return Davao de Oro
-6. "Balindong" → Should return Lanao del Sur
+Added municipality field:
+```typescript
+export interface RegionInfo {
+  island: Island
+  region: string
+  province: string
+  municipality?: string  // ← NEW
+}
 ```
 
-### How to Test:
-1. Restart dev server: `npm run dev`
-2. Click "Enter Dashboard"
-3. Check console for "UNKNOWN PROVINCE" logs
-4. Should see 0 or minimal unknown entries
+### 2. Extract Municipality from Address
+**File:** `lib/philippine-regions.ts`
 
----
+Added logic to extract municipality from comma-separated addresses:
+```typescript
+// Format: "Street, Municipality, Province"
+let municipality: string | undefined = undefined
+
+if (normalizedInput.includes(',')) {
+  const parts = normalizedInput.split(',').map(p => p.trim())
+  if (parts.length >= 2) {
+    municipality = parts[parts.length - 2]  // Second to last
+  }
+}
+```
+
+### 3. Updated Google Sheets Processor
+**File:** `lib/google-sheets-processor.ts`
+
+Changed from hardcoded empty to using extracted municipality:
+```typescript
+// Before:
+municipality: "",
+
+// After:
+municipality: regionInfo.municipality || "",
+```
+
+### 4. Updated All Return Statements
+**File:** `lib/philippine-regions.ts`
+
+All return statements now include municipality:
+```typescript
+return {
+  island: island,
+  region: region,
+  province: province,
+  municipality,  // ← Added
+}
+```
 
 ## Impact
 
-### Before:
-- Unknown Provinces: 8+
-- Success Rate: ~95%
+### Before Fix:
+- System shows: "Davao-city", "Quezon-city", etc.
+- Supabase shows: EMPTY for all municipality columns
+- SQL exports have empty municipality values
 
-### After:
-- Unknown Provinces: 0-2 (edge cases only)
-- Success Rate: ~99%
+### After Fix:
+- System shows: "Davao-city", "Quezon-city", etc.
+- Supabase will have: "Davao-city", "Quezon-city", etc.
+- SQL exports will include municipality data
 
----
+## How Municipality is Extracted
+
+### Address Format Examples:
+1. **"123 Main St, Davao-city, Davao del Sur"**
+   - Municipality: "Davao-city"
+   - Province: "Davao del Sur"
+
+2. **"Quezon-city, Metro Manila"**
+   - Municipality: "Quezon-city"
+   - Province: "Metro Manila"
+
+3. **"General-santos-city, South Cotabato"**
+   - Municipality: "General-santos-city"
+   - Province: "South Cotabato"
+
+### Extraction Logic:
+```
+Split by comma → ["Street", "Municipality", "Province"]
+                              ↑
+                    Second to last part
+```
+
+## Testing
+
+### To Verify Fix:
+1. Re-export SQL from system
+2. Check SQL file - municipality column should have data
+3. Import to Supabase
+4. Query: `SELECT province, municipality FROM parcels LIMIT 10`
+5. Municipality column should show data
+
+### Expected Results:
+```sql
+province          | municipality
+------------------|-----------------
+Davao del Sur     | Davao-city
+Metro Manila      | Quezon-city
+South Cotabato    | General-santos-city
+Zamboanga del Sur | Zamboanga-city
+```
+
+## Files Modified
+
+1. **lib/philippine-regions.ts**
+   - Added municipality to RegionInfo interface
+   - Added municipality extraction logic
+   - Updated all return statements
+
+2. **lib/google-sheets-processor.ts**
+   - Changed municipality from "" to regionInfo.municipality
 
 ## Next Steps
 
-### If Still Have Unknown Provinces:
-1. Check terminal logs for new "UNKNOWN PROVINCE PARCEL" entries
-2. Identify the municipality/city name
-3. Add to appropriate region in `lib/philippine-regions.ts`
-4. Restart server and test
+1. **Re-export your data:**
+   - Go to Parcel → Insights
+   - Click "Download SQL File"
+   - New export will include municipality data
 
-### Future Enhancement:
-Consider creating comprehensive municipality database with all 1,488 municipalities nationwide for 100% coverage.
+2. **Import to Supabase:**
+   - Open Supabase SQL Editor
+   - Paste and run the new SQL file
+   - Municipality column will now have data
+
+3. **Verify:**
+   - Check Supabase table editor
+   - Municipality column should show cities/municipalities
+   - System reports will match Supabase data
+
+## Notes
+
+- Municipality extraction works for comma-separated addresses
+- If address doesn't have commas, municipality will be undefined
+- This is backward compatible - existing code won't break
+- Future exports will automatically include municipality data
+
+## Status
+
+✅ **FIXED** - Municipality data will now be included in SQL exports and Supabase imports.
 
 ---
 
-**Status:** ✅ FIXED - Ready for Testing
-
-**Date:** March 31, 2026
+**Date:** April 16, 2026
+**Issue:** Municipality column empty in Supabase
+**Resolution:** Extract municipality from address and include in exports
