@@ -40,7 +40,7 @@ export default function LoginPage() {
         setError(data.error || "Invalid username or password")
         setIsLoading(false)
       }
-    } catch (err) {
+    } catch {
       setError("Login failed. Please try again.")
       setIsLoading(false)
     }

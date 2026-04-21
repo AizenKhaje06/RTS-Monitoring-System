@@ -48,7 +48,7 @@ const REASON_OPTIONS = [
   "Other",
 ]
 
-export function OrdersReport({ data, filter, onFilterChange }: OrdersReportProps) {
+export function OrdersReport({ data }: OrdersReportProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [currentPage, setCurrentPage] = useState(1)
