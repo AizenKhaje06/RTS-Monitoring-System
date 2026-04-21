@@ -164,7 +164,7 @@ export async function GET() {
         
         const month = parcelDate.getMonth()
         return month === 2 // March
-      } catch (error) {
+      } catch {
         return false
       }
     })

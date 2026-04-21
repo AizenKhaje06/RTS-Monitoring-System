@@ -86,10 +86,10 @@ export async function PUT(request: Request) {
 
     console.log("✅ Update successful:", data[0])
     return NextResponse.json(data[0])
-  } catch (error: any) {
+  } catch (error) {
     console.error("❌ Error updating user:", error)
     return NextResponse.json(
-      { error: error.message || "Failed to update user" },
+      { error: error instanceof Error ? error.message : "Failed to update user" },
       { status: 500 }
     )
   }

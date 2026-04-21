@@ -249,7 +249,7 @@ export function OrdersTableView({ data, onDataChange, userRole }: OrdersTableVie
         })
       }, 3000)
     }
-  }, [onDataChange, toast])
+  }, [toast])
 
   // Filter orders based on search term, month, and status
   const filteredOrders = useMemo(() => {
